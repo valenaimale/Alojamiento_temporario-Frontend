@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>G-ONE | Registro de propietario</title>
+        <meta name="description" content="Creá tu cuenta como propietario en G-ONE">
+        <link rel="stylesheet" href="../../estilos/style.css">
+        <link rel="stylesheet" href="../../estilos/registro.css">
+    </head>
+    <body>
+        <header></header>
+        <main>
+            <h1>Creá tu cuenta de propietario</h1>
+            <form action="registrar.php" method="post">
+                <label>Nombre completo
+                    <input type="text" name="nombre" required>
+                </label>
+                <label>Mail
+                    <input type="email" name="mail" required>
+                </label>
+                <label>Contraseña
+                    <input type="password" name="contrasenia" required minlength="8">
+                </label>
+                <label>¿Cobrás IVA?
+                    <select id="cobra_iva" name="cobra_iva" required>
+                        <option value="">Seleccioná una opción</option>
+                        <option value="1">Sí, cobro IVA</option>
+                        <option value="0">No, no cobro IVA</option>
+                    </select>
+                </label>
+                <button type="submit">Registrarme</button>
+            </form>
+            <p>¿Ya tenés una cuenta? <a href="../homes/inicio-sesion.html">Iniciá sesión acá</a>.</p>
+        </main>
+    </body>
+</html>
