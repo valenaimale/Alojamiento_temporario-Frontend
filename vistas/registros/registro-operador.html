@@ -7,12 +7,13 @@
         <meta name="description" content="Creá tu cuenta como operador de estadía en G-ONE">
         <link rel="stylesheet" href="../../estilos/style.css">
         <link rel="stylesheet" href="../../estilos/registro.css">
+        <script src="../../funcionalidades/registro.js" defer></script>
     </head>
     <body>
         <header></header>
         <main>
             <h1>Creá tu cuenta de operador de estadía</h1>
-            <form action="registrar.php" method="post">
+            <form id="form-registro" data-rol="operador">
                 <label>Nombre completo
                     <input type="text" name="nombre" required>
                 </label>

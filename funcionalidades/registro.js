@@ -15,6 +15,11 @@ form.addEventListener('submit', async (evento) => { // "escucha" el form: cada v
         body: JSON.stringify(datos),                      // convierte el objeto datos a texto JSON (como json_encode en PHP)
     });
 
-    const resultado = await respuesta.json(); // lee el cuerpo de la respuesta y lo convierte de JSON a objeto (como json_decode en PHP)
-    console.log(respuesta.status, resultado); // muestra el código HTTP (201, 422...) y lo que respondió el back ({ok: ...} o {error: ...})
+    const resultado = await respuesta.json(); // lee el cuerpo de la respuesta y lo convierte de JSON a objeto
+    console.log(respuesta.status, resultado); // muestra el código HTTP y lo que respondió el back
+
+    const texto = respuesta.ok ? resultado.ok : resultado.error; // si salió bien usa el mensaje de ok, si no el de error
+    sessionStorage.setItem('mensajeRegistro', texto);            // guarda el mensaje en el session storage del navegador para que lo lea la página siguiente.
+    //lo que se guarda en el session storage del navegador permanece ahi hasta cerrar la ventana.
+    window.location.href = 'post-registro.html';                 // navega a la página de resultado   
 }); // cierra la función del submit y el addEventListener
