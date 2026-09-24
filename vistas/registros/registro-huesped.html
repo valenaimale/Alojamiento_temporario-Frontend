@@ -5,14 +5,16 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>G-ONE | Registro de huésped</title>
         <meta name="description" content="Creá tu cuenta como huésped en G-ONE">
-        <link rel="stylesheet" href="../../estilos/style.css">
-        <link rel="stylesheet" href="../../estilos/registro.css">
+        <!--<link rel="stylesheet" href="../../estilos/style.css">
+        <link rel="stylesheet" href="../../estilos/registro.css">-->
+        <script src="../../funcionalidades/registro.js" defer></script>
+
     </head>
     <body>
         <header></header>
         <main>
             <h1>Creá tu cuenta de huésped</h1>
-            <form action="registrar.php" method="post">
+            <form id="form-registro" data-rol="huesped" >
                 <label>Nombre completo
                     <input type="text" name="nombre" required>
                 </label>
