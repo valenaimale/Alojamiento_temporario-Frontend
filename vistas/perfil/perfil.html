@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Perfil usuario</title>
+        <meta name="description" content="Mira la informacion de tu perfil">
+        <link rel="stylesheet" href="../../estilos/style.css ">
+        <link rel="stylesheet" href="../../estilos/index-huesped.css">
+        <script src="../../funcionalidades/cerrar-sesion.js" defer></script>
+    </head>
+    <body>
+        <main>
+            <h1 id="saludo-nombre"></h1>
+
+            <section>
+                <h2>Datos de tu cuenta</h2>
+                <dl>
+                    <dt>Nombre</dt>
+                    <dd id="perfil-nombre"></dd>
+
+                    <dt>Mail</dt>
+                    <dd id="perfil-mail"></dd>
+
+                    <dt>Tipo de cuenta</dt>
+                    <dd id="perfil-rol"></dd>
+                </dl>
+            </section>
+            <button type="button" id="boton-cerrar-sesion">Cerrar sesión</button>
+        </main>
+    </body>
+</html>

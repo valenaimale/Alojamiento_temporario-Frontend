@@ -7,12 +7,13 @@
         <meta name="description" content="Iniciá sesión en tu cuenta de G-ONE">
         <link rel="stylesheet" href="../../estilos/style.css">
         <link rel="stylesheet" href="../../estilos/inicio-sesion.css">
+        <script src="../../funcionalidades/inicio-sesion.js" defer></script>
     </head>
     <body>
         <header></header>
         <main>
             <h1>Iniciá sesión</h1>
-            <form action="iniciar-sesion.php" method="post">
+            <form id="form-inicio-sesion">
                 <label>Mail
                     <input type="email" name="mail" required>
                 </label>
@@ -22,6 +23,7 @@
                 <button type="submit">Iniciar sesión</button>
             </form>
             <p>¿Todavía no tenés cuenta? <a href="../registros/pre-registro.html">Registrate acá</a>.</p>
+            <p id="mensaje-error"></p>
         </main>
     </body>
 </html>
