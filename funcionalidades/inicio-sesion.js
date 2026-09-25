@@ -10,21 +10,8 @@ form.addEventListener('submit', async (evento) => { // "escucha" el form: cada v
         body: JSON.stringify(datos)                  // convierte el objeto datos a texto JSON (como json_encode en PHP)
     });
     const resultado = await respuesta.json();
-    if(respuesta.ok){
-        switch(resultado.usuario.rol){
-            case 'huesped':
-                window.location.href = '../homes/index-huesped.html';//navega a la página de resultado   
-                break;
-            case 'propietario':
-                window.location.href = '../homes/index-propietario.html';//navega a la página de resultado   
-                break;
-            case 'operador':
-                window.location.href = '../homes/index-operador.html';//navega a la página de resultado   
-                break;
-            case 'administrador':
-                window.location.href = '../homes/index-administrador.html';//navega a la página de resultado   
-                break;
-        }
+    if (respuesta.ok) {
+        irAlHome(resultado.usuario.rol);
     }
     else{
         const mensaje = document.getElementById('mensaje-error');                     // busca el <p id="mensaje"> de ESTA página (post-registro)

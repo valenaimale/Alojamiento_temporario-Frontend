@@ -8,12 +8,8 @@
     padding: 0;
     margin: 0 0 2rem;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: 1fr;
     gap: 1.25rem;
-}
-
-.lista-hospedajes .tarjeta {
-    flex-direction: column;
 }
 
 .lista-hospedajes img {
@@ -21,7 +17,11 @@
 }
 
 .lista-hospedajes .boton {
-    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.lista-hospedajes .boton:last-of-type {
+    margin-bottom: 0;
 }
 
 #titulo-liquidaciones + p {
@@ -31,4 +31,16 @@
     padding: 2.5rem 1rem;
     text-align: center;
     color: var(--color-text-muted);
+}
+
+@media (min-width: 640px) {
+    .lista-hospedajes {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+
+    .lista-hospedajes .boton {
+        width: auto;
+        margin-bottom: 0;
+        margin-right: 0.5rem;
+    }
 }

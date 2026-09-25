@@ -10,7 +10,8 @@ form.addEventListener('submit', async (evento) => { // "escucha" el form: cada v
     console.log(datos); // muestra en consola el objeto completo, que es lo que después se va a enviar al back
 
     const respuesta = await fetch('http://localhost:8000/registrarse', { // le pide al navegador que haga la petición al back; y con await espera a que llegue la respuesta
-        method: 'POST',                                   // método HTTP: la ruta del back es POST@/registrarse
+        method: 'POST',
+        credentials: 'include',                                   // método HTTP: la ruta del back es POST@/registrarse
         headers: { 'Content-Type': 'application/json' },  // le avisa al back que el cuerpo es JSON
         body: JSON.stringify(datos),                      // convierte el objeto datos a texto JSON (como json_encode en PHP)
     });

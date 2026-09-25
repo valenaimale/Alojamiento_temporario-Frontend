@@ -20,23 +20,13 @@ main > p {
     margin-bottom: 0.75rem;
 }
 
-.form-busqueda fieldset {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: flex-end;
-}
-
-.form-busqueda label {
-    flex: 1 1 160px;
-}
-
 .form-busqueda button {
-    flex: 0 0 auto;
+    width: 100%;
 }
 
 .grilla-unidades {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns: 1fr;
     gap: 1.25rem;
     margin-top: 2rem;
 }
@@ -48,4 +38,25 @@ main > p {
 .grilla-unidades data {
     font-size: 1.05rem;
     color: var(--color-primary-dark);
+}
+
+@media (min-width: 640px) {
+    .form-busqueda fieldset {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: flex-end;
+    }
+
+    .form-busqueda label {
+        flex: 1 1 160px;
+    }
+
+    .form-busqueda button {
+        width: auto;
+        flex: 0 0 auto;
+    }
+
+    .grilla-unidades {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    }
 }

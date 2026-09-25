@@ -22,3 +22,19 @@ async function obtenerSesion() {
     const resultado = await respuesta.json();
     return resultado.usuario;
 }
+function irAlHome(rol) {
+    switch (rol){
+        case 'huesped':
+            window.location.href= '../homes/index-huesped.html';
+            break;
+        case 'propietario':
+            window.location.href= '../homes/index-propietario.html';
+            break;
+        case 'administrador':
+            window.location.href= '../homes/index-administrador.html';
+            break;
+        case 'operador':
+            window.location.href= '../homes/index-operador.html';
+            break;            
+    }
+}
