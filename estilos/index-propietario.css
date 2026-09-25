@@ -1,0 +1,34 @@
+.badge-rol {
+    background-color: var(--color-primary-light);
+    color: var(--color-primary-dark);
+}
+
+.lista-hospedajes {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 2rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
+}
+
+.lista-hospedajes .tarjeta {
+    flex-direction: column;
+}
+
+.lista-hospedajes img {
+    aspect-ratio: 16 / 9;
+}
+
+.lista-hospedajes .boton {
+    margin-right: 0.5rem;
+}
+
+#titulo-liquidaciones + p {
+    background-color: var(--color-surface);
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 2.5rem 1rem;
+    text-align: center;
+    color: var(--color-text-muted);
+}

@@ -1,0 +1,13 @@
+main {
+    max-width: 380px;
+    margin-top: 3rem;
+}
+
+#mensaje-error {
+    color: var(--color-danger);
+    font-size: 0.9rem;
+}
+
+#mensaje-error:empty {
+    display: none;
+}

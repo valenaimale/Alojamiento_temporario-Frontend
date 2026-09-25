@@ -5,11 +5,11 @@ async function cerrarSesion() {
     });
 
     //una vez que el back cerró la sesión, llevamos al usuario al login
-    window.location.href = '../sesion/index-sin-sesion.html';
+    window.location.href = '../homes/index-sin-sesion.html';
 }
 async function obtenerSesion() {
     const respuesta = await fetch('http://localhost:8000/sesion', {
-        method: 'POST',
+        method: 'GET',
         credentials: 'include',
     });
 

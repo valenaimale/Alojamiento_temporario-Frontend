@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Administrador index</title>
+        <meta name="description" content="Gestioná la cartera de unidades, reservas y tu comisión">
+        <link rel="stylesheet" href="../../estilos/style.css">
+        <link rel="stylesheet" href="../../estilos/index-administrador.css">
+    </head>
+    <body>
+        <header>
+            <nav aria-label="Principal">
+                <ul>
+                    <li><a href="index-administrador.html" aria-current="page">Cartera de propiedades</a></li>
+                    <li><a href="reservas.html">Reservas</a></li>
+                    <li><a href="mi-comision.html">Mi comisión</a></li>
+                </ul>
+            </nav>
+            <p class="badge-rol">Administrador</p>
+            <a href="../perfil/perfil.html" class="enlace-perfil">Mi perfil</a>
+        </header>
+        <main>
+            <h1>Cartera de propiedades</h1>
+            <p>14 unidades a cargo · comisión promedio 17%</p>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">Unidad</th>
+                        <th scope="col">Propietario</th>
+                        <th scope="col">Estado</th>
+                        <th scope="col">Comisión</th>
+                        <th scope="col">Comisión del mes</th>
+                        <th scope="col"><span class="visualmente-oculto">Acciones</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Cabaña 1 — Las Grutas</td>
+                        <td>Marisa E.</td>
+                        <td><span class="estado estado-publicada">Publicada</span></td>
+                        <td>15%</td>
+                        <td><data value="10500">$10.500</data></td>
+                        <td><a href="detalle-unidad.html?id=1" class="boton">Ver detalle</a></td>
+                    </tr>
+                    <tr>
+                        <td>Depto 4B — Villa Gesell</td>
+                        <td>Roberto S.</td>
+                        <td><span class="estado estado-publicada">Publicada</span></td>
+                        <td>20%</td>
+                        <td><data value="8400">$8.400</data></td>
+                        <td><a href="detalle-unidad.html?id=2" class="boton">Ver detalle</a></td>
+                    </tr>
+                    <tr>
+                        <td>Casa Norte — Villa Gesell</td>
+                        <td>Laura P.</td>
+                        <td><span class="estado estado-no-publicada">No publicada</span></td>
+                        <td>18%</td>
+                        <td>—</td>
+                        <td><a href="detalle-unidad.html?id=3" class="boton">Ver detalle</a></td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="6"><a href="cartera-completa.html">+ 11 unidades más</a></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </main>
+    </body>
+</html>

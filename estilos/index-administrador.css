@@ -1,0 +1,14 @@
+.badge-rol {
+    background-color: var(--color-purple-light);
+    color: var(--color-purple);
+}
+
+main > p {
+    color: var(--color-text-muted);
+    margin-top: -0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+tfoot a {
+    font-weight: 600;
+}

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Alquiler temporario</title>
+        <meta name="description" content="Busca unidades disponibles por localidad y fechas">
+        <link rel="stylesheet" href="../../estilos/style.css">
+        <link rel="stylesheet" href="../../estilos/index-sin-sesion.css">
+    </head>
+    <body>
+        <header>
+            <a href="../sesion/inicio-sesion.html" class="boton boton-outline">Iniciar sesion</a>
+            <a href="../registros/pre-registro.html" class="boton boton-primario">Registrarme</a>
+        </header>
+        <main>
+            <h1>Alquiler temporario sin intermediarios</h1>
+            <p>Busca por unidades disponibles por localidad y horas</p>
+            <form action="search.php" method="get" class="form-busqueda">
+                <fieldset>
+                    <legend>Busqueda de disponibilidad</legend>
+                    <label for="localidad">Localidad
+                        <select id="localidad" name="localidad">
+                            <option value="las-grutas">Las Grutas</option>
+                            <option value="villa-gesel">Villa Gesell</option>
+                        </select>
+                    </label>
+                    <label for="check-in">Check-in
+                        <input type="date" id="check-in" name="check-in">
+                    </label>
+                    <label for="check-out">Check-out
+                        <input type="date" id="check-out" name="check-out">
+                    </label>
+                    <button type="submit" class="boton boton-primario">Buscar disponibilidad</button>
+                </fieldset>
+            </form>
+            <section class="grilla-unidades">
+                <h2>Unidades disponibles</h2>
+                    <article class="tarjeta">
+                        <a href="unidad-las-grutas.html">
+                            <img alt="Cabaña en las grutas" src="lasgrutas.png">
+                            <h3>Cabaña - Las Grutas</h3>
+                            <strong><data value="70000">$70.000</data></strong>
+                            <p>7 noches min</p>
+                        </a>
+                    </article>
+                    <article class="tarjeta">
+                        <a href="unidad-villa-gesel.html">
+                            <img alt="Cabaña en las grutas" src="villagesel.png">
+                            <h3>Departamento - Villa Gesell</h3>
+                            <strong><data value="100000">$100.000</data></strong>
+                            <p>10 noches min</p>
+                        </a>
+                    </article>
+            </section>
+        </main>
+    </body>
+</html>

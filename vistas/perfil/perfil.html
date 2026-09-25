@@ -5,8 +5,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Perfil usuario</title>
         <meta name="description" content="Mira la informacion de tu perfil">
-        <link rel="stylesheet" href="../../estilos/style.css ">
-        <link rel="stylesheet" href="../../estilos/index-huesped.css">
+        <link rel="stylesheet" href="../../estilos/style.css">
+        <link rel="stylesheet" href="../../estilos/perfil.css">
         <script src="../../funcionalidades/sesion.js" defer></script>
         <script src="../../funcionalidades/perfil.js" defer></script>
 
@@ -14,7 +14,7 @@
     <body>
         <main>
             <h1 id="saludo-nombre"></h1>
-            <section>
+            <section class="tarjeta">
                 <h2>Datos de tu cuenta</h2>
                 <dl>
                     <dt>Nombre</dt>
@@ -27,7 +27,7 @@
                     <dd id="perfil-rol"></dd>
                 </dl>
             </section>
-            <button type="button" id="boton-cerrar-sesion">Cerrar sesión</button>
+            <button type="button" id="boton-cerrar-sesion" class="boton boton-outline">Cerrar sesión</button>
         </main>
     </body>
 </html>

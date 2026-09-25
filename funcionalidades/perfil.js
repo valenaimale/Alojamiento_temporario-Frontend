@@ -3,7 +3,7 @@ async function cargarPerfil() {
     const usuario = await obtenerSesion();   // con paréntesis: ejecuta la función; con await: espera el resultado
 
     if (usuario === null) {                   // no hay sesión: esta página no se puede ver
-        window.location.href = '../sesion/index-sin-sesion.html';
+        window.location.href = '../homes/index-sin-sesion.html';
         return;
     }
 

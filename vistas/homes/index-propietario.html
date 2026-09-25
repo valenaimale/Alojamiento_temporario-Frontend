@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Propietario index</title>
+        <meta name="description" content="Gestioná tus hospedajes, reservas y liquidaciones">
+        <link rel="stylesheet" href="../../estilos/style.css">
+        <link rel="stylesheet" href="../../estilos/index-propietario.css">
+    </head>
+    <body>
+        <header>
+            <nav aria-label="Principal">
+                <ul>
+                    <li><a href="index-propietario.html" aria-current="page">Mis hospedajes</a></li>
+                    <li><a href="reservas.html">Reservas</a></li>
+                    <li><a href="liquidaciones.html">Liquidaciones</a></li>
+                    <li><a href="estadisticas.html">Estadísticas</a></li>
+                </ul>
+            </nav>
+            <p class="badge-rol">Propietario</p>
+            <a href="../perfil/perfil.html" class="enlace-perfil">Mi perfil <span aria-hidden="true">M</span></a>
+        </header>
+        <main>
+            <div class="encabezado-seccion">
+                <h1>Mis hospedajes</h1>
+                <a href="alta-hospedaje.html" class="boton boton-primario">+ Dar de alta hospedaje</a>
+            </div>
+
+            <ul class="lista-hospedajes">
+                <li>
+                    <article class="tarjeta">
+                        <img src="cabania1.png" alt="Cabaña 1 en Las Grutas">
+                        <header>
+                            <h2>Cabaña 1 — Las Grutas</h2>
+                            <p class="estado estado-publicada">Publicada</p>
+                        </header>
+                        <p>Admin.: Cacho F. · Comisión 15% · Depósito $15.000</p>
+                        <a href="configurar-hospedaje.html?id=1" class="boton">Configurar</a>
+                        <a href="reservas-hospedaje.html?id=1" class="boton">Ver reservas</a>
+                    </article>
+                </li>
+                <li>
+                    <article class="tarjeta">
+                        <img src="cabania2.png" alt="Cabaña 2 en Las Grutas">
+                        <header>
+                            <h2>Cabaña 2 — Las Grutas</h2>
+                            <p class="estado estado-no-publicada">No publicada</p>
+                        </header>
+                        <p>Autogestión · Falta cargar tarifa</p>
+                        <a href="configurar-hospedaje.html?id=2" class="boton">Completar configuración</a>
+                    </article>
+                </li>
+            </ul>
+
+            <section aria-labelledby="titulo-liquidaciones">
+                <h2 id="titulo-liquidaciones">Próximas liquidaciones</h2>
+                <p>Tabla o lista de liquidaciones pendientes.</p>
+            </section>
+        </main>
+    </body>
+</html>

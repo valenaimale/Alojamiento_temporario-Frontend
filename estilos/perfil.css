@@ -1,0 +1,23 @@
+main {
+    max-width: 480px;
+}
+
+.tarjeta {
+    margin-bottom: 1.5rem;
+}
+
+dl {
+    margin: 0;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.5rem 1rem;
+}
+
+dt {
+    color: var(--color-text-muted);
+    font-weight: 600;
+}
+
+dd {
+    margin: 0;
+}
