@@ -3,7 +3,14 @@ mensaje.textContent = sessionStorage.getItem('mensajeRegistro') ?? '';  // lee e
 sessionStorage.removeItem('mensajeRegistro'); //se elimina el item del session storage del navegador, no tiene sentido guardarlo una vez que se utilizo
 // "Volver al inicio": si el registro dejó una sesión abierta, va al home de su rol; si no, al home sin sesión
 async function volverAlInicio() {
-    const usuario = await obtenerSesion();
+    let usuario;
+    try {
+        usuario = await obtenerSesion();
+    } catch (error) {//el back no respondió: se avisa en el mismo mensaje de la página
+        console.error('No se pudo conectar con el back:', error);
+        mensaje.textContent = MENSAJE_SIN_CONEXION;
+        return;
+    }
     if (usuario === null) {
         window.location.href = '../homes/index-sin-sesion.html';
         return;

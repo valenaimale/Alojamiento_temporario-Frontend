@@ -9,14 +9,23 @@ form.addEventListener('submit', async (evento) => { // "escucha" el form: cada v
 
     console.log(datos); // muestra en consola el objeto completo, que es lo que después se va a enviar al back
 
-    const respuesta = await fetch('http://localhost:8000/registrarse', { // le pide al navegador que haga la petición al back; y con await espera a que llegue la respuesta
-        method: 'POST',
-        credentials: 'include',                                   // método HTTP: la ruta del back es POST@/registrarse
-        headers: { 'Content-Type': 'application/json' },  // le avisa al back que el cuerpo es JSON
-        body: JSON.stringify(datos),                      // convierte el objeto datos a texto JSON (como json_encode en PHP)
-    });
-
-    const resultado = await respuesta.json(); // lee el cuerpo de la respuesta y lo convierte de JSON a objeto
+    let respuesta;
+    let resultado;
+    try {
+        respuesta = await fetch('http://localhost:8000/registrarse', { // le pide al navegador que haga la petición al back; y con await espera a que llegue la respuesta
+            method: 'POST',
+            credentials: 'include',                                   // método HTTP: la ruta del back es POST@/registrarse
+            headers: { 'Content-Type': 'application/json' },  // le avisa al back que el cuerpo es JSON
+            body: JSON.stringify(datos),                      // convierte el objeto datos a texto JSON (como json_encode en PHP)
+        });
+        resultado = await respuesta.json(); // lee el cuerpo de la respuesta y lo convierte de JSON a objeto
+    } catch (error) {
+        //el back no respondió (apagado o sin internet): se avisa en el mismo formulario,
+        //así el usuario no pierde lo que escribió y puede volver a intentar
+        console.error('No se pudo conectar con el back:', error);
+        document.getElementById('mensaje-error').textContent = MENSAJE_SIN_CONEXION;
+        return;
+    }
     console.log(respuesta.status, resultado); // muestra el código HTTP y lo que respondió el back
 
     const texto = respuesta.ok ? resultado.ok : resultado.error; // si salió bien usa el mensaje de ok, si no el de error

@@ -1,6 +1,12 @@
 // Carga los datos del usuario logueado en la página. Si no hay sesión, manda al login.
 async function cargarPerfil() {
-    const usuario = await obtenerSesion();   // con paréntesis: ejecuta la función; con await: espera el resultado
+    let usuario;
+    try {
+        usuario = await obtenerSesion();   // con paréntesis: ejecuta la función; con await: espera el resultado
+    } catch (error) {                     // el back no respondió: se muestra el aviso de sesion.js
+        mostrarPantallaSinConexion(error);
+        return;
+    }
 
     if (usuario === null) {                   // no hay sesión: esta página no se puede ver
         window.location.href = '../homes/index-sin-sesion.html';
