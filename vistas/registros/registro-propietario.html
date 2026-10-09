@@ -9,6 +9,7 @@
         <link rel="stylesheet" href="../../estilos/registro.css">
         <script src="../../funcionalidades/sesion.js" defer></script>
         <script src="../../funcionalidades/registro.js" defer></script>
+        <script src="../../funcionalidades/registro-propietario.js" defer></script>
     </head>
     <body>
         <header></header>
@@ -18,11 +19,20 @@
                 <label>Nombre completo
                     <input type="text" name="nombre" required>
                 </label>
+                <label>DNI
+                    <input type="text" name="dni" inputmode="numeric" required>
+                </label>
                 <label>Mail
                     <input type="email" name="mail" required>
                 </label>
+                <label>Repetí tu mail
+                    <input type="email" name="mail_confirmacion" required autocomplete="off" onpaste="return false">
+                </label>
                 <label>Contraseña
                     <input type="password" name="contrasenia" required minlength="8">
+                </label>
+                <label>Repetí tu contraseña
+                    <input type="password" name="contrasenia_confirmacion" required minlength="8" autocomplete="off" onpaste="return false">
                 </label>
                 <label>¿Cobrás IVA?
                     <select id="cobra_iva" name="cobra_iva" required>
@@ -31,6 +41,18 @@
                         <option value="0">No, no cobro IVA</option>
                     </select>
                 </label>
+                <fieldset id="datos-fiscales" hidden>
+                    <legend>Datos fiscales</legend>
+                    <label>CUIT
+                        <input type="text" name="cuit" inputmode="numeric" placeholder="20-12345678-9">
+                    </label>
+                    <label>Razón social
+                        <input type="text" name="razon_social">
+                    </label>
+                    <label>Domicilio fiscal
+                        <input type="text" name="domicilio_fiscal">
+                    </label>
+                </fieldset>
                 <button type="submit" class="boton boton-primario">Registrarme</button>
             </form>
             <p id="mensaje-error"></p>
