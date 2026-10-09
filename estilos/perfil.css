@@ -33,3 +33,13 @@ dd {
         margin: 0;
     }
 }
+
+#enlace-hacerme-propietario {
+    margin-bottom: 0.75rem;
+}
+
+/* style.css le pone display a .tarjeta y a .boton, y este archivo a dl: eso le gana al atributo hidden.
+   Sin esta regla, lo que está oculto se vería igual */
+[hidden] {
+    display: none;
+}

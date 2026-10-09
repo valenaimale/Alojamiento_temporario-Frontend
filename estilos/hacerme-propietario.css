@@ -1,0 +1,27 @@
+main {
+    max-width: 420px;
+}
+
+main > p {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+}
+
+form {
+    margin-bottom: 1rem;
+}
+
+#mensaje-error {
+    color: var(--color-danger);
+    font-size: 0.9rem;
+}
+
+#mensaje-error:empty {
+    display: none;
+}
+
+/* style.css le pone display al fieldset, y eso le gana al atributo hidden:
+   sin esta regla los datos fiscales se verían siempre */
+[hidden] {
+    display: none;
+}
