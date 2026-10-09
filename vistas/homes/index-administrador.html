@@ -8,17 +8,12 @@
         <link rel="stylesheet" href="../../estilos/style.css">
         <link rel="stylesheet" href="../../estilos/index-administrador.css">
         <script src="../../funcionalidades/sesion.js" defer></script>
+        <script src="../../funcionalidades/menu.js" defer></script>
         <script src="../../funcionalidades/proteger-pagina.js" defer></script>
     </head>
     <body data-rol="administrador" hidden>
         <header>
-            <nav aria-label="Principal">
-                <ul>
-                    <li><a href="index-administrador.html" aria-current="page">Cartera de propiedades</a></li>
-                    <li><a href="reservas.html">Reservas</a></li>
-                    <li><a href="mi-comision.html">Mi comisión</a></li>
-                </ul>
-            </nav>
+            <nav id="menu" aria-label="Principal"></nav>
             <p class="badge-rol">Administrador</p>
             <a href="../perfil/perfil.html" class="enlace-perfil">Mi perfil</a>
         </header>

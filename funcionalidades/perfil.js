@@ -13,6 +13,7 @@ async function cargarPerfil() {
         return;
     }
 
+    armarMenu(usuario.rol);//función de menu.js
     document.getElementById('saludo-nombre').textContent = `Hola, ${usuario.nombre}`;   // comillas invertidas para meter la variable
     document.getElementById('perfil-nombre').textContent = usuario.nombre;
     document.getElementById('perfil-mail').textContent = usuario.mail;

@@ -47,11 +47,23 @@ async function obtenerSesion() {
     const resultado = await respuesta.json();
     return resultado.usuario;
 }
-// Protege una página que solo puede ver un rol (los homes de cada rol).
-// Sin sesión: manda al login. Con otro rol: manda al home de su propio rol.
-// El body arranca con el atributo hidden y solo se muestra si el rol coincide,
+// Qué páginas puede ver cada rol: para cada rol, los roles que "incluye".
+// El propietario es un huésped con funciones extra, así que también entra a las páginas de huésped.
+// Operador y administrador son cuentas aparte. Es la misma regla que usa el back (Autorizacion.php).
+const PERMISOS = {
+    huesped: ['huesped'],
+    propietario: ['propietario', 'huesped'],
+    operador: ['operador'],
+    administrador: ['administrador'],
+};
+function tienePermiso(rolUsuario, rolRequerido) {
+    return (PERMISOS[rolUsuario] ?? []).includes(rolRequerido);
+}
+// Protege una página según el rol que pide (el atributo data-rol del body).
+// Sin sesión: manda al login. Con sesión pero sin permiso: manda a "acceso denegado".
+// El body arranca con el atributo hidden y solo se muestra si el usuario puede verla,
 // así no se llega a ver el contenido antes de la redirección.
-async function protegerPagina(rolPermitido) {
+async function protegerPagina(rolRequerido) {
     let usuario;
     try {
         usuario = await obtenerSesion();
@@ -64,10 +76,11 @@ async function protegerPagina(rolPermitido) {
         window.location.href = '../sesion/inicio-sesion.html';
         return;
     }
-    if (usuario.rol !== rolPermitido) {
-        irAlHome(usuario.rol);
+    if (!tienePermiso(usuario.rol, rolRequerido)) {
+        window.location.href = '../errores/acceso-denegado.html';
         return;
     }
+    armarMenu(usuario.rol);//función de menu.js
     document.body.hidden = false;
 }
 // Para páginas de visitantes (home sin sesión): si ya hay sesión, lleva al home de su rol.
@@ -90,10 +103,8 @@ async function redirigirSiHaySesion() {
 function irAlHome(rol) {
     switch (rol){
         case 'huesped':
+        case 'propietario'://comparte el inicio con el huésped; "Mis propiedades" la tiene en el menú
             window.location.href= '../homes/index-huesped.html';
-            break;
-        case 'propietario':
-            window.location.href= '../homes/index-propietario.html';
             break;
         case 'administrador':
             window.location.href= '../homes/index-administrador.html';
