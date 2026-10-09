@@ -18,11 +18,20 @@
                 <label>Nombre completo
                     <input type="text" name="nombre" required>
                 </label>
+                <label>DNI
+                    <input type="text" name="dni" inputmode="numeric" required>
+                </label>
                 <label>Mail
                     <input type="email" name="mail" required>
                 </label>
+                <label>Repetí tu mail
+                    <input type="email" name="mail_confirmacion" required autocomplete="off" onpaste="return false">
+                </label>
                 <label>Contraseña
                     <input type="password" name="contrasenia" required minlength="8">
+                </label>
+                <label>Repetí tu contraseña
+                    <input type="password" name="contrasenia_confirmacion" required minlength="8" autocomplete="off" onpaste="return false">
                 </label>
                 <button type="submit" class="boton boton-primario">Registrarme</button>
             </form>

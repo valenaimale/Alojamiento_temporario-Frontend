@@ -2,12 +2,26 @@ const form = document.getElementById('form-registro'); // busca en el HTML el el
 form.addEventListener('submit', async (evento) => { // "escucha" el form: cada vez que se envíe (submit), ejecuta esta función. async permite usar await adentro. evento tiene la info del envío
     evento.preventDefault();   // frena el envío clásico del form (que iría a otra página y recargaría). A partir de acá lo manejamos nosotros
 
-    console.log('Se envió el formulario'); // muestra un texto en la consola del navegador (F12 → Console), para confirmar que se ejecutó
-    console.log('Rol:', form.dataset.rol);   // lee el atributo data-rol del form (dataset.rol = data-rol) y lo muestra en consola
+    const mensajeError = document.getElementById('mensaje-error'); // el <p id="mensaje-error"> que está debajo del formulario
+    mensajeError.textContent = ''; // borra el error del intento anterior
     const datos = Object.fromEntries(new FormData(form)); // FormData junta los campos del form según su atributo name; Object.fromEntries los pasa a un objeto {nombre: ..., mail: ..., contrasenia: ...}
     datos.rol = form.dataset.rol; // agrega al objeto la propiedad rol, con el valor de data-rol (el rol no es un campo del form)
 
-    console.log(datos); // muestra en consola el objeto completo, que es lo que después se va a enviar al back
+    // el mail y la contraseña se escriben dos veces: si no coinciden se avisa acá, sin enviar nada al back
+    if (datos.mail.trim().toLowerCase() !== datos.mail_confirmacion.trim().toLowerCase()) {
+        mensajeError.textContent = 'Los mails no coinciden';
+        return;
+    }
+    if (datos.contrasenia !== datos.contrasenia_confirmacion) {
+        mensajeError.textContent = 'Las contraseñas no coinciden';
+        return;
+    }
+    // los datos fiscales solo se mandan si cobra IVA (los otros roles no tienen esos campos)
+    if (datos.cobra_iva !== '1') {
+        delete datos.cuit;
+        delete datos.razon_social;
+        delete datos.domicilio_fiscal;
+    }
 
     let respuesta;
     let resultado;
@@ -23,13 +37,13 @@ form.addEventListener('submit', async (evento) => { // "escucha" el form: cada v
         //el back no respondió (apagado o sin internet): se avisa en el mismo formulario,
         //así el usuario no pierde lo que escribió y puede volver a intentar
         console.error('No se pudo conectar con el back:', error);
-        document.getElementById('mensaje-error').textContent = MENSAJE_SIN_CONEXION;
+        mensajeError.textContent = MENSAJE_SIN_CONEXION;
         return;
     }
-    console.log(respuesta.status, resultado); // muestra el código HTTP y lo que respondió el back
 
     const texto = respuesta.ok ? resultado.ok : resultado.error; // si salió bien usa el mensaje de ok, si no el de error
     sessionStorage.setItem('mensajeRegistro', texto);            // guarda el mensaje en el session storage del navegador para que lo lea la página siguiente.
+    sessionStorage.setItem('registroExitoso', respuesta.ok ? '1' : '0'); // para que la página siguiente sepa si tiene que avisar del mail de verificación
     //lo que se guarda en el session storage del navegador permanece ahi hasta cerrar la ventana.
     window.location.href = 'post-registro.html';                 // navega a la página de resultado   
 }); // cierra la función del submit y el addEventListener

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Hacerme propietario</title>
+        <meta name="description" content="Completá tus datos fiscales para publicar tus alojamientos">
+        <link rel="stylesheet" href="../../estilos/style.css">
+        <link rel="stylesheet" href="../../estilos/hacerme-propietario.css">
+        <script src="../../funcionalidades/sesion.js" defer></script>
+        <script src="../../funcionalidades/menu.js" defer></script>
+        <script src="../../funcionalidades/proteger-pagina.js" defer></script>
+        <script src="../../funcionalidades/registro-propietario.js" defer></script>
+        <script src="../../funcionalidades/hacerme-propietario.js" defer></script>
+    </head>
+    <body data-rol="huesped" hidden>
+        <header>
+            <nav id="menu" aria-label="Principal"></nav>
+        </header>
+        <main>
+            <h1>Publicá tus alojamientos</h1>
+            <p>Para publicar necesitamos tus datos fiscales. Tu cuenta sigue siendo la misma, con el mismo mail y el mismo DNI, y vas a poder seguir reservando como hasta ahora.</p>
+            <form id="form-hacerme-propietario">
+                <label>¿Cobrás IVA?
+                    <select id="cobra_iva" name="cobra_iva" required>
+                        <option value="">Seleccioná una opción</option>
+                        <option value="1">Sí, cobro IVA</option>
+                        <option value="0">No, no cobro IVA</option>
+                    </select>
+                </label>
+                <fieldset id="datos-fiscales" hidden>
+                    <legend>Datos fiscales</legend>
+                    <label>CUIT
+                        <input type="text" name="cuit" inputmode="numeric" placeholder="20-12345678-9">
+                    </label>
+                    <label>Razón social
+                        <input type="text" name="razon_social">
+                    </label>
+                    <label>Domicilio fiscal
+                        <input type="text" name="domicilio_fiscal">
+                    </label>
+                </fieldset>
+                <button type="submit" class="boton boton-primario">Quiero ser propietario</button>
+            </form>
+            <p id="mensaje-error"></p>
+            <p><a href="perfil.html">Volver a mi perfil</a></p>
+        </main>
+    </body>
+</html>
