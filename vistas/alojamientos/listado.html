@@ -3,8 +3,8 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Alquiler temporario</title>
-        <meta name="description" content="Busca unidades disponibles por localidad y fechas">
+        <title>Alojamientos</title>
+        <meta name="description" content="Listado de alojamientos disponibles">
         <link rel="stylesheet" href="../../estilos/style.css">
         <link rel="stylesheet" href="../../estilos/index-huesped.css">
         <script src="../../funcionalidades/sesion.js" defer></script>
@@ -18,11 +18,10 @@
             <a href="../perfil/perfil.html" class="enlace-perfil">Perfil</a>
         </header>
         <main>
-            <h1>Alquiler temporario sin intermediarios</h1>
-            <p>Busca por unidades disponibles por localidad y horas</p>
-            <form class="form-busqueda" action="../alojamientos/listado.html" method="get">
+            <h1>Alojamientos</h1>
+            <form class="form-busqueda">
                 <fieldset>
-                    <legend>Busqueda de disponibilidad</legend>
+                    <legend>Filtrar por localidad</legend>
                     <label for="localidad">Localidad
                         <select id="localidad" name="localidad">
                             <option value="">Todas</option>
@@ -30,17 +29,11 @@
                             <option value="Villa Gesell">Villa Gesell</option>
                         </select>
                     </label>
-                    <label for="check-in">Check-in
-                        <input type="date" id="check-in" name="check-in">
-                    </label>
-                    <label for="check-out">Check-out
-                        <input type="date" id="check-out" name="check-out">
-                    </label>
-                    <button type="submit" class="boton boton-primario">Buscar disponibilidad</button>
+                    <button type="submit" class="boton boton-primario">Filtrar</button>
                 </fieldset>
             </form>
             <section class="grilla-unidades" id="grilla-alojamientos">
-                <h2>Unidades disponibles</h2>
+                <h2>Resultados</h2>
             </section>
         </main>
     </body>

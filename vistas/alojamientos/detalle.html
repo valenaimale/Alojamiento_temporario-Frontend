@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Detalle del alojamiento</title>
+        <link rel="stylesheet" href="../../estilos/style.css">
+        <link rel="stylesheet" href="../../estilos/detalle-alojamiento.css">
+        <script src="../../funcionalidades/sesion.js" defer></script>
+        <script src="../../funcionalidades/menu.js" defer></script>
+        <script src="../../funcionalidades/proteger-pagina.js" defer></script>
+        <script src="../../funcionalidades/alojamientos.js" defer></script>
+    </head>
+    <body data-rol="huesped" hidden>
+        <header>
+            <nav id="menu" aria-label="Principal"></nav>
+            <a href="../perfil/perfil.html" class="enlace-perfil">Perfil</a>
+        </header>
+        <main>
+            <a href="listado.html">Volver al listado</a>
+            <!-- fotos, descripcion y reserva: llegan con la epica de alojamientos -->
+            <article class="tarjeta" id="detalle-alojamiento">
+                <h1 id="detalle-titulo"></h1>
+                <p id="detalle-localidad"></p>
+                <strong id="detalle-precio"></strong>
+                <p id="detalle-noches"></p>
+            </article>
+        </main>
+    </body>
+</html>
