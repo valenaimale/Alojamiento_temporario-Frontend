@@ -49,12 +49,13 @@ async function obtenerSesion() {
 }
 // Qué páginas puede ver cada rol: para cada rol, los roles que "incluye".
 // El propietario es un huésped con funciones extra, así que también entra a las páginas de huésped.
-// Operador y administrador son cuentas aparte. Es la misma regla que usa el back (Autorizacion.php).
+// Operador, administrador y backoffice son cuentas aparte. Es la misma regla que usa el back (Autorizacion.php).
 const PERMISOS = {
     huesped: ['huesped'],
     propietario: ['propietario', 'huesped'],
     operador: ['operador'],
     administrador: ['administrador'],
+    backoffice: ['backoffice'],
 };
 function tienePermiso(rolUsuario, rolRequerido) {
     return (PERMISOS[rolUsuario] ?? []).includes(rolRequerido);
@@ -111,6 +112,9 @@ function irAlHome(rol) {
             break;
         case 'operador':
             window.location.href= '../homes/index-operador.html';
-            break;            
+            break;
+        case 'backoffice'://el home lo crea la Tarea 2
+            window.location.href= '../homes/index-backoffice.html';
+            break;
     }
 }

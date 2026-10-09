@@ -10,6 +10,7 @@ const MENU = {
     propietario: [...ENLACES_HUESPED, { texto: 'Mis propiedades', url: '../homes/index-propietario.html' }],
     operador: [{ texto: 'Agenda', url: '../homes/index-operador.html' }],
     administrador: [{ texto: 'Inicio', url: '../homes/index-administrador.html' }],
+    backoffice: [{ texto: 'Usuarios', url: '../homes/index-backoffice.html' }],   // la página la crea la Tarea 2
 };
 
 // Arma el menú dentro del <nav id="menu"> de la página.
