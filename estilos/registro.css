@@ -16,3 +16,9 @@ main > p {
 #mensaje-error:empty {
     display: none;
 }
+
+/* style.css le pone display al fieldset, y eso le gana al atributo hidden:
+   sin esta regla los datos fiscales se verían siempre */
+[hidden] {
+    display: none;
+}
