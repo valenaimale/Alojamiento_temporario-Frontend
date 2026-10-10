@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Completar datos</title>
+        <meta name="description" content="Completá tu DNI para terminar de crear tu cuenta en G-ONE">
+        <link rel="stylesheet" href="../../estilos/style.css">
+        <link rel="stylesheet" href="../../estilos/completar-datos.css">
+        <script src="../../funcionalidades/sesion.js" defer></script>
+        <script src="../../funcionalidades/completar-datos.js" defer></script>
+    </head>
+    <!-- hidden: se muestra recién cuando se sabe que el usuario tiene sesión y le falta el DNI -->
+    <body hidden>
+        <header></header>
+        <main>
+            <h1>Completá tus datos</h1>
+            <p>Para terminar, necesitamos tu DNI. Es el mismo para todos tus roles en la plataforma.</p>
+            <form id="form-completar-datos">
+                <label>DNI
+                    <input type="text" name="dni" inputmode="numeric" required>
+                </label>
+                <button type="submit" class="boton boton-primario">Guardar</button>
+            </form>
+            <p id="mensaje-error"></p>
+        </main>
+    </body>
+</html>
