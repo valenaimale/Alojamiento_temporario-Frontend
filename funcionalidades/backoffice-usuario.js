@@ -32,7 +32,7 @@ async function cargarUsuario() {
     let respuesta;
     let resultado;
     try {
-        respuesta = await fetch('http://localhost:8000/backoffice/usuario?id=' + encodeURIComponent(idDelUsuario), {
+        respuesta = await fetch(URL_BACK + '/backoffice/usuario?id=' + encodeURIComponent(idDelUsuario), {
             method: 'GET',
             credentials: 'include',
         });
@@ -100,7 +100,7 @@ async function cambiarEstado(activo) {
     let respuesta;
     let resultado;
     try {
-        respuesta = await fetch('http://localhost:8000/backoffice/usuario/estado', {
+        respuesta = await fetch(URL_BACK + '/backoffice/usuario/estado', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',

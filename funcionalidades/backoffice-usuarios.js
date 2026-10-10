@@ -47,7 +47,7 @@ async function cargarUsuarios(pagina) {
     let respuesta;
     let resultado;
     try {
-        respuesta = await fetch('http://localhost:8000/backoffice/usuarios?' + parametros, {
+        respuesta = await fetch(URL_BACK + '/backoffice/usuarios?' + parametros, {
             method: 'GET',
             credentials: 'include',
         });

@@ -7,7 +7,7 @@ form.addEventListener('submit', async (evento) => { // "escucha" el form: cada v
     let respuesta;
     let resultado;
     try {
-        respuesta = await fetch('http://localhost:8000/iniciar-sesion', { // le pide al navegador que haga la petición al back; y con await espera a que llegue la respuesta
+        respuesta = await fetch(URL_BACK + '/iniciar-sesion', { // le pide al navegador que haga la petición al back; y con await espera a que llegue la respuesta
             method: 'POST',                                   // método HTTP: la ruta del back es POST@/iniciar-sesion
             headers: { 'Content-Type': 'application/json' },  // le avisa al back que el cuerpo es JSON
             credentials: 'include',

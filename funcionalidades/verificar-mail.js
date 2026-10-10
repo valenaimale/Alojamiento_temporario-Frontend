@@ -14,7 +14,7 @@ async function verificarMail() {
     let respuesta;
     let resultado;
     try {
-        respuesta = await fetch('http://localhost:8000/verificar-mail', {
+        respuesta = await fetch(URL_BACK + '/verificar-mail', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',   // si el usuario tiene la sesión abierta acá, el back se la refresca

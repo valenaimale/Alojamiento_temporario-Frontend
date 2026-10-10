@@ -29,7 +29,7 @@ formPropietario.addEventListener('submit', async (evento) => {
     let respuesta;
     let resultado;
     try {
-        respuesta = await fetch('http://localhost:8000/hacerse-propietario', {
+        respuesta = await fetch(URL_BACK + '/hacerse-propietario', {
             method: 'POST',
             credentials: 'include',   // para que viaje la cookie de sesión: el back saca de ahí quién es el usuario
             headers: { 'Content-Type': 'application/json' },

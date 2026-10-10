@@ -40,7 +40,7 @@ async function reenviarMail(boton, texto) {
     let respuesta;
     let resultado;
     try {
-        respuesta = await fetch('http://localhost:8000/reenviar-verificacion', {
+        respuesta = await fetch(URL_BACK + '/reenviar-verificacion', {
             method: 'POST',
             credentials: 'include',
         });
