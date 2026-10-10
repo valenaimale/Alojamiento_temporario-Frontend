@@ -3,6 +3,6 @@
     { "source": "/", "destination": "/vistas/homes/index-sin-sesion.html", "permanent": false }
   ],
   "rewrites": [
-    { "source": "/api/:ruta*", "destination": "https://REEMPLAZAR-CON-LA-URL-DE-RAILWAY.up.railway.app/:ruta*" }
+    { "source": "/api/:ruta*", "destination": "https://alojamientotemporario-backend-production.up.railway.app/:ruta*" }
   ]
 }
