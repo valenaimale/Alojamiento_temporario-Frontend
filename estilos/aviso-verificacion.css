@@ -1,1 +1,54 @@
-/* Estilos del aviso para verificar el mail. Los completa la Tarea 2. */
+/* Franja arriba de todo con el aviso para verificar el mail.
+   Es una advertencia, no un error: tono ámbar y no rojo.
+   Mobile: el texto y el botón apilados. Desktop: en una fila, con el botón a la derecha. */
+.aviso-verificacion {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    background-color: #fdf4d8;
+    border-bottom: 1px solid #e6cf85;
+    color: #6b4e0a;
+}
+
+.aviso-verificacion p {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.aviso-verificacion .boton {
+    width: 100%;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.85rem;
+    border-color: #e6cf85;
+    color: #6b4e0a;
+}
+
+.aviso-verificacion .boton:hover {
+    border-color: #6b4e0a;
+}
+
+.aviso-verificacion .boton:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+@media (min-width: 640px) {
+    .aviso-verificacion {
+        flex-direction: row;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.85rem 1.5rem;
+    }
+
+    .aviso-verificacion p {
+        margin-right: auto;
+    }
+
+    .aviso-verificacion .boton {
+        width: auto;
+        flex-shrink: 0;
+    }
+}
