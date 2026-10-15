@@ -29,7 +29,7 @@ form.addEventListener('submit', async (evento) => {
     let respuesta;
     let resultado;
     try {
-        respuesta = await fetch('http://localhost:8000/completar-datos', {
+        respuesta = await fetch(URL_BACK + '/completar-datos', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',                          // manda la cookie de sesión: el back toma el usuario de ahí

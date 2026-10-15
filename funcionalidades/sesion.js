@@ -4,6 +4,13 @@
 //   navegador ve front y back como el MISMO sitio y la cookie de sesión funciona sin problemas.
 const URL_BACK = ['localhost', '127.0.0.1'].includes(window.location.hostname) ? 'http://localhost:8000' : '/api';
 
+// Los enlaces que van directo al back (por ejemplo "Continuar con Google") no pueden usar URL_BACK desde el HTML.
+// Se escriben con href="#" y data-ruta-back="/ruta", y acá se completa su dirección real.
+// sesion.js se carga con defer, así que cuando esto corre los enlaces ya existen.
+document.querySelectorAll('a[data-ruta-back]').forEach((enlace) => {
+    enlace.href = URL_BACK + enlace.dataset.rutaBack;
+});
+
 // Mensaje para cuando el back no responde (servidor apagado o sin internet).
 // Es para el usuario, así que no dice nada técnico: el detalle queda en la consola (F12).
 const MENSAJE_SIN_CONEXION = 'No pudimos conectarnos. Revisá tu conexión a internet y volvé a intentar en unos minutos.';
