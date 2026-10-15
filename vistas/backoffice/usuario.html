@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Detalle de usuario</title>
+        <meta name="description" content="Mirá los datos de una cuenta y habilitala o deshabilitala">
+        <link rel="stylesheet" href="../../estilos/style.css">
+        <link rel="stylesheet" href="../../estilos/backoffice.css">
+        <script src="../../funcionalidades/sesion.js" defer></script>
+        <script src="../../funcionalidades/menu.js" defer></script>
+        <script src="../../funcionalidades/proteger-pagina.js" defer></script>
+        <script src="../../funcionalidades/backoffice-usuario.js" defer></script>
+    </head>
+    <body data-rol="backoffice" hidden>
+        <header>
+            <nav id="menu" aria-label="Principal"></nav>
+            <p class="badge-rol">Backoffice</p>
+            <a href="../perfil/perfil.html" class="enlace-perfil">Mi perfil</a>
+        </header>
+        <main>
+            <h1>Detalle de usuario</h1>
+            <p id="mensaje" role="status">Cargando los datos del usuario…</p>
+
+            <section class="tarjeta" id="datos-cuenta" hidden>
+                <h2>Datos de la cuenta</h2>
+                <dl>
+                    <dt>Nombre</dt>
+                    <dd id="dato-nombre"></dd>
+
+                    <dt>Mail</dt>
+                    <dd id="dato-mail"></dd>
+
+                    <dt>DNI</dt>
+                    <dd id="dato-dni"></dd>
+
+                    <dt>Tipo de cuenta</dt>
+                    <dd id="dato-rol"></dd>
+
+                    <dt>Mail verificado</dt>
+                    <dd id="dato-mail-verificado"></dd>
+
+                    <dt>Estado</dt>
+                    <dd id="dato-estado"></dd>
+
+                    <dt>Alta</dt>
+                    <dd id="dato-alta"></dd>
+                </dl>
+            </section>
+
+            <section class="tarjeta" id="datos-fiscales" hidden>
+                <h2>Datos fiscales</h2>
+                <dl>
+                    <dt>Cobra IVA</dt>
+                    <dd id="dato-cobra-iva"></dd>
+
+                    <dt>CUIT</dt>
+                    <dd id="dato-cuit"></dd>
+
+                    <dt>Razón social</dt>
+                    <dd id="dato-razon-social"></dd>
+
+                    <dt>Domicilio fiscal</dt>
+                    <dd id="dato-domicilio-fiscal"></dd>
+                </dl>
+            </section>
+
+            <div class="acciones-cuenta" id="acciones" hidden>
+                <button type="button" id="boton-cambiar-estado" class="boton boton-primario"></button>
+                <p id="mensaje-accion" role="status"></p>
+
+                <!-- confirmación dentro de la página, en lugar de un confirm() del navegador -->
+                <div class="confirmacion" id="confirmacion" hidden>
+                    <p>¿Seguro?</p>
+                    <button type="button" id="boton-confirmar" class="boton boton-primario">Sí, deshabilitar</button>
+                    <button type="button" id="boton-cancelar" class="boton boton-outline">Cancelar</button>
+                </div>
+            </div>
+
+            <p><a href="../homes/index-backoffice.html">Volver al listado</a></p>
+        </main>
+    </body>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Backoffice index</title>
+        <meta name="description" content="Administrá las cuentas de usuario de la plataforma">
+        <link rel="stylesheet" href="../../estilos/style.css">
+        <link rel="stylesheet" href="../../estilos/backoffice.css">
+        <script src="../../funcionalidades/sesion.js" defer></script>
+        <script src="../../funcionalidades/menu.js" defer></script>
+        <script src="../../funcionalidades/proteger-pagina.js" defer></script>
+        <script src="../../funcionalidades/backoffice-usuarios.js" defer></script>
+    </head>
+    <body data-rol="backoffice" hidden>
+        <header>
+            <nav id="menu" aria-label="Principal"></nav>
+            <p class="badge-rol">Backoffice</p>
+            <a href="../perfil/perfil.html" class="enlace-perfil">Mi perfil</a>
+            <button type="button" id="boton-cerrar-sesion" class="boton boton-outline">Cerrar sesión</button>
+        </header>
+        <main>
+            <h1>Usuarios de la plataforma</h1>
+
+            <form id="form-filtros" class="filtros">
+                <label>Buscar por nombre, mail o DNI
+                    <input type="search" name="buscar" id="filtro-buscar">
+                </label>
+                <label>Tipo de cuenta
+                    <select name="rol" id="filtro-rol">
+                        <option value="">Todos</option>
+                        <option value="huesped">Huésped</option>
+                        <option value="propietario">Propietario</option>
+                        <option value="administrador">Administrador de hospedajes</option>
+                        <option value="operador">Operador de estadía</option>
+                        <option value="backoffice">Backoffice</option>
+                    </select>
+                </label>
+                <label>Estado
+                    <select name="activo" id="filtro-activo">
+                        <option value="">Todos</option>
+                        <option value="1">Activos</option>
+                        <option value="0">Deshabilitados</option>
+                    </select>
+                </label>
+                <button type="submit" class="boton boton-primario">Buscar</button>
+            </form>
+
+            <p id="mensaje-listado" role="status">Cargando usuarios…</p>
+
+            <div class="tabla-scroll">
+                <table id="tabla-usuarios" hidden>
+                    <thead>
+                        <tr>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Mail</th>
+                            <th scope="col">DNI</th>
+                            <th scope="col">Rol</th>
+                            <th scope="col">Mail verificado</th>
+                            <th scope="col">Estado</th>
+                            <th scope="col">Alta</th>
+                            <th scope="col"><span class="visualmente-oculto">Acciones</span></th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpo-usuarios"></tbody>
+                </table>
+            </div>
+
+            <nav class="paginacion" id="paginacion" aria-label="Paginación" hidden>
+                <button type="button" id="boton-anterior" class="boton">Anterior</button>
+                <p id="texto-paginacion"></p>
+                <button type="button" id="boton-siguiente" class="boton">Siguiente</button>
+            </nav>
+        </main>
+    </body>
+</html>

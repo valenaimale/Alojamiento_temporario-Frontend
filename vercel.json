@@ -1,0 +1,8 @@
+{
+  "redirects": [
+    { "source": "/", "destination": "/vistas/homes/index-sin-sesion.html", "permanent": false }
+  ],
+  "rewrites": [
+    { "source": "/api/:ruta*", "destination": "https://alojamientotemporario-backend-production.up.railway.app/:ruta*" }
+  ]
+}

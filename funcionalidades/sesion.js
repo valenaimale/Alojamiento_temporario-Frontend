@@ -1,3 +1,9 @@
+// Dirección del backend, en un solo lugar (todas las páginas cargan sesion.js antes que su propio JS).
+// - En la máquina de cada uno (Live Server en localhost): el php -S local, como siempre.
+// - Desplegado en Vercel: '/api'. vercel.json reenvía esas peticiones al backend en Railway, así el
+//   navegador ve front y back como el MISMO sitio y la cookie de sesión funciona sin problemas.
+const URL_BACK = ['localhost', '127.0.0.1'].includes(window.location.hostname) ? 'http://localhost:8000' : '/api';
+
 // Mensaje para cuando el back no responde (servidor apagado o sin internet).
 // Es para el usuario, así que no dice nada técnico: el detalle queda en la consola (F12).
 const MENSAJE_SIN_CONEXION = 'No pudimos conectarnos. Revisá tu conexión a internet y volvé a intentar en unos minutos.';
@@ -17,7 +23,7 @@ function mostrarPantallaSinConexion(error) {
 }
 async function cerrarSesion() {
     try {
-        await fetch('http://localhost:8000/cerrar-sesion', {
+        await fetch(URL_BACK + '/cerrar-sesion', {
             method: 'POST',
             credentials: 'include',
         });
@@ -33,7 +39,7 @@ async function cerrarSesion() {
 //Si el back no responde, fetch lanza un error: lo atrapa quien llama a esta función
 //(así se distingue "no hay sesión" de "no hay conexión").
 async function obtenerSesion() {
-    const respuesta = await fetch('http://localhost:8000/sesion', {
+    const respuesta = await fetch(URL_BACK + '/sesion', {
         method: 'GET',
         credentials: 'include',
     });

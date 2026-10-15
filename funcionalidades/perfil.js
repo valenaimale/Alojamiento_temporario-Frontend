@@ -39,7 +39,7 @@ async function cargarDatosFiscales() {
     let respuesta;
     let resultado;
     try {
-        respuesta = await fetch('http://localhost:8000/datos-fiscales', {
+        respuesta = await fetch(URL_BACK + '/datos-fiscales', {
             method: 'GET',
             credentials: 'include',
         });
