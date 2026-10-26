@@ -16,7 +16,8 @@ form.addEventListener('submit', async (evento) => { // "escucha" el form: cada v
         mensajeError.textContent = 'Las contraseñas no coinciden';
         return;
     }
-    // los datos fiscales solo se mandan si cobra IVA (los otros roles no tienen esos campos)
+    // los datos fiscales solo se mandan si cobra IVA (huésped y operador no tienen esos campos;
+    // propietario y administrador además mandan siempre su cuenta bancaria: cbu, alias y titular_cuenta)
     if (datos.cobra_iva !== '1') {
         delete datos.cuit;
         delete datos.razon_social;
@@ -41,9 +42,15 @@ form.addEventListener('submit', async (evento) => { // "escucha" el form: cada v
         return;
     }
 
-    const texto = respuesta.ok ? resultado.ok : resultado.error; // si salió bien usa el mensaje de ok, si no el de error
-    sessionStorage.setItem('mensajeRegistro', texto);            // guarda el mensaje en el session storage del navegador para que lo lea la página siguiente.
-    sessionStorage.setItem('registroExitoso', respuesta.ok ? '1' : '0'); // para que la página siguiente sepa si tiene que avisar del mail de verificación
+    // si el back rechazó algún dato, el error se muestra acá mismo: el usuario corrige ese campo
+    // sin perder todo lo que ya escribió (y el <p role="alert"> hace que el lector de pantalla lo lea en voz alta)
+    if (!respuesta.ok) {
+        mensajeError.textContent = resultado.error;
+        return;
+    }
+
+    sessionStorage.setItem('mensajeRegistro', resultado.ok);     // guarda el mensaje en el session storage del navegador para que lo lea la página siguiente.
+    sessionStorage.setItem('registroExitoso', '1');              // para que la página siguiente avise del mail de verificación
     //lo que se guarda en el session storage del navegador permanece ahi hasta cerrar la ventana.
     window.location.href = 'post-registro.html';                 // navega a la página de resultado   
 }); // cierra la función del submit y el addEventListener

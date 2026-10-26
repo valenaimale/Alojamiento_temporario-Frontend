@@ -17,6 +17,31 @@ main > p {
     display: none;
 }
 
+/* style.css pone cada label en columna (texto arriba, campo abajo):
+   en los radios, el círculo va al lado de su texto */
+label:has(> input[type="radio"]) {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 400;
+    color: var(--color-text);
+}
+
+input[type="radio"] {
+    width: auto;
+}
+
+/* el texto de ayuda va pegado al campo que explica (el fieldset deja 1rem entre cada elemento) */
+.ayuda {
+    margin: -0.6rem 0 0;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+}
+
+legend + .ayuda {
+    margin-top: 0;
+}
+
 /* style.css le pone display al fieldset, y eso le gana al atributo hidden:
    sin esta regla los datos fiscales se verían siempre */
 [hidden] {

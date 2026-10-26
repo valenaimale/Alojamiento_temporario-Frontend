@@ -29,12 +29,12 @@ async function cargarPerfil() {
     if (usuario.rol === 'huesped') {   // un huésped se puede hacer propietario sin crear otra cuenta
         document.getElementById('enlace-hacerme-propietario').hidden = false;
     }
-    if (usuario.rol === 'propietario') {
+    if (usuario.rol === 'propietario' || usuario.rol === 'administrador') {   // los dos tienen datos fiscales y cuenta bancaria
         cargarDatosFiscales();
     }
 }
 
-// Pide al back los datos fiscales del propietario y los muestra en la sección "Datos fiscales".
+// Pide al back los datos fiscales y bancarios (propietario o administrador) y los muestra en sus dos secciones.
 async function cargarDatosFiscales() {
     let respuesta;
     let resultado;
@@ -53,6 +53,13 @@ async function cargarDatosFiscales() {
     }
 
     const fiscales = resultado.datos_fiscales;
+
+    // la cuenta bancaria se carga siempre (va primero porque el bloque de abajo puede cortar con return)
+    document.getElementById('banco-cbu').textContent = fiscales.cbu;
+    document.getElementById('banco-alias').textContent = fiscales.alias ?? 'Sin alias';   // el alias es opcional
+    document.getElementById('banco-titular').textContent = fiscales.titular_cuenta;
+    document.getElementById('seccion-cuenta-bancaria').hidden = false;
+
     document.getElementById('seccion-datos-fiscales').hidden = false;
     if (!fiscales.cobra_iva) {
         document.getElementById('fiscal-sin-iva').hidden = false;
