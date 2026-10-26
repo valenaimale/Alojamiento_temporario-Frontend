@@ -73,12 +73,15 @@ function mostrarUsuario(usuario) {
     document.getElementById('dato-alta').textContent = formatearFechaDetalle(usuario.fecha_alta);
     seccionCuenta.hidden = false;
 
-    // solo los propietarios tienen fila en propietarios: para el resto el back manda null
+    // solo propietarios y administradores tienen datos fiscales y cuenta bancaria: para el resto el back manda null
     if (usuario.datos_fiscales !== null) {
         document.getElementById('dato-cobra-iva').textContent = usuario.datos_fiscales.cobra_iva ? 'Sí' : 'No';
         document.getElementById('dato-cuit').textContent = usuario.datos_fiscales.cuit ?? '—';
         document.getElementById('dato-razon-social').textContent = usuario.datos_fiscales.razon_social ?? '—';
         document.getElementById('dato-domicilio-fiscal').textContent = usuario.datos_fiscales.domicilio_fiscal ?? '—';
+        document.getElementById('dato-cbu').textContent = usuario.datos_fiscales.cbu;
+        document.getElementById('dato-alias').textContent = usuario.datos_fiscales.alias ?? '—';
+        document.getElementById('dato-titular-cuenta').textContent = usuario.datos_fiscales.titular_cuenta;
         seccionFiscal.hidden = false;
     } else {
         seccionFiscal.hidden = true;

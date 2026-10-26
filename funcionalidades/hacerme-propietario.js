@@ -19,8 +19,8 @@ formPropietario.addEventListener('submit', async (evento) => {
 
     const mensajeError = document.getElementById('mensaje-error');
     mensajeError.textContent = '';   // borra el error del intento anterior
-    const datos = Object.fromEntries(new FormData(formPropietario));   // {cobra_iva, cuit, razon_social, domicilio_fiscal}
-    if (datos.cobra_iva !== '1') {   // si no cobra IVA, solo se manda cobra_iva
+    const datos = Object.fromEntries(new FormData(formPropietario));   // {cobra_iva, cuit, razon_social, domicilio_fiscal, cbu, alias, titular_cuenta}
+    if (datos.cobra_iva !== '1') {   // si no cobra IVA no se mandan los datos fiscales (la cuenta bancaria va siempre)
         delete datos.cuit;
         delete datos.razon_social;
         delete datos.domicilio_fiscal;

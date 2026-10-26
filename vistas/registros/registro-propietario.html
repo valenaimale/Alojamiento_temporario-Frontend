@@ -9,7 +9,7 @@
         <link rel="stylesheet" href="../../estilos/registro.css">
         <script src="../../funcionalidades/sesion.js" defer></script>
         <script src="../../funcionalidades/registro.js" defer></script>
-        <script src="../../funcionalidades/registro-propietario.js" defer></script>
+        <script src="../../funcionalidades/datos-fiscales.js" defer></script>
     </head>
     <body>
         <header></header>
@@ -34,28 +34,42 @@
                 <label>Repetí tu contraseña
                     <input type="password" name="contrasenia_confirmacion" required minlength="8" autocomplete="off" onpaste="return false">
                 </label>
-                <label>¿Cobrás IVA?
-                    <select id="cobra_iva" name="cobra_iva" required>
-                        <option value="">Seleccioná una opción</option>
-                        <option value="1">Sí, cobro IVA</option>
-                        <option value="0">No, no cobro IVA</option>
-                    </select>
-                </label>
+                <fieldset>
+                    <legend>¿Cobrás IVA?</legend>
+                    <label><input type="radio" name="cobra_iva" value="1" required> Sí, cobro IVA</label>
+                    <label><input type="radio" name="cobra_iva" value="0"> No, no cobro IVA</label>
+                </fieldset>
                 <fieldset id="datos-fiscales" hidden>
                     <legend>Datos fiscales</legend>
                     <label>CUIT
-                        <input type="text" name="cuit" inputmode="numeric" placeholder="20-12345678-9">
+                        <input type="text" name="cuit" inputmode="numeric" autocomplete="off" aria-describedby="ayuda-cuit">
                     </label>
+                    <p class="ayuda" id="ayuda-cuit">11 números, con o sin guiones. Por ejemplo: 20-12345678-9.</p>
                     <label>Razón social
-                        <input type="text" name="razon_social">
+                        <input type="text" name="razon_social" maxlength="150" autocomplete="organization">
                     </label>
                     <label>Domicilio fiscal
-                        <input type="text" name="domicilio_fiscal">
+                        <input type="text" name="domicilio_fiscal" maxlength="200" autocomplete="off">
+                    </label>
+                </fieldset>
+                <fieldset aria-describedby="ayuda-cuenta-bancaria">
+                    <legend>Cuenta bancaria</legend>
+                    <p class="ayuda" id="ayuda-cuenta-bancaria">Es la cuenta donde vas a cobrar tus reservas.</p>
+                    <label>CBU
+                        <input type="text" name="cbu" inputmode="numeric" autocomplete="off" required aria-describedby="ayuda-cbu">
+                    </label>
+                    <p class="ayuda" id="ayuda-cbu">22 números. Lo encontrás en la app o el homebanking de tu banco.</p>
+                    <label>Alias (opcional)
+                        <input type="text" name="alias" maxlength="20" autocomplete="off" aria-describedby="ayuda-alias">
+                    </label>
+                    <p class="ayuda" id="ayuda-alias">De 6 a 20 caracteres: letras sin tilde, números, puntos o guiones.</p>
+                    <label>Titular de la cuenta
+                        <input type="text" name="titular_cuenta" maxlength="150" autocomplete="off" required>
                     </label>
                 </fieldset>
                 <button type="submit" class="boton boton-primario">Registrarme</button>
             </form>
-            <p id="mensaje-error"></p>
+            <p id="mensaje-error" role="alert"></p>
             <p>¿Ya tenés una cuenta? <a href="../sesion/inicio-sesion.html">Iniciá sesión acá</a>.</p>
         </main>
     </body>
