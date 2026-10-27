@@ -120,6 +120,7 @@ function dibujarFilas(usuarios) {
     }
 }
 
+// Agrega a la fila una celda con ese texto (con textContent: el texto nunca se interpreta como HTML)
 function agregarCelda(fila, texto) {
     const celda = document.createElement('td');
     celda.textContent = texto;
@@ -132,6 +133,7 @@ function formatearFecha(fecha) {
     return fecha.slice(0, 10).split('-').reverse().join('/');
 }
 
+// Muestra en qué página está y habilita o deshabilita "Anterior" y "Siguiente"
 function dibujarPaginacion(total) {
     textoPaginacion.textContent = `Página ${paginaActual} de ${totalDePaginas} · ${total} usuarios`;
     botonAnterior.disabled = paginaActual <= 1;

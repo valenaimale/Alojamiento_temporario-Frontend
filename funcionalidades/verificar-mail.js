@@ -3,6 +3,7 @@
 // el usuario puede abrir el mail en otro navegador o en el celular.
 const mensaje = document.getElementById('mensaje');
 
+// Manda al backend el token del enlace y muestra si el mail quedó verificado
 async function verificarMail() {
     const token = new URLSearchParams(window.location.search).get('token');
 

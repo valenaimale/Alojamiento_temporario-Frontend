@@ -1,3 +1,5 @@
+// Envía al backend cualquiera de los cuatro formularios de registro (el rol sale del atributo data-rol del formulario).
+// Si el backend rechaza algún dato, muestra el error en el mismo formulario; si sale bien, va a post-registro.html.
 const form = document.getElementById('form-registro'); // busca en el HTML el elemento con id="form-registro" y lo guarda en la constante form
 form.addEventListener('submit', async (evento) => { // "escucha" el form: cada vez que se envíe (submit), ejecuta esta función. async permite usar await adentro. evento tiene la info del envío
     evento.preventDefault();   // frena el envío clásico del form (que iría a otra página y recargaría). A partir de acá lo manejamos nosotros

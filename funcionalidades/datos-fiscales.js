@@ -6,6 +6,7 @@ const radiosCobraIva = document.querySelectorAll('input[name="cobra_iva"]');
 const datosFiscales = document.getElementById('datos-fiscales');
 const camposFiscales = datosFiscales.querySelectorAll('input');
 
+// Muestra u oculta los datos fiscales según la respuesta a "¿Cobrás IVA?"
 function actualizarDatosFiscales() {
     const cobraIva = document.querySelector('input[name="cobra_iva"]:checked')?.value === '1'; // ?. por si todavía no eligió ninguno
     datosFiscales.hidden = !cobraIva;

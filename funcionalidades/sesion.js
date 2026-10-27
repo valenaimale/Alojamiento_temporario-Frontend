@@ -28,6 +28,7 @@ function mostrarPantallaSinConexion(error) {
     document.querySelector('button').addEventListener('click', () => window.location.reload());
     document.body.hidden = false;
 }
+// Cierra la sesión en el backend y vuelve al inicio sin sesión
 async function cerrarSesion() {
     try {
         await fetch(URL_BACK + '/cerrar-sesion', {
@@ -70,6 +71,7 @@ const PERMISOS = {
     administrador: ['administrador'],
     backoffice: ['backoffice'],
 };
+// true si un usuario con ese rol puede ver lo que pide ese rol (la misma tabla que el backend)
 function tienePermiso(rolUsuario, rolRequerido) {
     return (PERMISOS[rolUsuario] ?? []).includes(rolRequerido);
 }
@@ -114,6 +116,7 @@ async function redirigirSiHaySesion() {
     }
     irAlHome(usuario.rol);
 }
+// Lleva al usuario al inicio que corresponde a su rol
 function irAlHome(rol) {
     switch (rol){
         case 'huesped':
