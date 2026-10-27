@@ -1,3 +1,4 @@
+// Página que se ve después de registrarse: muestra el resultado y, si salió bien, el aviso del mail de verificación.
 const mensaje = document.getElementById('mensaje');                     // busca el <p id="mensaje"> de ESTA página (post-registro)
 mensaje.textContent = sessionStorage.getItem('mensajeRegistro') ?? '';  // lee el mensaje que guardó registro.js y lo muestra
 sessionStorage.removeItem('mensajeRegistro'); //se elimina el item del session storage del navegador, no tiene sentido guardarlo una vez que se utilizo

@@ -23,6 +23,7 @@ const confirmacion = document.getElementById('confirmacion');
 
 let usuarioMostrado = null;
 
+// Pide al backend el usuario del ?id= de la URL y lo muestra
 async function cargarUsuario() {
     if (idDelUsuario === null) {   // alguien entró a la página sin el ?id=
         mensaje.textContent = 'Usuario inválido';

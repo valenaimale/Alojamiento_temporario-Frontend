@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<!-- Página central de una unidad (?id=): su nombre, su estado, qué le falta para publicarse y el acceso a cada sección.
+     La ven el propietario y el administrador asignado; al administrador se le ocultan las secciones que son solo del propietario. -->
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Configurar unidad</title>
+        <meta name="description" content="Configurá los datos, las condiciones y la publicación de tu unidad">
+        <link rel="stylesheet" href="../../estilos/style.css">
+        <link rel="stylesheet" href="../../estilos/configurar-unidad.css">
+        <script src="../../funcionalidades/sesion.js" defer></script>
+        <script src="../../funcionalidades/menu.js" defer></script>
+        <script src="../../funcionalidades/unidades-comun.js" defer></script>
+        <script src="../../funcionalidades/configurar-unidad.js" defer></script>
+    </head>
+    <body hidden>
+        <header>
+            <nav id="menu" aria-label="Principal"></nav>
+            <a href="../perfil/perfil.html" class="enlace-perfil">Mi perfil</a>
+        </header>
+        <main>
+            <p><a href="../homes/index-propietario.html" id="enlace-volver">Volver a mis unidades</a></p>
+
+            <p id="mensaje-error" role="alert"></p>
+
+            <article id="unidad" hidden>
+                <h1 id="nombre-unidad"></h1>
+                <p id="ubicacion-unidad"></p>
+
+                <section aria-labelledby="titulo-estado" class="tarjeta">
+                    <h2 id="titulo-estado">Estado</h2>
+                    <p><strong id="estado-unidad"></strong></p>
+                    <p id="no-disponible" hidden></p>
+                    <section id="faltantes" aria-labelledby="titulo-faltantes" hidden>
+                        <h3 id="titulo-faltantes">Para publicarla te falta</h3>
+                        <ul id="lista-faltantes"></ul>
+                    </section>
+                </section>
+
+                <nav aria-labelledby="titulo-secciones">
+                    <h2 id="titulo-secciones">Configurá tu unidad</h2>
+                    <ul class="secciones">
+                        <li>
+                            <a href="datos-unidad.html" data-seccion>Datos, fotos y depósito</a>
+                            <p>Ubicación, capacidad, características, fotos y el depósito de garantía.</p>
+                        </li>
+                        <li data-solo-propietario>
+                            <a href="gestion-unidad.html" data-seccion>Administrador y operador</a>
+                            <p>Quién gestiona la unidad y su comisión, y quién recibe a los huéspedes.</p>
+                        </li>
+                        <li data-solo-propietario>
+                            <a href="temporadas-unidad.html" data-seccion>Temporadas y precios</a>
+                            <p>Las temporadas con su mínimo de noches, y el precio de cada noche.</p>
+                        </li>
+                        <li data-solo-propietario>
+                            <a href="politica-unidad.html" data-seccion>Política de cancelación y seña</a>
+                            <p>Cuánto se retiene si el huésped cancela, y el porcentaje de seña.</p>
+                        </li>
+                        <li>
+                            <a href="disponibilidad-unidad.html" data-seccion>Publicación y fechas bloqueadas</a>
+                            <p>Publicar o pausar la unidad, y bloquear las fechas reservadas por otros medios.</p>
+                        </li>
+                    </ul>
+                </nav>
+            </article>
+        </main>
+    </body>
+</html>
