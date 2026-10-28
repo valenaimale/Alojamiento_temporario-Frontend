@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<!-- Las temporadas y los precios por noche de una unidad (?id=), US2.7 y US2.9. Solo los ve y los cambia el propietario.
+     Arriba, las temporadas (con su mínimo de noches); abajo, un calendario por mes con el precio de cada noche
+     y el formulario para cargar el precio de un rango de fechas. -->
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Temporadas y precios</title>
+        <meta name="description" content="Definí las temporadas de tu unidad y el precio de cada noche">
+        <link rel="stylesheet" href="../../estilos/style.css">
+        <link rel="stylesheet" href="../../estilos/temporadas-unidad.css">
+        <script src="../../funcionalidades/sesion.js" defer></script>
+        <script src="../../funcionalidades/menu.js" defer></script>
+        <script src="../../funcionalidades/unidades-comun.js" defer></script>
+        <script src="../../funcionalidades/temporadas-unidad.js" defer></script>
+    </head>
+    <body hidden>
+        <header>
+            <nav id="menu" aria-label="Principal"></nav>
+            <a href="../perfil/perfil.html" class="enlace-perfil">Mi perfil</a>
+        </header>
+        <main>
+            <p><a href="configurar-unidad.html" id="enlace-volver">Volver a la unidad</a></p>
+
+            <p id="mensaje-error" role="alert"></p>
+
+            <article id="contenido" hidden>
+                <h1>Temporadas y precios</h1>
+                <p id="nombre-unidad" class="subtitulo"></p>
+
+                <section aria-labelledby="titulo-temporadas" class="seccion">
+                    <h2 id="titulo-temporadas" tabindex="-1">Temporadas</h2>
+                    <p class="ayuda">Son opcionales: sirven para exigir un mínimo de noches en ciertas fechas. Las noches que no están en ninguna temporada tienen un mínimo de 1 noche. Dos temporadas no pueden compartir ninguna noche.</p>
+
+                    <p id="sin-temporadas" hidden>Todavía no definiste temporadas.</p>
+                    <ul id="lista-temporadas" class="lista-temporadas"></ul>
+
+                    <form id="form-temporada" class="tarjeta">
+                        <fieldset>
+                            <legend id="titulo-form-temporada">Nueva temporada</legend>
+                            <label>Temporada
+                                <select name="nombre" required>
+                                    <option value="">Elegí una</option>
+                                    <option value="alta">Alta</option>
+                                    <option value="media">Media</option>
+                                    <option value="baja">Baja</option>
+                                </select>
+                            </label>
+                            <label>Primera noche
+                                <input type="date" name="fecha_inicio" required>
+                            </label>
+                            <label>Última noche
+                                <input type="date" name="fecha_fin" required aria-describedby="ayuda-fecha-fin">
+                            </label>
+                            <p class="ayuda" id="ayuda-fecha-fin">La última noche también es parte de la temporada.</p>
+                            <label>Mínimo de noches
+                                <input type="number" name="minimo_noches" min="1" max="60" step="1" inputmode="numeric" required aria-describedby="ayuda-minimo">
+                            </label>
+                            <p class="ayuda" id="ayuda-minimo">De 1 a 60. Si una reserva toca dos temporadas, se exige el mayor de los dos mínimos.</p>
+                        </fieldset>
+                        <p class="mensaje-error" id="error-temporada" role="alert"></p>
+                        <p class="mensaje-ok" id="ok-temporada" role="status"></p>
+                        <button type="submit" class="boton boton-primario" id="guardar-temporada">Crear la temporada</button>
+                        <button type="button" class="boton boton-outline" id="cancelar-edicion" hidden>Cancelar la edición</button>
+                    </form>
+                </section>
+
+                <section aria-labelledby="titulo-precios" class="seccion">
+                    <h2 id="titulo-precios">Precios por noche</h2>
+                    <p class="ayuda">Es el precio final que paga el huésped por cada noche<span id="aclaracion-iva" hidden>, con el IVA incluido</span>. Una noche sin precio no se puede reservar. Los precios se cambian pero no se quitan: si no querés recibir reservas en ciertas fechas, bloquealas desde "Publicación y fechas bloqueadas".</p>
+
+                    <form id="form-precio" class="tarjeta">
+                        <fieldset>
+                            <legend>Cargar el precio de varias noches</legend>
+                            <label>Desde la noche del
+                                <input type="date" name="desde" required>
+                            </label>
+                            <label>Hasta la noche del (incluida)
+                                <input type="date" name="hasta" required>
+                            </label>
+                            <label>Precio por noche, en pesos
+                                <input type="number" name="precio" min="0.01" step="0.01" inputmode="decimal" required>
+                            </label>
+                        </fieldset>
+                        <p class="mensaje-error" id="error-precio" role="alert"></p>
+                        <p class="mensaje-ok" id="ok-precio" role="status"></p>
+                        <button type="submit" class="boton boton-primario">Guardar el precio</button>
+                    </form>
+
+                    <section aria-labelledby="titulo-mes" class="calendario">
+                        <h3 id="titulo-mes" aria-live="polite"></h3>
+                        <p class="navegacion-mes">
+                            <button type="button" class="boton boton-outline" id="mes-anterior">Mes anterior</button>
+                            <button type="button" class="boton boton-outline" id="mes-siguiente">Mes siguiente</button>
+                        </p>
+                        <p class="mensaje-error" id="error-calendario" role="alert"></p>
+                        <table>
+                            <caption class="visualmente-oculto">Precio y temporada de cada noche del mes</caption>
+                            <thead>
+                                <tr>
+                                    <th scope="col"><abbr title="lunes">Lun</abbr></th>
+                                    <th scope="col"><abbr title="martes">Mar</abbr></th>
+                                    <th scope="col"><abbr title="miércoles">Mié</abbr></th>
+                                    <th scope="col"><abbr title="jueves">Jue</abbr></th>
+                                    <th scope="col"><abbr title="viernes">Vie</abbr></th>
+                                    <th scope="col"><abbr title="sábado">Sáb</abbr></th>
+                                    <th scope="col"><abbr title="domingo">Dom</abbr></th>
+                                </tr>
+                            </thead>
+                            <tbody id="dias-del-mes"></tbody>
+                        </table>
+                        <p class="ayuda">Debajo de cada precio, la temporada de esa noche. Las noches pasadas aparecen en gris.</p>
+                    </section>
+                </section>
+            </article>
+        </main>
+    </body>
+</html>

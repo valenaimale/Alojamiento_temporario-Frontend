@@ -1,0 +1,178 @@
+/* Estilos de las temporadas y los precios por noche de una unidad (vistas/unidades/temporadas-unidad.html). */
+
+main {
+    max-width: 900px;
+}
+
+.subtitulo {
+    color: var(--color-text-muted);
+    margin-top: -0.5rem;
+}
+
+.seccion {
+    margin-bottom: 2.5rem;
+}
+
+.ayuda {
+    margin: 0 0 1rem;
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+}
+
+fieldset .ayuda {
+    margin: -0.6rem 0 0;
+}
+
+/* los formularios van en una tarjeta; .tarjeta trae un espacio chico entre elementos, el form necesita el suyo */
+form.tarjeta {
+    max-width: 520px;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+}
+
+/* ===== Lista de temporadas: una tarjeta por temporada, con sus botones ===== */
+.lista-temporadas {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem;
+    display: grid;
+    gap: 0.75rem;
+}
+
+.lista-temporadas li {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.lista-temporadas h3 {
+    margin: 0;
+    font-size: 1rem;
+    flex-basis: 100%;
+}
+
+.lista-temporadas p {
+    margin: 0 0 0.25rem;
+    flex-basis: 100%;
+}
+
+.lista-temporadas .boton {
+    width: auto;
+}
+
+/* ===== Calendario del mes ===== */
+.calendario h3 {
+    margin-bottom: 0.5rem;
+}
+
+.navegacion-mes {
+    display: flex;
+    gap: 0.5rem;
+    margin: 0 0 0.75rem;
+}
+
+.navegacion-mes .boton {
+    width: auto;
+}
+
+.calendario table {
+    width: 100%;
+    table-layout: fixed;   /* las 7 columnas del mismo ancho */
+    border-collapse: collapse;
+}
+
+.calendario th {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    padding: 0.25rem;
+}
+
+.calendario abbr {
+    text-decoration: none;
+}
+
+.calendario td {
+    vertical-align: top;
+    height: 4.5rem;
+    padding: 0.3rem;
+    border: 1px solid var(--color-border);
+    background-color: var(--color-surface);
+    font-size: 0.75rem;
+}
+
+.calendario td:empty {
+    background-color: transparent;
+}
+
+.calendario .dia {
+    display: block;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.calendario .precio {
+    display: block;
+    overflow-wrap: anywhere;   /* en el celular, el precio se parte antes que desbordar la celda */
+}
+
+.calendario .sin-precio {
+    color: var(--color-danger);
+}
+
+.calendario .temporada {
+    display: inline-block;
+    margin-top: 0.2rem;
+    padding: 0 0.3rem;
+    border-radius: var(--radius-sm);
+}
+
+.temporada-alta {
+    background-color: var(--color-danger-light);
+}
+
+.temporada-media {
+    background-color: var(--color-purple-light);
+}
+
+.temporada-baja {
+    background-color: var(--color-primary-light);
+}
+
+.calendario td.pasada {
+    color: var(--color-text-muted);
+    background-color: var(--color-gray-light);
+}
+
+.calendario td[aria-current="date"] {
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+}
+
+/* ===== Mensajes ===== */
+.mensaje-error,
+#mensaje-error {
+    color: var(--color-danger);
+    margin: 0;
+}
+
+.mensaje-ok {
+    color: var(--color-primary-dark);
+    font-weight: 600;
+    margin: 0;
+}
+
+.mensaje-error:empty,
+#mensaje-error:empty,
+.mensaje-ok:empty {
+    display: none;
+}
+
+/* style.css les pone display a algunos elementos, y eso le gana al atributo hidden */
+[hidden] {
+    display: none;
+}
