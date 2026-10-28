@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<!-- Datos, fotos y depósito de una unidad (?id=): el propietario edita los datos básicos, sube y ordena las fotos
+     y carga el depósito de garantía. El administrador asignado solo ve el depósito: las otras dos secciones se quitan. -->
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Datos de la unidad</title>
+        <meta name="description" content="Editá los datos, las fotos y el depósito de garantía de tu unidad">
+        <link rel="stylesheet" href="../../estilos/style.css">
+        <link rel="stylesheet" href="../../estilos/datos-unidad.css">
+        <script src="../../funcionalidades/sesion.js" defer></script>
+        <script src="../../funcionalidades/menu.js" defer></script>
+        <script src="../../funcionalidades/unidades-comun.js" defer></script>
+        <script src="../../funcionalidades/subir-fotos.js" defer></script>
+        <script src="../../funcionalidades/datos-unidad.js" defer></script>
+    </head>
+    <body hidden>
+        <header>
+            <nav id="menu" aria-label="Principal"></nav>
+            <a href="../perfil/perfil.html" class="enlace-perfil">Mi perfil</a>
+        </header>
+        <main>
+            <p><a href="configurar-unidad.html" id="enlace-volver">Volver a la unidad</a></p>
+
+            <p id="mensaje-error" role="alert"></p>
+
+            <article id="unidad" hidden>
+                <h1 id="nombre-unidad"></h1>
+
+                <section aria-labelledby="titulo-datos" class="tarjeta" data-solo-propietario>
+                    <h2 id="titulo-datos">Datos</h2>
+                    <p class="ayuda-seccion">Todos los campos son obligatorios, salvo los que dicen "opcional".</p>
+                    <form id="form-datos">
+                        <label for="nombre">Nombre
+                            <input type="text" id="nombre" name="nombre" required minlength="3" maxlength="100" autocomplete="off" aria-describedby="ayuda-nombre">
+                        </label>
+                        <p class="ayuda" id="ayuda-nombre">Es el que ven los huéspedes. Por ejemplo: Cabaña del Mar.</p>
+
+                        <label for="localidad">Localidad
+                            <select id="localidad" name="localidad_id" required>
+                                <option value="">Cargando las localidades...</option>
+                            </select>
+                        </label>
+
+                        <label for="direccion">Dirección
+                            <input type="text" id="direccion" name="direccion" required minlength="5" maxlength="200" autocomplete="off">
+                        </label>
+
+                        <label for="capacidad">Capacidad
+                            <input type="number" id="capacidad" name="capacidad" required min="1" max="50" step="1" inputmode="numeric" autocomplete="off" aria-describedby="ayuda-capacidad">
+                        </label>
+                        <p class="ayuda" id="ayuda-capacidad">Cuántas personas pueden alojarse, de 1 a 50.</p>
+
+                        <label for="caracteristicas">Características (opcional)
+                            <textarea id="caracteristicas" name="caracteristicas" rows="5" maxlength="2000" aria-describedby="ayuda-caracteristicas"></textarea>
+                        </label>
+                        <p class="ayuda" id="ayuda-caracteristicas">Descripción y comodidades: ambientes, camas, parrilla, cochera... Hasta 2000 caracteres.</p>
+
+                        <button type="submit" class="boton boton-primario">Guardar los cambios</button>
+                    </form>
+                    <p class="aviso" aria-live="polite" data-aviso="datos"></p>
+                    <p class="error" role="alert" data-error="datos"></p>
+                </section>
+
+                <section aria-labelledby="titulo-fotos" class="tarjeta" data-solo-propietario>
+                    <h2 id="titulo-fotos" tabindex="-1">Fotos</h2>
+                    <p id="cantidad-fotos"></p>
+                    <p class="ayuda-seccion">La primera es la foto principal: es la que se ve en la búsqueda.</p>
+                    <ol id="lista-fotos" class="lista-fotos"></ol>
+                    <p id="sin-fotos" hidden>Todavía no subiste ninguna foto.</p>
+
+                    <label for="archivos-fotos">Agregar fotos
+                        <input type="file" id="archivos-fotos" multiple accept="image/jpeg,image/png,image/webp" aria-describedby="ayuda-fotos">
+                    </label>
+                    <p class="ayuda" id="ayuda-fotos">JPG, PNG o WEBP, de hasta 5 MB cada una. Podés elegir varias a la vez.</p>
+                    <p class="aviso" aria-live="polite" data-aviso="fotos"></p>
+                    <div class="error" role="alert" data-error="fotos"></div>
+                </section>
+
+                <section aria-labelledby="titulo-deposito" class="tarjeta">
+                    <h2 id="titulo-deposito">Depósito de garantía</h2>
+                    <form id="form-deposito">
+                        <label for="deposito">Monto en pesos (opcional)
+                            <input type="number" id="deposito" name="deposito_garantia" min="0" step="0.01" inputmode="decimal" autocomplete="off" aria-describedby="ayuda-deposito">
+                        </label>
+                        <p class="ayuda" id="ayuda-deposito">Es informativo: el depósito se cobra y se devuelve por fuera de la aplicación. Dejalo vacío si no se pide depósito.</p>
+                        <button type="submit" class="boton boton-primario">Guardar el depósito</button>
+                    </form>
+                    <p class="aviso" aria-live="polite" data-aviso="deposito"></p>
+                    <p class="error" role="alert" data-error="deposito"></p>
+                </section>
+            </article>
+        </main>
+
+        <!-- Cada foto de la lista: datos-unidad.js la copia y la llena por cada foto -->
+        <template id="plantilla-foto">
+            <li>
+                <figure>
+                    <img data-campo="imagen" alt="">
+                    <figcaption data-campo="leyenda"></figcaption>
+                </figure>
+                <button type="button" class="boton" data-accion="principal">Elegir como principal<span data-campo="foto-principal" class="visualmente-oculto"></span></button>
+                <button type="button" class="boton boton-peligro" data-accion="quitar">Quitar<span data-campo="foto-quitar" class="visualmente-oculto"></span></button>
+            </li>
+        </template>
+    </body>
+</html>

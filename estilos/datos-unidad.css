@@ -1,0 +1,155 @@
+/* Estilos de los datos, las fotos y el depósito de una unidad (vistas/unidades/datos-unidad.html). */
+
+main {
+    max-width: 720px;
+}
+
+.tarjeta {
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+}
+
+.tarjeta h2 {
+    margin: 0;
+}
+
+.tarjeta p {
+    margin: 0;
+}
+
+form {
+    max-width: 520px;
+}
+
+.ayuda-seccion,
+#cantidad-fotos {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+}
+
+/* el texto de ayuda va pegado al campo que explica (el form deja 1rem entre cada elemento) */
+.tarjeta .ayuda {
+    margin-top: -0.6rem;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+}
+
+/* style.css no le da estilo al textarea: el mismo aspecto que los input */
+textarea {
+    font-family: inherit;
+    font-size: 1rem;
+    color: var(--color-text);
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface);
+    width: 100%;
+    resize: vertical;
+}
+
+textarea:focus {
+    border-color: var(--color-primary);
+}
+
+button:disabled,
+input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.aviso {
+    color: var(--color-primary-dark);
+    font-weight: 600;
+}
+
+.error,
+#mensaje-error {
+    color: var(--color-danger);
+    font-size: 0.9rem;
+}
+
+.error ul {
+    margin: 0.25rem 0 0;
+    padding-left: 1.25rem;
+}
+
+.aviso:empty,
+.error:empty,
+#mensaje-error:empty {
+    display: none;
+}
+
+/* ===== Fotos: una grilla de miniaturas, cada una con sus botones ===== */
+.lista-fotos {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+}
+
+.lista-fotos li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+}
+
+/* la principal se marca con el borde, además del texto de la leyenda */
+.lista-fotos li.principal {
+    border: 2px solid var(--color-primary);
+}
+
+.lista-fotos figure {
+    margin: 0;
+}
+
+/* margin: 0 le gana a ".tarjeta img" de style.css, que corre la foto hacia los bordes de la tarjeta */
+.lista-fotos img {
+    margin: 0;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-gray-light);
+}
+
+.lista-fotos figcaption {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-top: 0.25rem;
+}
+
+.lista-fotos li.principal figcaption {
+    color: var(--color-primary-dark);
+}
+
+.lista-fotos .boton {
+    width: 100%;
+    font-size: 0.85rem;
+    padding: 0.5rem 0.75rem;
+}
+
+.boton-peligro {
+    border-color: var(--color-danger);
+    color: var(--color-danger);
+}
+
+.boton-peligro:hover {
+    background-color: var(--color-danger-light);
+    border-color: var(--color-danger);
+}
+
+@media (min-width: 640px) {
+    .lista-fotos {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    }
+}
+
+/* style.css les pone display a algunos elementos, y eso le gana al atributo hidden */
+[hidden] {
+    display: none;
+}
