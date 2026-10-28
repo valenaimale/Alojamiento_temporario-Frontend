@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<!-- Publicación y fechas bloqueadas de una unidad (?id=), US3.1 y US3.3.
+     Publicación (publicar o pausar): solo el propietario; al administrador se le quita esa sección.
+     Fechas bloqueadas (bloquear y liberar): el propietario y el administrador asignado. -->
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Publicación y fechas bloqueadas</title>
+        <meta name="description" content="Publicá o pausá tu unidad y bloqueá las fechas que no querés que se reserven">
+        <link rel="stylesheet" href="../../estilos/style.css">
+        <link rel="stylesheet" href="../../estilos/disponibilidad-unidad.css">
+        <script src="../../funcionalidades/sesion.js" defer></script>
+        <script src="../../funcionalidades/menu.js" defer></script>
+        <script src="../../funcionalidades/unidades-comun.js" defer></script>
+        <script src="../../funcionalidades/disponibilidad-unidad.js" defer></script>
+    </head>
+    <body hidden>
+        <header>
+            <nav id="menu" aria-label="Principal"></nav>
+            <a href="../perfil/perfil.html" class="enlace-perfil">Mi perfil</a>
+        </header>
+        <main>
+            <p><a href="configurar-unidad.html" id="enlace-volver">Volver a la unidad</a></p>
+
+            <p id="mensaje-error" role="alert"></p>
+
+            <article id="contenido" hidden>
+                <h1>Publicación y fechas bloqueadas</h1>
+                <p id="nombre-unidad" class="subtitulo"></p>
+
+                <section aria-labelledby="titulo-publicacion" class="seccion tarjeta" id="seccion-publicacion">
+                    <h2 id="titulo-publicacion">Publicación</h2>
+                    <p>Estado: <strong id="estado-unidad"></strong></p>
+                    <p id="explicacion-estado"></p>
+                    <p id="no-disponible" class="aviso" hidden></p>
+                    <section id="faltantes" aria-labelledby="titulo-faltantes" class="aviso" hidden>
+                        <h3 id="titulo-faltantes">Para publicarla te falta</h3>
+                        <ul id="lista-faltantes"></ul>
+                    </section>
+                    <p class="mensaje-error" id="error-publicacion" role="alert"></p>
+                    <p class="mensaje-ok" id="ok-publicacion" role="status"></p>
+                    <p class="acciones">
+                        <button type="button" class="boton boton-primario" id="publicar" hidden>Publicar la unidad</button>
+                        <button type="button" class="boton boton-outline" id="pausar" hidden>Pausar la publicación</button>
+                    </p>
+                </section>
+
+                <section aria-labelledby="titulo-bloqueos" class="seccion">
+                    <h2 id="titulo-bloqueos" tabindex="-1">Fechas bloqueadas</h2>
+                    <p class="ayuda">Las noches bloqueadas no se pueden reservar en la plataforma: por ejemplo, porque las reservaron por Airbnb o Booking, o porque no querés recibir huéspedes. El motivo solo lo ven el propietario y su administrador: el huésped solo ve que esas fechas están ocupadas. Las noches que ya pasaron no se pueden bloquear ni liberar.</p>
+
+                    <p id="sin-bloqueos" hidden>No tenés fechas bloqueadas.</p>
+                    <ul id="lista-bloqueos" class="lista-bloqueos"></ul>
+
+                    <form id="form-bloqueo" class="tarjeta">
+                        <fieldset>
+                            <legend>Bloquear fechas</legend>
+                            <label>Primera noche
+                                <input type="date" name="fecha_desde" required>
+                            </label>
+                            <label>Última noche (incluida)
+                                <input type="date" name="fecha_hasta" required>
+                            </label>
+                            <label>Motivo
+                                <select name="motivo" required>
+                                    <option value="">Elegí uno</option>
+                                    <option value="reserva_externa">Reserva por otro medio (Airbnb, Booking…)</option>
+                                    <option value="mantenimiento">Mantenimiento o arreglos</option>
+                                    <option value="danio">Daños en la unidad</option>
+                                    <option value="uso_personal">No quiero recibir reservas en esas fechas</option>
+                                    <option value="otro">Otro motivo</option>
+                                </select>
+                            </label>
+                            <label><span id="texto-detalle">Detalle (opcional)</span>
+                                <textarea name="detalle" rows="2" maxlength="255" aria-describedby="ayuda-detalle"></textarea>
+                            </label>
+                            <p class="ayuda" id="ayuda-detalle">Hasta 255 caracteres. Por ejemplo: "Reservada por Airbnb, código 4815".</p>
+                        </fieldset>
+                        <p class="mensaje-error" id="error-bloqueo" role="alert"></p>
+                        <p class="mensaje-ok" id="ok-bloqueo" role="status"></p>
+                        <button type="submit" class="boton boton-primario">Bloquear estas fechas</button>
+                    </form>
+                </section>
+            </article>
+        </main>
+    </body>
+</html>
