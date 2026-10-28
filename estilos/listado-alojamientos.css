@@ -1,0 +1,72 @@
+/* Estilos del listado de alojamientos disponibles (vistas/alojamientos/listado.html). */
+
+header .acceso {
+    display: flex;
+    gap: 0.5rem;
+    margin: 0 0 0 auto;
+}
+
+header .acceso .boton {
+    width: auto;
+}
+
+#resumen-busqueda {
+    color: var(--color-text-muted);
+}
+
+/* una tarjeta por alojamiento: en el celular, una debajo de la otra; en pantallas anchas, en grilla */
+.resultados {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+}
+
+/* toda la tarjeta se puede tocar: el enlace del nombre se estira sobre ella (sigue siendo un solo enlace,
+   así el lector de pantalla lee solo el nombre y no toda la tarjeta) */
+.resultados .tarjeta {
+    position: relative;
+}
+
+.resultados h3 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.resultados h3 a::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+}
+
+.resultados .tarjeta:focus-within {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+}
+
+.resultados p {
+    margin: 0;
+    color: var(--color-text-muted);
+}
+
+.resultados .precio {
+    color: var(--color-text);
+}
+
+.resultados .precio strong {
+    font-size: 1.15rem;
+    color: var(--color-primary-dark);
+}
+
+@media (min-width: 640px) {
+    .resultados {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    }
+}
+
+/* style.css les pone display a algunos elementos, y eso le gana al atributo hidden */
+[hidden] {
+    display: none;
+}

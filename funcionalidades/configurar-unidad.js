@@ -24,6 +24,15 @@ function mostrarUnidad(unidad) {
         aviso.hidden = false;
     }
 
+    // hasta cuándo tiene precios: las reglas se exigen al publicar, así que el propietario tiene que ir cargando más
+    if (unidad.es_propietario) {
+        const preciosHasta = document.getElementById('precios-hasta');
+        preciosHasta.textContent = unidad.precios_hasta === null
+            ? 'Todavía no cargaste el precio de la noche de mañana.'
+            : `Tenés precios cargados hasta el ${formatearFecha(unidad.precios_hasta)}.`;
+        preciosHasta.hidden = false;
+    }
+
     // lo que falta para publicarse solo importa mientras no está publicada
     if (unidad.faltantes.length > 0 && unidad.estado_publicacion !== 'publicada') {
         const lista = document.getElementById('lista-faltantes');

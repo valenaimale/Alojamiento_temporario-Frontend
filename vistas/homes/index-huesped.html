@@ -1,50 +1,53 @@
 <!DOCTYPE html>
-<!-- Inicio del huésped (y del propietario): la búsqueda de alojamientos. -->
+<!-- Inicio del huésped (y del propietario): la búsqueda de alojamientos (US3.2). Los resultados se ven en
+     vistas/alojamientos/listado.html, adonde el formulario manda la búsqueda. -->
 <html lang="es">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Alquiler temporario</title>
-        <meta name="description" content="Busca unidades disponibles por localidad y fechas">
+        <meta name="description" content="Buscá alojamientos disponibles por destino y fechas">
         <link rel="stylesheet" href="../../estilos/style.css">
+        <link rel="stylesheet" href="../../estilos/busqueda.css">
         <link rel="stylesheet" href="../../estilos/index-huesped.css">
         <script src="../../funcionalidades/sesion.js" defer></script>
         <script src="../../funcionalidades/menu.js" defer></script>
         <script src="../../funcionalidades/proteger-pagina.js" defer></script>
         <link rel="stylesheet" href="../../estilos/aviso-verificacion.css">
         <script src="../../funcionalidades/aviso-verificacion.js" defer></script>
-        <script src="../../funcionalidades/alojamientos.js" defer></script>
+        <script src="../../funcionalidades/unidades-comun.js" defer></script>
+        <script src="../../funcionalidades/busqueda.js" defer></script>
+        <script src="../../funcionalidades/index-huesped.js" defer></script>
     </head>
     <body data-rol="huesped" hidden>
         <header>
             <nav id="menu" aria-label="Principal"></nav>
-            <a href="../perfil/perfil.html" class="enlace-perfil">Perfil</a>
+            <a href="../perfil/perfil.html" class="enlace-perfil">Mi perfil</a>
         </header>
         <main>
             <h1>Alquiler temporario sin intermediarios</h1>
-            <p>Busca por unidades disponibles por localidad y horas</p>
-            <form class="form-busqueda" action="../alojamientos/listado.html" method="get">
+            <p>Buscá alojamiento por destino y fechas: te mostramos solo lo que está disponible, con el precio final.</p>
+            <form class="form-busqueda" id="form-busqueda" action="../alojamientos/listado.html" method="get">
                 <fieldset>
-                    <legend>Busqueda de disponibilidad</legend>
-                    <label for="localidad">Localidad
-                        <select id="localidad" name="localidad">
-                            <option value="">Todas</option>
-                            <option value="Las Grutas">Las Grutas</option>
-                            <option value="Villa Gesell">Villa Gesell</option>
+                    <legend>Buscá alojamiento</legend>
+                    <label>Destino
+                        <select name="localidad_id">
+                            <option value="">Todos los destinos</option>
                         </select>
                     </label>
-                    <label for="check-in">Check-in
-                        <input type="date" id="check-in" name="check-in">
+                    <label>Ingreso
+                        <input type="date" name="ingreso" required>
                     </label>
-                    <label for="check-out">Check-out
-                        <input type="date" id="check-out" name="check-out">
+                    <label>Egreso
+                        <input type="date" name="egreso" required>
                     </label>
-                    <button type="submit" class="boton boton-primario">Buscar disponibilidad</button>
+                    <label>Personas
+                        <input type="number" name="personas" min="1" max="50" step="1" value="2" inputmode="numeric" required>
+                    </label>
+                    <button type="submit" class="boton boton-primario">Buscar</button>
                 </fieldset>
+                <p class="mensaje-error" id="error-busqueda" role="alert"></p>
             </form>
-            <section class="grilla-unidades" id="grilla-alojamientos">
-                <h2>Unidades disponibles</h2>
-            </section>
         </main>
     </body>
 </html>
