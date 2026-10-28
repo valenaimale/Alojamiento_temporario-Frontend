@@ -1,0 +1,55 @@
+/* Estilos del alta de una unidad (vistas/unidades/alta-unidad.html). */
+
+main {
+    max-width: 520px;
+}
+
+main > p {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+}
+
+form {
+    max-width: none;
+    margin-bottom: 1rem;
+    gap: 1.5rem;
+}
+
+/* style.css no le da estilo al textarea: el mismo aspecto que los input */
+textarea {
+    font-family: inherit;
+    font-size: 1rem;
+    color: var(--color-text);
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface);
+    width: 100%;
+    resize: vertical;
+}
+
+textarea:focus {
+    border-color: var(--color-primary);
+}
+
+/* el texto de ayuda va pegado al campo que explica (el fieldset deja 1rem entre cada elemento) */
+.ayuda {
+    margin: -0.6rem 0 0;
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+#mensaje-error {
+    color: var(--color-danger);
+    font-size: 0.9rem;
+}
+
+#mensaje-error:empty,
+#mensaje-progreso:empty {
+    display: none;
+}

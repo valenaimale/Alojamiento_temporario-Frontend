@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<!-- Alta de una unidad (US2.1): el propietario carga los datos básicos y, si quiere, el depósito de garantía.
+     La unidad queda sin publicar; al crearla se pasa a su página central para seguir configurándola. -->
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Dar de alta una unidad</title>
+        <meta name="description" content="Cargá los datos de tu cabaña o departamento para empezar a alquilarlo">
+        <link rel="stylesheet" href="../../estilos/style.css">
+        <link rel="stylesheet" href="../../estilos/alta-unidad.css">
+        <script src="../../funcionalidades/sesion.js" defer></script>
+        <script src="../../funcionalidades/menu.js" defer></script>
+        <script src="../../funcionalidades/proteger-pagina.js" defer></script>
+        <script src="../../funcionalidades/unidades-comun.js" defer></script>
+        <script src="../../funcionalidades/alta-unidad.js" defer></script>
+    </head>
+    <body data-rol="propietario" hidden>
+        <header>
+            <nav id="menu" aria-label="Principal"></nav>
+            <a href="../perfil/perfil.html" class="enlace-perfil">Mi perfil</a>
+        </header>
+        <main>
+            <p><a href="../homes/index-propietario.html">Volver a mis hospedajes</a></p>
+            <h1>Dar de alta una unidad</h1>
+            <p>La unidad queda <strong>sin publicar</strong>: después le cargás las fotos, los precios y las condiciones, y la publicás cuando esté lista. Todos los campos son obligatorios, salvo los que dicen "opcional".</p>
+
+            <form id="form-alta">
+                <fieldset>
+                    <legend>Datos de la unidad</legend>
+                    <label for="nombre">Nombre
+                        <input type="text" id="nombre" name="nombre" required minlength="3" maxlength="100" autocomplete="off" aria-describedby="ayuda-nombre">
+                    </label>
+                    <p class="ayuda" id="ayuda-nombre">Es el que ven los huéspedes. Por ejemplo: Cabaña del Mar.</p>
+
+                    <label for="localidad">Localidad
+                        <select id="localidad" name="localidad_id" required>
+                            <option value="">Cargando las localidades...</option>
+                        </select>
+                    </label>
+
+                    <label for="direccion">Dirección
+                        <input type="text" id="direccion" name="direccion" required minlength="5" maxlength="200" autocomplete="off">
+                    </label>
+
+                    <label for="capacidad">Capacidad
+                        <input type="number" id="capacidad" name="capacidad" required min="1" max="50" step="1" inputmode="numeric" autocomplete="off" aria-describedby="ayuda-capacidad">
+                    </label>
+                    <p class="ayuda" id="ayuda-capacidad">Cuántas personas pueden alojarse, de 1 a 50.</p>
+
+                    <label for="caracteristicas">Características (opcional)
+                        <textarea id="caracteristicas" name="caracteristicas" rows="5" maxlength="2000" aria-describedby="ayuda-caracteristicas"></textarea>
+                    </label>
+                    <p class="ayuda" id="ayuda-caracteristicas">Descripción y comodidades: ambientes, camas, parrilla, cochera... Hasta 2000 caracteres.</p>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Depósito de garantía (opcional)</legend>
+                    <label for="deposito">Monto en pesos
+                        <input type="number" id="deposito" name="deposito_garantia" min="0" step="0.01" inputmode="decimal" autocomplete="off" aria-describedby="ayuda-deposito">
+                    </label>
+                    <p class="ayuda" id="ayuda-deposito">Es informativo: el depósito se cobra y se devuelve por fuera de la aplicación. Dejalo vacío si no pedís depósito.</p>
+                </fieldset>
+
+                <button type="submit" class="boton boton-primario">Dar de alta</button>
+            </form>
+            <p id="mensaje-progreso" aria-live="polite"></p>
+            <p id="mensaje-error" role="alert"></p>
+        </main>
+    </body>
+</html>
