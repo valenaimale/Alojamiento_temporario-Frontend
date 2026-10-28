@@ -1,0 +1,68 @@
+/* Estilos de la política de cancelación y seña de una unidad (vistas/unidades/politica-unidad.html). */
+
+main {
+    max-width: 720px;
+}
+
+.subtitulo {
+    color: var(--color-text-muted);
+    margin-top: -0.5rem;
+}
+
+#form-politica {
+    max-width: 520px;
+}
+
+.ayuda {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+}
+
+/* el ejemplo calculado: una tarjeta con cada monto a la derecha de su descripción */
+.ejemplo {
+    background-color: var(--color-primary-light);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.25rem;
+}
+
+.ejemplo h2 {
+    font-size: 1rem;
+    margin: 0 0 0.5rem;
+}
+
+.ejemplo dl {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.4rem 1rem;
+    margin: 0;
+}
+
+.ejemplo dt {
+    color: var(--color-text);
+}
+
+.ejemplo dd {
+    margin: 0;
+    font-weight: 700;
+    text-align: right;
+}
+
+#mensaje-error {
+    color: var(--color-danger);
+}
+
+#mensaje-ok {
+    color: var(--color-primary-dark);
+    font-weight: 600;
+}
+
+#mensaje-error:empty,
+#mensaje-ok:empty {
+    display: none;
+}
+
+/* style.css les pone display a algunos elementos, y eso le gana al atributo hidden */
+[hidden] {
+    display: none;
+}

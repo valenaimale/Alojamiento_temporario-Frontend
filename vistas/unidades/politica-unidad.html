@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<!-- La política de cancelación y el % de seña de una unidad (?id=), US2.8. Solo la ve y la cambia el propietario.
+     Muestra un ejemplo calculado en vivo, para que se entienda qué significa cada porcentaje. -->
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Política de cancelación y seña</title>
+        <meta name="description" content="Definí cuánto retenés si el huésped cancela y el porcentaje de seña de tu unidad">
+        <link rel="stylesheet" href="../../estilos/style.css">
+        <link rel="stylesheet" href="../../estilos/politica-unidad.css">
+        <script src="../../funcionalidades/sesion.js" defer></script>
+        <script src="../../funcionalidades/menu.js" defer></script>
+        <script src="../../funcionalidades/unidades-comun.js" defer></script>
+        <script src="../../funcionalidades/politica-unidad.js" defer></script>
+    </head>
+    <body hidden>
+        <header>
+            <nav id="menu" aria-label="Principal"></nav>
+            <a href="../perfil/perfil.html" class="enlace-perfil">Mi perfil</a>
+        </header>
+        <main>
+            <p><a href="configurar-unidad.html" id="enlace-volver">Volver a la unidad</a></p>
+
+            <p id="mensaje-error" role="alert"></p>
+
+            <article id="politica" hidden>
+                <h1>Política de cancelación y seña</h1>
+                <p id="nombre-unidad" class="subtitulo"></p>
+                <p>Es una sola para todo el año. Los cambios valen para las reservas nuevas: las que ya están hechas mantienen sus condiciones.</p>
+
+                <form id="form-politica">
+                    <fieldset aria-describedby="ayuda-sena">
+                        <legend>Seña</legend>
+                        <p class="ayuda" id="ayuda-sena">El porcentaje del total que paga el huésped al reservar. No puede ser mayor que la retención más baja.</p>
+                        <label>Porcentaje de seña (%)
+                            <input type="number" name="porcentaje_sena" min="0" max="100" step="0.01" inputmode="decimal" required>
+                        </label>
+                    </fieldset>
+
+                    <fieldset aria-describedby="ayuda-retenciones">
+                        <legend>Cuánto retenés si el huésped cancela</legend>
+                        <p class="ayuda" id="ayuda-retenciones">Es un porcentaje del total de la reserva, según cuántos días antes del cobro del saldo cancela el huésped. El saldo se cobra <span id="dias-cobro-saldo">5</span> días antes del ingreso. Cuanto más cerca de la fecha cancela, más retenés: cada tramo tiene que ser igual o mayor que el anterior.</p>
+                        <label>Cancela con más de 30 días de anticipación (%)
+                            <input type="number" name="retencion_mas_de_30" min="0" max="100" step="0.01" inputmode="decimal" required>
+                        </label>
+                        <label>Cancela entre 15 y 30 días antes (%)
+                            <input type="number" name="retencion_de_15_a_30" min="0" max="100" step="0.01" inputmode="decimal" required>
+                        </label>
+                        <label>Cancela con menos de 15 días de anticipación (%)
+                            <input type="number" name="retencion_menos_de_15" min="0" max="100" step="0.01" inputmode="decimal" required>
+                        </label>
+                    </fieldset>
+
+                    <section aria-labelledby="titulo-ejemplo" class="ejemplo">
+                        <h2 id="titulo-ejemplo">Ejemplo: una reserva de <span id="monto-ejemplo"></span></h2>
+                        <dl>
+                            <dt>El huésped paga de seña</dt>
+                            <dd id="ejemplo-sena"></dd>
+                            <dt>Si cancela con más de 30 días, retenés</dt>
+                            <dd id="ejemplo-mas-de-30"></dd>
+                            <dt>Si cancela entre 15 y 30 días antes, retenés</dt>
+                            <dd id="ejemplo-de-15-a-30"></dd>
+                            <dt>Si cancela con menos de 15 días, retenés</dt>
+                            <dd id="ejemplo-menos-de-15"></dd>
+                        </dl>
+                    </section>
+
+                    <button type="submit" class="boton boton-primario">Guardar la política</button>
+                    <p id="mensaje-ok" role="status"></p>
+                </form>
+            </article>
+        </main>
+    </body>
+</html>
