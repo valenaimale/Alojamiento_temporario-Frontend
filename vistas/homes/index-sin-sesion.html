@@ -1,61 +1,49 @@
 <!DOCTYPE html>
-<!-- Inicio para quien no inició sesión: la búsqueda y los enlaces para entrar o registrarse. -->
+<!-- Inicio para quien no inició sesión: la búsqueda de alojamientos (US3.2) y los enlaces para entrar o registrarse.
+     Los resultados se ven en vistas/alojamientos/listado.html, adonde el formulario manda la búsqueda. -->
 <html lang="es">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Alquiler temporario</title>
-        <meta name="description" content="Busca unidades disponibles por localidad y fechas">
+        <meta name="description" content="Buscá alojamientos disponibles por destino y fechas">
         <link rel="stylesheet" href="../../estilos/style.css">
+        <link rel="stylesheet" href="../../estilos/busqueda.css">
         <link rel="stylesheet" href="../../estilos/index-sin-sesion.css">
         <script src="../../funcionalidades/sesion.js" defer></script>
+        <script src="../../funcionalidades/unidades-comun.js" defer></script>
+        <script src="../../funcionalidades/busqueda.js" defer></script>
         <script src="../../funcionalidades/index-sin-sesion.js" defer></script>
     </head>
     <body hidden>
         <header>
-            <a href="../sesion/inicio-sesion.html" class="boton boton-outline">Iniciar sesion</a>
+            <a href="../sesion/inicio-sesion.html" class="boton boton-outline">Iniciar sesión</a>
             <a href="../registros/pre-registro.html" class="boton boton-primario">Registrarme</a>
         </header>
         <main>
             <h1>Alquiler temporario sin intermediarios</h1>
-            <p>Busca por unidades disponibles por localidad y horas</p>
-            <form action="search.php" method="get" class="form-busqueda">
+            <p>Buscá alojamiento por destino y fechas: te mostramos solo lo que está disponible, con el precio final.</p>
+            <form class="form-busqueda" id="form-busqueda" action="../alojamientos/listado.html" method="get">
                 <fieldset>
-                    <legend>Busqueda de disponibilidad</legend>
-                    <label for="localidad">Localidad
-                        <select id="localidad" name="localidad">
-                            <option value="las-grutas">Las Grutas</option>
-                            <option value="villa-gesel">Villa Gesell</option>
+                    <legend>Buscá alojamiento</legend>
+                    <label>Destino
+                        <select name="localidad_id">
+                            <option value="">Todos los destinos</option>
                         </select>
                     </label>
-                    <label for="check-in">Check-in
-                        <input type="date" id="check-in" name="check-in">
+                    <label>Ingreso
+                        <input type="date" name="ingreso" required>
                     </label>
-                    <label for="check-out">Check-out
-                        <input type="date" id="check-out" name="check-out">
+                    <label>Egreso
+                        <input type="date" name="egreso" required>
                     </label>
-                    <button type="submit" class="boton boton-primario">Buscar disponibilidad</button>
+                    <label>Personas
+                        <input type="number" name="personas" min="1" max="50" step="1" value="2" inputmode="numeric" required>
+                    </label>
+                    <button type="submit" class="boton boton-primario">Buscar</button>
                 </fieldset>
+                <p class="mensaje-error" id="error-busqueda" role="alert"></p>
             </form>
-            <section class="grilla-unidades">
-                <h2>Unidades disponibles</h2>
-                    <article class="tarjeta">
-                        <a href="unidad-las-grutas.html">
-                            <img alt="Cabaña en las grutas" src="lasgrutas.png">
-                            <h3>Cabaña - Las Grutas</h3>
-                            <strong><data value="70000">$70.000</data></strong>
-                            <p>7 noches min</p>
-                        </a>
-                    </article>
-                    <article class="tarjeta">
-                        <a href="unidad-villa-gesel.html">
-                            <img alt="Cabaña en las grutas" src="villagesel.png">
-                            <h3>Departamento - Villa Gesell</h3>
-                            <strong><data value="100000">$100.000</data></strong>
-                            <p>10 noches min</p>
-                        </a>
-                    </article>
-            </section>
         </main>
     </body>
 </html>

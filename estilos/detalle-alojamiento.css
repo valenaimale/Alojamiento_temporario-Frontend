@@ -1,20 +1,225 @@
-/* Estilos del detalle de un alojamiento (vistas/alojamientos/detalle.html). */
+/* Estilos del detalle de un alojamiento (vistas/alojamientos/detalle.html): fotos, calendario para elegir fechas,
+   la estadía con su precio, la política de cancelación y el depósito. */
 
 main {
-    max-width: 640px;
+    max-width: 960px;
 }
 
-main > a {
-    display: inline-block;
-    margin-bottom: 1rem;
-    font-weight: 600;
+header .acceso {
+    display: flex;
+    gap: 0.5rem;
+    margin: 0 0 0 auto;
 }
 
-#detalle-localidad {
+header .acceso .boton {
+    width: auto;
+}
+
+.subtitulo {
+    color: var(--color-text-muted);
+    margin-top: -0.5rem;
+}
+
+article > section {
+    margin-bottom: 2rem;
+}
+
+.ayuda {
+    font-size: 0.9rem;
     color: var(--color-text-muted);
 }
 
-#detalle-precio {
-    font-size: 1.2rem;
-    color: var(--color-primary-dark);
+#caracteristicas {
+    white-space: pre-line;   /* respeta los renglones que escribió el propietario */
+}
+
+/* ===== Fotos: la principal grande y las demás en grilla ===== */
+.galeria {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.5rem;
+}
+
+.galeria img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-gray-light);
+}
+
+.galeria li:first-child {
+    grid-column: 1 / -1;
+}
+
+.galeria li:first-child img {
+    aspect-ratio: 16 / 9;
+}
+
+/* ===== Calendario ===== */
+.personas {
+    max-width: 10rem;
+    margin-bottom: 1rem;
+}
+
+.navegacion-mes {
+    display: flex;
+    gap: 0.5rem;
+    margin: 0 0 0.75rem;
+}
+
+.navegacion-mes .boton {
+    width: auto;
+}
+
+.navegacion-mes .boton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.calendario table {
+    width: 100%;
+    table-layout: fixed;   /* las 7 columnas del mismo ancho */
+    border-collapse: collapse;
+}
+
+.calendario th {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    padding: 0.25rem;
+}
+
+.calendario abbr {
+    text-decoration: none;
+}
+
+.calendario td {
+    padding: 2px;
+}
+
+.calendario td button {
+    width: 100%;
+    min-height: 3.5rem;
+    padding: 0.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+    color: var(--color-text);
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+}
+
+.calendario td button:hover:not([aria-disabled="true"]) {
+    border-color: var(--color-primary);
+}
+
+.calendario td button:focus-visible {
+    outline: 3px solid var(--color-primary);
+    outline-offset: 1px;
+}
+
+.calendario .dia {
+    font-weight: 700;
+}
+
+.calendario .precio {
+    font-size: 0.7rem;
+    overflow-wrap: anywhere;
+}
+
+/* no disponible: tachado y gris (además, el lector de pantalla dice "no disponible") */
+.calendario button.no-disponible {
+    color: var(--color-text-muted);
+    background-color: var(--color-gray-light);
+    text-decoration: line-through;
+    cursor: not-allowed;
+}
+
+.calendario button.en-rango {
+    background-color: var(--color-primary-light);
+}
+
+.calendario button.elegida {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #ffffff;
+    text-decoration: none;
+}
+
+/* ===== La estadía ===== */
+.estadia {
+    margin-top: 1.5rem;
+    max-width: 420px;
+}
+
+.estadia h3,
+.estadia p {
+    margin: 0;
+}
+
+.estadia dl,
+.politica {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.4rem 1rem;
+    margin: 0.5rem 0;
+}
+
+.estadia dd,
+.politica dd {
+    margin: 0;
+    font-weight: 700;
+    text-align: right;
+}
+
+.estadia .boton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.politica {
+    max-width: 520px;
+}
+
+.mensaje-error,
+#mensaje-error {
+    color: var(--color-danger);
+}
+
+.mensaje-error:empty,
+#mensaje-error:empty {
+    display: none;
+}
+
+/* en pantallas anchas, el calendario y la estadía uno al lado del otro */
+@media (min-width: 900px) {
+    .reserva {
+        display: grid;
+        grid-template-columns: 1fr 320px;
+        column-gap: 2rem;
+        align-items: start;
+    }
+
+    .reserva > h2,
+    .reserva > .ayuda,
+    .reserva > .personas {
+        grid-column: 1 / -1;
+    }
+
+    .estadia {
+        margin-top: 0;
+    }
+}
+
+/* style.css y esta hoja les ponen display a algunos elementos (por ejemplo, .estadia dl), y eso le gana al atributo
+   hidden. Con !important, hidden siempre oculta: si no, quedaban a la vista el precio y la seña de una estadía anterior. */
+[hidden] {
+    display: none !important;
 }

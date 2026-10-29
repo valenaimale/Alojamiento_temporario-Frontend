@@ -67,6 +67,24 @@ async function obtenerResumenUnidad(id) {
     return pedirAlBack(`/unidades/resumen?id=${encodeURIComponent(id)}`);
 }
 
+// El encabezado de las páginas públicas (el listado y el detalle de alojamientos), que se ven con o sin sesión.
+// Con sesión arma el menú del usuario y muestra "Mi perfil" (#enlace-perfil); sin sesión, "Iniciar sesión" y
+// "Registrarme" (#acceso). Si el back no responde, se muestra como sin sesión.
+async function armarEncabezadoPublico() {
+    let usuario = null;
+    try {
+        usuario = await obtenerSesion();
+    } catch (error) {
+        console.error('No se pudo conectar con el back:', error);
+    }
+    if (usuario === null) {
+        document.getElementById('acceso').hidden = false;
+        return;
+    }
+    armarMenu(usuario.rol);
+    document.getElementById('enlace-perfil').hidden = false;
+}
+
 // El estado de publicación como se le muestra al usuario
 const NOMBRES_DE_ESTADO = {
     borrador: 'Sin publicar',
