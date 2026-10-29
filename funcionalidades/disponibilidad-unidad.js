@@ -91,7 +91,11 @@ function mostrarFaltantes(faltantes) {
 
 // Publica o pausa la unidad (accion: 'publicar' o 'pausar') y muestra cómo quedó
 async function cambiarPublicacion(accion) {
-    if (accion === 'pausar' && !confirm('¿Pausar la publicación? La unidad deja de aparecer en la búsqueda. Las reservas que ya tiene siguen en pie.')) {
+    if (accion === 'pausar' && !await confirmar({
+        titulo: '¿Pausar la publicación?',
+        detalle: 'La unidad deja de aparecer en la búsqueda. Las reservas que ya tiene siguen en pie.',
+        textoConfirmar: 'Pausar',
+    })) {
         return;
     }
     limpiarMensajes('error-publicacion', 'ok-publicacion');
@@ -198,10 +202,10 @@ async function bloquear(evento) {
 
 // Libera un bloqueo, después de confirmarlo. Si está en curso, se liberan las noches de hoy en adelante.
 async function liberarBloqueo(bloqueo, rango, enCurso) {
-    const pregunta = enCurso
-        ? `¿Liberar las noches ${rango}? Se liberan de hoy en adelante: las que ya pasaron quedan como estaban.`
-        : `¿Liberar las noches ${rango}? Se van a poder reservar.`;
-    if (!confirm(pregunta)) {
+    const detalle = enCurso
+        ? 'Se liberan de hoy en adelante: las que ya pasaron quedan como estaban.'
+        : 'Se van a poder reservar.';
+    if (!await confirmar({ titulo: `¿Liberar las noches ${rango}?`, detalle, textoConfirmar: 'Liberar' })) {
         return;
     }
     limpiarMensajes('error-bloqueo', 'ok-bloqueo');

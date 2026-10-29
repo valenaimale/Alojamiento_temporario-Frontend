@@ -18,6 +18,11 @@ function formatearPrecio(monto) {
     return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(Number(monto));
 }
 
+// Un porcentaje del backend como se lee acá: "15.00" → "15 %", "17.50" → "17,5 %"
+function formatearPorcentaje(valor) {
+    return `${Number(valor).toLocaleString('es-AR')} %`;
+}
+
 // Una fecha del backend como se lee acá: "2026-10-05" → "05/10/2026".
 // Se corta el texto en lugar de usar Date, así no hay corrimientos por zona horaria.
 function formatearFecha(fecha) {
@@ -91,3 +96,51 @@ const NOMBRES_DE_ESTADO = {
     publicada: 'Publicada',
     pausada: 'Pausada',
 };
+
+// Pide confirmación antes de una acción que no se puede deshacer, con un diálogo propio (<dialog>) en vez del confirm() del navegador.
+// titulo: la pregunta ("¿Quitar a Nadia como operador?"); detalle: qué pasa si confirma; textoConfirmar: el botón ("Quitar").
+// Devuelve una promesa: true si confirma, false si cancela o cierra con Escape.
+// Es modal: el foco queda adentro, arranca en "Cancelar" (lo seguro) y al cerrarse vuelve al botón que lo abrió.
+function confirmar({ titulo, detalle = '', textoConfirmar }) {
+    const dialogo = document.createElement('dialog');
+    dialogo.className = 'dialogo-confirmar';
+    dialogo.setAttribute('role', 'alertdialog');
+    dialogo.setAttribute('aria-labelledby', 'dialogo-confirmar-titulo');
+
+    const encabezado = document.createElement('h2');
+    encabezado.id = 'dialogo-confirmar-titulo';
+    encabezado.textContent = titulo;
+    dialogo.appendChild(encabezado);
+
+    if (detalle !== '') {
+        const texto = document.createElement('p');
+        texto.id = 'dialogo-confirmar-detalle';
+        texto.textContent = detalle;
+        dialogo.appendChild(texto);
+        dialogo.setAttribute('aria-describedby', texto.id);
+    }
+
+    // method="dialog": cada botón cierra el diálogo y deja su value en dialogo.returnValue
+    const formulario = document.createElement('form');
+    formulario.method = 'dialog';
+    const cancelar = document.createElement('button');
+    cancelar.value = 'cancelar';
+    cancelar.className = 'boton boton-outline';
+    cancelar.textContent = 'Cancelar';
+    cancelar.autofocus = true;
+    const aceptar = document.createElement('button');
+    aceptar.value = 'confirmar';
+    aceptar.className = 'boton boton-primario';
+    aceptar.textContent = textoConfirmar;
+    formulario.append(cancelar, aceptar);
+    dialogo.appendChild(formulario);
+
+    document.body.appendChild(dialogo);
+    dialogo.showModal();
+    return new Promise((resolver) => {
+        dialogo.addEventListener('close', () => {
+            resolver(dialogo.returnValue === 'confirmar');   // con Escape, returnValue queda vacío
+            dialogo.remove();
+        });
+    });
+}

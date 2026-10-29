@@ -1,16 +1,46 @@
-/* Estilos del inicio del administrador (vistas/homes/index-administrador.html). */
+/* Estilos del inicio del administrador: su cartera de unidades (vistas/homes/index-administrador.html). */
 
 .badge-rol {
     background-color: var(--color-purple-light);
     color: var(--color-purple);
 }
 
-main > p {
+.subtitulo {
     color: var(--color-text-muted);
     margin-top: -0.5rem;
     margin-bottom: 1.5rem;
 }
 
-tfoot a {
-    font-weight: 600;
+#mensaje-error {
+    color: var(--color-danger);
+}
+
+#mensaje-error:empty {
+    display: none;
+}
+
+/* la localidad, debajo del nombre de la unidad */
+.localidad {
+    display: block;
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    font-weight: 400;
+}
+
+/* "Publicada" y "No disponible" pueden ir juntos */
+.estados {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+
+.estado-no-disponible {
+    background-color: var(--color-danger-light);
+    color: var(--color-danger);
+}
+
+/* style.css y esta hoja les ponen display a algunos elementos, y eso le gana al atributo hidden.
+   Con !important, hidden siempre oculta. */
+[hidden] {
+    display: none !important;
 }
