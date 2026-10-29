@@ -55,10 +55,14 @@ async function cargarGestion() {
     mostrarOperador(resultado.operador);
 }
 
-// El administrador con sus datos (y, para el propietario, cambiar la comisión y quitarlo), o el formulario para asignar uno
+// El administrador con sus datos (y, para el propietario, cambiar la comisión y quitarlo), o el formulario para asignar uno.
+// Al administrador, ajustarSegunQuienEs() le quitó del DOM "sin-administrador" y "form-comision": por eso se controla que existan.
 function mostrarAdministrador(administrador) {
     document.getElementById('administrador-asignado').hidden = administrador === null;
-    document.getElementById('sin-administrador').hidden = administrador !== null;
+    const sinAdministrador = document.getElementById('sin-administrador');
+    if (sinAdministrador !== null) {
+        sinAdministrador.hidden = administrador !== null;
+    }
     if (administrador === null) {
         return;
     }
@@ -66,7 +70,10 @@ function mostrarAdministrador(administrador) {
     document.getElementById('administrador-mail').textContent = administrador.mail;
     document.getElementById('administrador-comision').textContent = formatearPorcentaje(administrador.porcentaje_comision);
     document.getElementById('administrador-desde').textContent = formatearFecha(administrador.desde);
-    document.getElementById('form-comision').elements.porcentaje_comision.value = Number(administrador.porcentaje_comision);
+    const formComision = document.getElementById('form-comision');
+    if (formComision !== null) {
+        formComision.elements.porcentaje_comision.value = Number(administrador.porcentaje_comision);
+    }
 }
 
 // El operador con sus datos y "Quitar", o el formulario para asignar uno
@@ -133,9 +140,13 @@ function conectarAcciones() {
         hacerAccion('administrador', '/unidades/administrador/comision', Object.fromEntries(new FormData(formComision)));
     });
 
-    document.getElementById('quitar-administrador')?.addEventListener('click', () => {
+    document.getElementById('quitar-administrador')?.addEventListener('click', async () => {
         const nombre = document.getElementById('administrador-nombre').textContent;
-        if (confirm(`¿Quitar a ${nombre} como administrador? La unidad vuelve a ser de autogestión, y le avisamos por mail.`)) {
+        if (await confirmar({
+            titulo: `¿Quitar a ${nombre} como administrador?`,
+            detalle: 'La unidad vuelve a ser de autogestión, y le avisamos por mail.',
+            textoConfirmar: 'Quitar',
+        })) {
             hacerAccion('administrador', '/unidades/administrador/quitar', {});
         }
     });
@@ -146,9 +157,13 @@ function conectarAcciones() {
         hacerAccion('operador', '/unidades/operador/asignar', Object.fromEntries(new FormData(formAsignarOperador)), formAsignarOperador);
     });
 
-    document.getElementById('quitar-operador').addEventListener('click', () => {
+    document.getElementById('quitar-operador').addEventListener('click', async () => {
         const nombre = document.getElementById('operador-nombre').textContent;
-        if (confirm(`¿Quitar a ${nombre} como operador de la unidad?`)) {
+        if (await confirmar({
+            titulo: `¿Quitar a ${nombre} como operador?`,
+            detalle: 'La unidad queda sin operador hasta que asignes otro.',
+            textoConfirmar: 'Quitar',
+        })) {
             hacerAccion('operador', '/unidades/operador/quitar', {});
         }
     });
