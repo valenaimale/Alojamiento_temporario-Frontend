@@ -1,16 +1,18 @@
 <!DOCTYPE html>
-<!-- Inicio del administrador: su cartera de unidades (por ahora, una maqueta). -->
+<!-- Inicio del administrador: su cartera de unidades (US2.5), las que le asignaron los propietarios, con la comisión de cada una. -->
 <html lang="es">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Administrador index</title>
-        <meta name="description" content="Gestioná la cartera de unidades, reservas y tu comisión">
+        <title>Cartera de unidades</title>
+        <meta name="description" content="Las unidades que administrás, con su estado y tu comisión">
         <link rel="stylesheet" href="../../estilos/style.css">
         <link rel="stylesheet" href="../../estilos/index-administrador.css">
         <script src="../../funcionalidades/sesion.js" defer></script>
         <script src="../../funcionalidades/menu.js" defer></script>
         <script src="../../funcionalidades/proteger-pagina.js" defer></script>
+        <script src="../../funcionalidades/unidades-comun.js" defer></script>
+        <script src="../../funcionalidades/cartera-administrador.js" defer></script>
         <link rel="stylesheet" href="../../estilos/aviso-verificacion.css">
         <script src="../../funcionalidades/aviso-verificacion.js" defer></script>
     </head>
@@ -21,51 +23,24 @@
             <a href="../perfil/perfil.html" class="enlace-perfil">Mi perfil</a>
         </header>
         <main>
-            <h1>Cartera de propiedades</h1>
-            <p>14 unidades a cargo · comisión promedio 17%</p>
+            <h1 id="titulo-cartera">Cartera de unidades</h1>
+            <p id="resumen-cartera" class="subtitulo" aria-live="polite">Cargando tus unidades…</p>
 
-            <table>
+            <p id="mensaje-error" role="alert"></p>
+
+            <p id="cartera-vacia" hidden>Todavía no te asignaron ninguna unidad. Cuando un propietario te asigne una, va a aparecer acá.</p>
+
+            <table id="tabla-cartera" aria-labelledby="titulo-cartera" hidden>
                 <thead>
                     <tr>
                         <th scope="col">Unidad</th>
                         <th scope="col">Propietario</th>
                         <th scope="col">Estado</th>
                         <th scope="col">Comisión</th>
-                        <th scope="col">Comisión del mes</th>
                         <th scope="col"><span class="visualmente-oculto">Acciones</span></th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td>Cabaña 1 — Las Grutas</td>
-                        <td>Marisa E.</td>
-                        <td><span class="estado estado-publicada">Publicada</span></td>
-                        <td>15%</td>
-                        <td><data value="10500">$10.500</data></td>
-                        <td><a href="detalle-unidad.html?id=1" class="boton">Ver detalle</a></td>
-                    </tr>
-                    <tr>
-                        <td>Depto 4B — Villa Gesell</td>
-                        <td>Roberto S.</td>
-                        <td><span class="estado estado-publicada">Publicada</span></td>
-                        <td>20%</td>
-                        <td><data value="8400">$8.400</data></td>
-                        <td><a href="detalle-unidad.html?id=2" class="boton">Ver detalle</a></td>
-                    </tr>
-                    <tr>
-                        <td>Casa Norte — Villa Gesell</td>
-                        <td>Laura P.</td>
-                        <td><span class="estado estado-no-publicada">No publicada</span></td>
-                        <td>18%</td>
-                        <td>—</td>
-                        <td><a href="detalle-unidad.html?id=3" class="boton">Ver detalle</a></td>
-                    </tr>
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <td colspan="6"><a href="cartera-completa.html">+ 11 unidades más</a></td>
-                    </tr>
-                </tfoot>
+                <tbody id="filas-cartera"></tbody>
             </table>
         </main>
     </body>

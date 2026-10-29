@@ -1,30 +1,115 @@
 <!DOCTYPE html>
-<!-- Detalle de un alojamiento (?id=): por ahora con datos de ejemplo; en la Épica 3 trae los datos reales. -->
+<!-- El detalle de un alojamiento para el huésped (US3.2): ?id=, y opcionalmente ingreso, egreso y personas
+     (vienen del listado). Fotos, características, el calendario para elegir las fechas (solo se pueden elegir
+     noches disponibles), el precio total y la seña, la política de cancelación y el depósito.
+     Es pública: se ve con o sin sesión. Reservar llega con la Épica 4. -->
 <html lang="es">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Detalle del alojamiento</title>
+        <title>Alojamiento</title>
+        <meta name="description" content="Fotos, disponibilidad, precio y condiciones del alojamiento">
         <link rel="stylesheet" href="../../estilos/style.css">
         <link rel="stylesheet" href="../../estilos/detalle-alojamiento.css">
         <script src="../../funcionalidades/sesion.js" defer></script>
         <script src="../../funcionalidades/menu.js" defer></script>
-        <script src="../../funcionalidades/proteger-pagina.js" defer></script>
-        <script src="../../funcionalidades/alojamientos.js" defer></script>
+        <script src="../../funcionalidades/unidades-comun.js" defer></script>
+        <script src="../../funcionalidades/detalle-alojamiento.js" defer></script>
     </head>
-    <body data-rol="huesped" hidden>
+    <body>
         <header>
             <nav id="menu" aria-label="Principal"></nav>
-            <a href="../perfil/perfil.html" class="enlace-perfil">Perfil</a>
+            <a href="../perfil/perfil.html" class="enlace-perfil" id="enlace-perfil" hidden>Mi perfil</a>
+            <p class="acceso" id="acceso" hidden>
+                <a href="../sesion/inicio-sesion.html" class="boton boton-outline">Iniciar sesión</a>
+                <a href="../registros/pre-registro.html" class="boton boton-primario">Registrarme</a>
+            </p>
         </header>
         <main>
-            <a href="listado.html">Volver al listado</a>
-            <!-- fotos, descripcion y reserva: llegan con la epica de alojamientos -->
-            <article class="tarjeta" id="detalle-alojamiento">
-                <h1 id="detalle-titulo"></h1>
-                <p id="detalle-localidad"></p>
-                <strong id="detalle-precio"></strong>
-                <p id="detalle-noches"></p>
+            <p><a href="listado.html" id="enlace-volver">Volver a los resultados</a></p>
+
+            <p id="mensaje-error" role="alert"></p>
+
+            <article id="alojamiento" hidden>
+                <h1 id="nombre"></h1>
+                <p id="ubicacion" class="subtitulo"></p>
+
+                <section aria-labelledby="titulo-fotos">
+                    <h2 id="titulo-fotos" class="visualmente-oculto">Fotos</h2>
+                    <ul class="galeria" id="galeria"></ul>
+                </section>
+
+                <section aria-labelledby="titulo-descripcion" id="seccion-descripcion">
+                    <h2 id="titulo-descripcion">Sobre el alojamiento</h2>
+                    <p id="caracteristicas"></p>
+                </section>
+
+                <section aria-labelledby="titulo-fechas" class="reserva">
+                    <h2 id="titulo-fechas">Elegí tus fechas</h2>
+                    <p class="ayuda" id="ayuda-calendario">Tocá la noche de ingreso y después el día de egreso. Las noches tachadas no están disponibles. En el calendario te podés mover con las flechas del teclado.</p>
+
+                    <label class="personas">Personas
+                        <input type="number" id="personas" min="1" max="50" step="1" value="2" inputmode="numeric">
+                    </label>
+
+                    <section aria-labelledby="titulo-mes" class="calendario">
+                        <h3 id="titulo-mes" aria-live="polite"></h3>
+                        <p class="navegacion-mes">
+                            <button type="button" class="boton boton-outline" id="mes-anterior">Mes anterior</button>
+                            <button type="button" class="boton boton-outline" id="mes-siguiente">Mes siguiente</button>
+                        </p>
+                        <p class="mensaje-error" id="error-calendario" role="alert"></p>
+                        <table aria-describedby="ayuda-calendario">
+                            <caption class="visualmente-oculto">Disponibilidad y precio de cada noche del mes</caption>
+                            <thead>
+                                <tr>
+                                    <th scope="col"><abbr title="lunes">Lun</abbr></th>
+                                    <th scope="col"><abbr title="martes">Mar</abbr></th>
+                                    <th scope="col"><abbr title="miércoles">Mié</abbr></th>
+                                    <th scope="col"><abbr title="jueves">Jue</abbr></th>
+                                    <th scope="col"><abbr title="viernes">Vie</abbr></th>
+                                    <th scope="col"><abbr title="sábado">Sáb</abbr></th>
+                                    <th scope="col"><abbr title="domingo">Dom</abbr></th>
+                                </tr>
+                            </thead>
+                            <tbody id="dias-del-mes"></tbody>
+                        </table>
+                    </section>
+
+                    <section aria-labelledby="titulo-estadia" class="estadia tarjeta">
+                        <h3 id="titulo-estadia">Tu estadía</h3>
+                        <p id="seleccion" role="status">Elegí las fechas en el calendario para ver el precio.</p>
+                        <dl id="precio-estadia" hidden>
+                            <dt>Noches</dt>
+                            <dd id="noches"></dd>
+                            <dt>Precio total (final)</dt>
+                            <dd id="precio-total"></dd>
+                            <dt id="texto-sena">Seña al reservar</dt>
+                            <dd id="sena"></dd>
+                        </dl>
+                        <p id="aclaracion-saldo" class="ayuda" hidden></p>
+                        <button type="button" class="boton boton-primario" disabled aria-describedby="aclaracion-reservar">Reservar</button>
+                        <p id="aclaracion-reservar" class="ayuda">Próximamente vas a poder reservar desde acá.</p>
+                    </section>
+                </section>
+
+                <section aria-labelledby="titulo-politica">
+                    <h2 id="titulo-politica">Si cancelás</h2>
+                    <p id="explicacion-politica" class="ayuda"></p>
+                    <dl class="politica">
+                        <dt>Más de 30 días antes</dt>
+                        <dd id="retencion-mas-de-30"></dd>
+                        <dt>Entre 15 y 30 días antes</dt>
+                        <dd id="retencion-de-15-a-30"></dd>
+                        <dt>Menos de 15 días antes</dt>
+                        <dd id="retencion-menos-de-15"></dd>
+                    </dl>
+                </section>
+
+                <section aria-labelledby="titulo-deposito">
+                    <h2 id="titulo-deposito">Depósito de garantía</h2>
+                    <p id="deposito"></p>
+                </section>
             </article>
         </main>
     </body>

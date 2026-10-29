@@ -1,40 +1,59 @@
 <!DOCTYPE html>
-<!-- Listado de alojamientos, con el filtro por localidad: por ahora con datos de ejemplo; en la Épica 3 usa la búsqueda real. -->
+<!-- Los alojamientos disponibles para una búsqueda (US3.2): destino (opcional), fechas y personas, que llegan en la URL
+     (listado.html?localidad_id=1&ingreso=...&egreso=...&personas=2). Es pública: se ve con o sin sesión. -->
 <html lang="es">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Alojamientos</title>
-        <meta name="description" content="Listado de alojamientos disponibles">
+        <title>Alojamientos disponibles</title>
+        <meta name="description" content="Alojamientos disponibles para tus fechas, con el precio final">
         <link rel="stylesheet" href="../../estilos/style.css">
-        <link rel="stylesheet" href="../../estilos/index-huesped.css">
+        <link rel="stylesheet" href="../../estilos/busqueda.css">
+        <link rel="stylesheet" href="../../estilos/listado-alojamientos.css">
         <script src="../../funcionalidades/sesion.js" defer></script>
         <script src="../../funcionalidades/menu.js" defer></script>
-        <script src="../../funcionalidades/proteger-pagina.js" defer></script>
-        <script src="../../funcionalidades/alojamientos.js" defer></script>
+        <script src="../../funcionalidades/unidades-comun.js" defer></script>
+        <script src="../../funcionalidades/busqueda.js" defer></script>
+        <script src="../../funcionalidades/listado-alojamientos.js" defer></script>
     </head>
-    <body data-rol="huesped" hidden>
+    <body>
         <header>
             <nav id="menu" aria-label="Principal"></nav>
-            <a href="../perfil/perfil.html" class="enlace-perfil">Perfil</a>
+            <a href="../perfil/perfil.html" class="enlace-perfil" id="enlace-perfil" hidden>Mi perfil</a>
+            <p class="acceso" id="acceso" hidden>
+                <a href="../sesion/inicio-sesion.html" class="boton boton-outline">Iniciar sesión</a>
+                <a href="../registros/pre-registro.html" class="boton boton-primario">Registrarme</a>
+            </p>
         </header>
         <main>
-            <h1>Alojamientos</h1>
-            <form class="form-busqueda">
+            <h1>Alojamientos disponibles</h1>
+
+            <form class="form-busqueda" id="form-busqueda" action="listado.html" method="get">
                 <fieldset>
-                    <legend>Filtrar por localidad</legend>
-                    <label for="localidad">Localidad
-                        <select id="localidad" name="localidad">
-                            <option value="">Todas</option>
-                            <option value="Las Grutas">Las Grutas</option>
-                            <option value="Villa Gesell">Villa Gesell</option>
+                    <legend>Cambiar la búsqueda</legend>
+                    <label>Destino
+                        <select name="localidad_id">
+                            <option value="">Todos los destinos</option>
                         </select>
                     </label>
-                    <button type="submit" class="boton boton-primario">Filtrar</button>
+                    <label>Ingreso
+                        <input type="date" name="ingreso" required>
+                    </label>
+                    <label>Egreso
+                        <input type="date" name="egreso" required>
+                    </label>
+                    <label>Personas
+                        <input type="number" name="personas" min="1" max="50" step="1" value="2" inputmode="numeric" required>
+                    </label>
+                    <button type="submit" class="boton boton-primario">Buscar</button>
                 </fieldset>
+                <p class="mensaje-error" id="error-busqueda" role="alert"></p>
             </form>
-            <section class="grilla-unidades" id="grilla-alojamientos">
-                <h2>Resultados</h2>
+
+            <section aria-labelledby="titulo-resultados">
+                <h2 id="titulo-resultados">Resultados</h2>
+                <p id="resumen-busqueda" role="status"></p>
+                <ul class="resultados" id="resultados"></ul>
             </section>
         </main>
     </body>

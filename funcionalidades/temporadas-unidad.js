@@ -160,7 +160,11 @@ async function guardarTemporada(evento) {
 
 // Borra una temporada, después de confirmarlo
 async function borrarTemporada(temporada, descripcion) {
-    if (!confirm(`¿Borrar la ${descripcion}? Esas noches van a quedar sin mínimo de noches (mínimo 1).`)) {
+    if (!await confirmar({
+        titulo: `¿Borrar la ${descripcion}?`,
+        detalle: 'Esas noches van a quedar sin mínimo de noches (mínimo 1).',
+        textoConfirmar: 'Borrar',
+    })) {
         return;
     }
     limpiarMensajes('error-temporada', 'ok-temporada');

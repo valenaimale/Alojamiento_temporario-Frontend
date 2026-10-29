@@ -1,0 +1,74 @@
+/* Estilos de la gestión de una unidad: administrador y operador (vistas/unidades/gestion-unidad.html). */
+
+main {
+    max-width: 720px;
+}
+
+.subtitulo {
+    color: var(--color-text-muted);
+    margin-top: -0.5rem;
+}
+
+/* una tarjeta para el administrador y otra para el operador */
+.tarjeta {
+    margin-bottom: 1.5rem;
+    gap: 0.75rem;
+}
+
+.tarjeta h2,
+.tarjeta p {
+    margin: 0;
+}
+
+.ayuda {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+}
+
+form .ayuda {
+    margin-top: -0.6rem;
+}
+
+/* los datos del administrador o del operador: nombre a la izquierda, valor a la derecha */
+.datos {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.3rem 1rem;
+    margin: 0 0 1rem;
+}
+
+.datos dt {
+    color: var(--color-text-muted);
+}
+
+.datos dd {
+    margin: 0;
+    font-weight: 600;
+    overflow-wrap: anywhere;   /* un mail largo se parte antes que desbordar */
+}
+
+#form-comision {
+    margin-bottom: 1rem;
+}
+
+.mensaje-error,
+#mensaje-error {
+    color: var(--color-danger);
+}
+
+.mensaje-ok {
+    color: var(--color-primary-dark);
+    font-weight: 600;
+}
+
+.mensaje-error:empty,
+#mensaje-error:empty,
+.mensaje-ok:empty {
+    display: none;
+}
+
+/* style.css y esta hoja les ponen display a algunos elementos, y eso le gana al atributo hidden.
+   Con !important, hidden siempre oculta. */
+[hidden] {
+    display: none !important;
+}
