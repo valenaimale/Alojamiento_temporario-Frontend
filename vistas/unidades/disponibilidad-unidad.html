@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- Publicación y fechas bloqueadas de una unidad (?id=), US3.1 y US3.3.
+<!-- Publicación, reservas y fechas bloqueadas de una unidad (?id=), US3.1, US3.3 y Épica 4.
      Publicación (publicar o pausar): solo el propietario; al administrador se le quita esa sección.
-     Fechas bloqueadas (bloquear y liberar): el propietario y el administrador asignado. -->
+     Reservas en curso y próximas (solo lectura) y fechas bloqueadas (bloquear y liberar): el propietario y el administrador asignado. -->
 <html lang="es">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Publicación y fechas bloqueadas</title>
+        <title>Publicación, reservas y fechas bloqueadas</title>
         <meta name="description" content="Publicá o pausá tu unidad y bloqueá las fechas que no querés que se reserven">
         <link rel="stylesheet" href="../../estilos/style.css">
         <link rel="stylesheet" href="../../estilos/disponibilidad-unidad.css">
@@ -26,7 +26,7 @@
             <p id="mensaje-error" role="alert"></p>
 
             <article id="contenido" hidden>
-                <h1>Publicación y fechas bloqueadas</h1>
+                <h1>Publicación, reservas y fechas bloqueadas</h1>
                 <p id="nombre-unidad" class="subtitulo"></p>
 
                 <section aria-labelledby="titulo-publicacion" class="seccion tarjeta" id="seccion-publicacion">
@@ -44,6 +44,26 @@
                         <button type="button" class="boton boton-primario" id="publicar" hidden>Publicar la unidad</button>
                         <button type="button" class="boton boton-outline" id="pausar" hidden>Pausar la publicación</button>
                     </p>
+                </section>
+
+                <section aria-labelledby="titulo-reservas" class="seccion">
+                    <h2 id="titulo-reservas">Reservas</h2>
+                    <p class="ayuda">Las reservas en curso y las próximas. Mientras la reserva está pendiente de pago, el huésped la puede cancelar y esas fechas vuelven a quedar libres.</p>
+                    <p id="sin-reservas" hidden>Todavía no hay reservas en curso ni próximas.</p>
+                    <table id="tabla-reservas" aria-labelledby="titulo-reservas" hidden>
+                        <thead>
+                            <tr>
+                                <th scope="col">Huésped</th>
+                                <th scope="col">Ingreso</th>
+                                <th scope="col">Egreso</th>
+                                <th scope="col">Noches</th>
+                                <th scope="col">Personas</th>
+                                <th scope="col">Estado</th>
+                                <th scope="col">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="filas-reservas"></tbody>
+                    </table>
                 </section>
 
                 <section aria-labelledby="titulo-bloqueos" class="seccion">

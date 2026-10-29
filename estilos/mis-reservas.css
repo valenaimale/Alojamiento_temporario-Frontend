@@ -1,0 +1,118 @@
+/* Estilos de "Mis reservas" del huésped (vistas/reservas/mis-reservas.html). */
+
+main {
+    max-width: 820px;
+}
+
+/* las reservas, una debajo de la otra; sin viñetas */
+.reservas {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.reserva {
+    gap: 0.5rem;
+}
+
+.reserva img {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+}
+
+.reserva h2,
+.reserva p {
+    margin: 0;
+}
+
+.reserva h2 {
+    font-size: 1.2rem;
+}
+
+.ubicacion {
+    color: var(--color-text-muted);
+}
+
+/* los datos: nombre a la izquierda, valor a la derecha */
+.datos {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.3rem 1rem;
+    margin: 0.25rem 0;
+}
+
+.datos dt {
+    color: var(--color-text-muted);
+}
+
+.datos dd {
+    margin: 0;
+    font-weight: 600;
+}
+
+.ayuda {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+}
+
+/* pendiente de pago: ni verde (confirmada) ni gris (terminada o cancelada) */
+.estado-pendiente {
+    background-color: var(--color-purple-light);
+    color: var(--color-purple);
+}
+
+/* desde 640px: la foto a la izquierda y los datos a la derecha */
+@media (min-width: 640px) {
+    .reserva {
+        display: grid;
+        grid-template-columns: 220px 1fr;
+        column-gap: 1.25rem;
+        align-content: start;
+    }
+
+    .reserva img {
+        grid-row: 1 / span 7;
+        aspect-ratio: 4 / 3;
+    }
+
+    .reserva > :not(img) {
+        grid-column: 2;
+    }
+
+    /* un alojamiento sin foto: todo en una sola columna */
+    .reserva:not(:has(img)) {
+        grid-template-columns: 1fr;
+    }
+
+    .reserva:not(:has(img)) > * {
+        grid-column: 1;
+    }
+
+    .reserva .boton {
+        justify-self: start;
+    }
+}
+
+#mensaje-error {
+    color: var(--color-danger);
+}
+
+.mensaje-ok {
+    color: var(--color-primary-dark);
+    font-weight: 600;
+}
+
+#mensaje-error:empty,
+.mensaje-ok:empty {
+    display: none;
+}
+
+/* style.css y esta hoja les ponen display a algunos elementos, y eso le gana al atributo hidden.
+   Con !important, hidden siempre oculta. */
+[hidden] {
+    display: none !important;
+}

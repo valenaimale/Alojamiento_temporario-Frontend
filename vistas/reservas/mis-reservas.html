@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<!-- "Mis reservas" del huésped (y del propietario, que también es huésped), Épica 4: todas sus reservas, con su
+     alojamiento, fechas, importes y estado. Las pendientes de pago se pueden cancelar. -->
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Mis reservas</title>
+        <meta name="description" content="Tus reservas de alojamiento: fechas, importes y estado">
+        <link rel="stylesheet" href="../../estilos/style.css">
+        <link rel="stylesheet" href="../../estilos/mis-reservas.css">
+        <script src="../../funcionalidades/sesion.js" defer></script>
+        <script src="../../funcionalidades/menu.js" defer></script>
+        <script src="../../funcionalidades/proteger-pagina.js" defer></script>
+        <script src="../../funcionalidades/unidades-comun.js" defer></script>
+        <script src="../../funcionalidades/mis-reservas.js" defer></script>
+    </head>
+    <body data-rol="huesped" hidden>
+        <header>
+            <nav id="menu" aria-label="Principal"></nav>
+            <a href="../perfil/perfil.html" class="enlace-perfil">Mi perfil</a>
+        </header>
+        <main>
+            <h1 id="titulo" tabindex="-1">Mis reservas</h1>
+
+            <p id="mensaje-ok" class="mensaje-ok" role="status"></p>
+            <p id="mensaje-error" role="alert"></p>
+            <p id="cargando" aria-live="polite">Cargando tus reservas…</p>
+
+            <p id="sin-reservas" hidden>Todavía no hiciste ninguna reserva. <a href="../alojamientos/listado.html">Buscá un alojamiento</a> para tus próximas vacaciones.</p>
+
+            <ul class="reservas" id="lista-reservas" aria-labelledby="titulo"></ul>
+        </main>
+    </body>
+</html>

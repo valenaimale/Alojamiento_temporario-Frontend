@@ -3,6 +3,7 @@
 const ENLACES_HUESPED = [
     { texto: 'Inicio', url: '../homes/index-huesped.html' },
     { texto: 'Alojamientos', url: '../alojamientos/listado.html' },
+    { texto: 'Mis reservas', url: '../reservas/mis-reservas.html' },
 ];
 const MENU = {
     huesped: ENLACES_HUESPED,

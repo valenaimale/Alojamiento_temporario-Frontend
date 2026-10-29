@@ -1,13 +1,15 @@
 // Temporadas y precios por noche de una unidad (vistas/unidades/temporadas-unidad.html?id=5), US2.7 y US2.9.
 // - Temporadas: lista, crear, editar (el mismo formulario) y borrar, con GET/POST /unidades/temporadas...
 // - Precios: un calendario por mes (GET /unidades/precios) y el formulario para cargar el precio de un rango.
-// Solo es del propietario: si entra otro usuario, el backend responde 403 o 404 y se muestra ese mensaje.
+// El propietario ve y cambia todo. El administrador asignado solo ve (las temporadas y el calendario completo):
+// se le quitan los formularios y los botones. A cualquier otro el backend le responde 404 y se muestra ese mensaje.
 
 const NOMBRES_DE_TEMPORADA = { alta: 'Alta', media: 'Media', baja: 'Baja' };
 
 const formTemporada = document.getElementById('form-temporada');
 const formPrecio = document.getElementById('form-precio');
 let idUnidad = null;
+let soloLectura = false;         // true para el administrador: ve, pero no cambia nada
 let temporadaEnEdicion = null;   // la temporada que se está editando, o null si el formulario es para crear una nueva
 let mesMostrado = null;          // el primer día del mes que muestra el calendario
 
@@ -70,7 +72,7 @@ async function cargarTemporadas() {
     dibujarTemporadas(resultado.temporadas);
 }
 
-// Dibuja la lista de temporadas: cada una con sus fechas, su mínimo y sus tres acciones
+// Dibuja la lista de temporadas: cada una con sus fechas, su mínimo y sus tres acciones (sin acciones para el administrador)
 function dibujarTemporadas(temporadas) {
     const lista = document.getElementById('lista-temporadas');
     lista.replaceChildren();
@@ -86,6 +88,10 @@ function dibujarTemporadas(temporadas) {
         const noches = temporada.minimo_noches === 1 ? '1 noche' : `${temporada.minimo_noches} noches`;
         detalle.textContent = `Del ${formatearFecha(temporada.fecha_inicio)} al ${formatearFecha(temporada.fecha_fin)} · Mínimo ${noches}`;
         item.append(titulo, detalle);
+        if (soloLectura) {
+            lista.appendChild(item);
+            continue;
+        }
 
         // los botones dicen de qué temporada son, para que se entiendan fuera de contexto (lector de pantalla).
         // El nombre accesible empieza con el texto visible: así quien usa control por voz puede decir "Editar".
@@ -344,8 +350,9 @@ async function cargarPagina() {
             mostrarErrorPagina(resumen.resultado.error);
             return;
         }
+        soloLectura = !resumen.resultado.unidad.es_propietario;   // se sabe antes de dibujar las temporadas
         await Promise.all([cargarTemporadas(), cargarCalendario()]);
-    } catch (error) {   // sin conexión, o el backend respondió un error (el administrador recibe 403)
+    } catch (error) {   // sin conexión, o el backend respondió un error
         console.error('No se pudo cargar la página:', error);
         mostrarErrorPagina(error instanceof TypeError ? MENSAJE_SIN_CONEXION : error.message);
         return;
@@ -354,6 +361,20 @@ async function cargarPagina() {
     const unidad = resumen.resultado.unidad;
     document.title = `Temporadas y precios de ${unidad.nombre}`;
     document.getElementById('nombre-unidad').textContent = `${unidad.nombre} · ${unidad.localidad}, ${unidad.provincia}`;
+
+    document.getElementById('mes-anterior').addEventListener('click', () => cambiarMes(-1));
+    document.getElementById('mes-siguiente').addEventListener('click', () => cambiarMes(1));
+
+    if (soloLectura) {
+        // el administrador: se quitan los formularios (no solo se ocultan, así el lector de pantalla no los cuenta)
+        formTemporada.remove();
+        formPrecio.remove();
+        document.getElementById('sin-temporadas').textContent = 'La unidad todavía no tiene temporadas.';
+        document.getElementById('aviso-solo-lectura').hidden = false;
+        document.getElementById('contenido').hidden = false;
+        document.body.hidden = false;
+        return;
+    }
 
     // no se cargan temporadas que ya terminaron ni precios de noches pasadas
     formTemporada.elements.fecha_fin.min = hoyATexto();
@@ -367,8 +388,6 @@ async function cargarPagina() {
         formTemporada.elements.nombre.focus();
     });
     formPrecio.addEventListener('submit', cargarPrecio);
-    document.getElementById('mes-anterior').addEventListener('click', () => cambiarMes(-1));
-    document.getElementById('mes-siguiente').addEventListener('click', () => cambiarMes(1));
 
     document.getElementById('contenido').hidden = false;
     document.body.hidden = false;

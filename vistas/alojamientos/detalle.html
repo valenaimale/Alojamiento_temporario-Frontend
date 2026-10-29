@@ -2,7 +2,7 @@
 <!-- El detalle de un alojamiento para el huésped (US3.2): ?id=, y opcionalmente ingreso, egreso y personas
      (vienen del listado). Fotos, características, el calendario para elegir las fechas (solo se pueden elegir
      noches disponibles), el precio total y la seña, la política de cancelación y el depósito.
-     Es pública: se ve con o sin sesión. Reservar llega con la Épica 4. -->
+     Es pública: se ve con o sin sesión. Para reservar hace falta una cuenta de huésped (o propietario) con el mail verificado. -->
 <html lang="es">
     <head>
         <meta charset="UTF-8">
@@ -88,8 +88,19 @@
                             <dd id="sena"></dd>
                         </dl>
                         <p id="aclaracion-saldo" class="ayuda" hidden></p>
-                        <button type="button" class="boton boton-primario" disabled aria-describedby="aclaracion-reservar">Reservar</button>
-                        <p id="aclaracion-reservar" class="ayuda">Próximamente vas a poder reservar desde acá.</p>
+
+                        <!-- se muestra solo si la estadía está disponible y quien la ve puede reservar -->
+                        <form id="form-reservar" hidden>
+                            <label class="aceptar-politica">
+                                <input type="checkbox" name="acepta_politica" required>
+                                Leí y acepto la <a href="#titulo-politica">política de cancelación</a>
+                            </label>
+                            <button type="submit" class="boton boton-primario" aria-describedby="aclaracion-pago">Reservar</button>
+                            <p id="aclaracion-pago" class="ayuda">Tu reserva queda pendiente de pago. El pago de la seña llega en la próxima versión de la plataforma: mientras tanto, la reserva te guarda las fechas.</p>
+                        </form>
+                        <!-- si no puede reservar: por qué (sin sesión, sin el mail verificado o con otro tipo de cuenta) -->
+                        <p id="aviso-reservar" class="ayuda" hidden></p>
+                        <p class="mensaje-error" id="error-reserva" role="alert"></p>
                     </section>
                 </section>
 

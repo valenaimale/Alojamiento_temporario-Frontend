@@ -184,6 +184,21 @@ article > section {
     cursor: not-allowed;
 }
 
+/* "Leí y acepto la política": el checkbox al lado del texto (style.css pone los label en columna y los input al 100 %) */
+.aceptar-politica {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-text);
+    font-weight: 400;
+}
+
+.aceptar-politica input {
+    width: 1.1rem;
+    height: 1.1rem;
+    flex-shrink: 0;
+}
+
 .politica {
     max-width: 520px;
 }

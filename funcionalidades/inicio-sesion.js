@@ -13,6 +13,15 @@ if (codigoError !== null) {
     document.getElementById('mensaje-error').textContent = ERRORES_OAUTH[codigoError] ?? ERRORES_OAUTH.error; // código desconocido: mensaje genérico
 }
 
+// La página a la que hay que volver después de iniciar sesión (?volver=...): el detalle de un alojamiento con las
+// fechas elegidas para reservar, o el listado con su búsqueda. Solo se aceptan esas dos páginas: si se aceptara
+// cualquier URL, un enlace armado por otro podría llevar al usuario a un sitio falso justo después de poner su contraseña.
+// Devuelve la ruta, o null para ir al inicio de su rol.
+function paginaParaVolver() {
+    const volver = new URLSearchParams(window.location.search).get('volver');
+    return volver !== null && /^\.\.\/alojamientos\/(detalle|listado)\.html(\?[\w=&%.-]*)?$/.test(volver) ? volver : null;
+}
+
 const form=document.getElementById('form-inicio-sesion');
 form.addEventListener('submit', async (evento) => { // "escucha" el form: cada vez que se envíe (submit), ejecuta esta función. async permite usar await adentro. evento tiene la info del envío
     evento.preventDefault();
@@ -35,7 +44,12 @@ form.addEventListener('submit', async (evento) => { // "escucha" el form: cada v
         return;
     }
     if (respuesta.ok) {
-        irAlHome(resultado.usuario.rol);
+        const volver = paginaParaVolver();
+        if (volver !== null) {
+            window.location.href = volver;
+        } else {
+            irAlHome(resultado.usuario.rol);
+        }
     }
     else{
         mensaje.textContent = resultado.error;

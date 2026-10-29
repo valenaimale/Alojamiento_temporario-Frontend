@@ -72,9 +72,18 @@ async function obtenerResumenUnidad(id) {
     return pedirAlBack(`/unidades/resumen?id=${encodeURIComponent(id)}`);
 }
 
+// El enlace al inicio de sesión que, después de entrar, vuelve a esta página de alojamientos (el listado o el detalle)
+// con lo que tiene en la URL: la búsqueda o las fechas elegidas. inicio-sesion.js solo acepta volver a estas páginas.
+function urlParaIniciarSesionYVolver() {
+    const pagina = window.location.pathname.split('/').pop();   // "detalle.html" o "listado.html"
+    const volver = `../alojamientos/${pagina}${window.location.search}`;
+    return `../sesion/inicio-sesion.html?volver=${encodeURIComponent(volver)}`;
+}
+
 // El encabezado de las páginas públicas (el listado y el detalle de alojamientos), que se ven con o sin sesión.
 // Con sesión arma el menú del usuario y muestra "Mi perfil" (#enlace-perfil); sin sesión, "Iniciar sesión" y
 // "Registrarme" (#acceso). Si el back no responde, se muestra como sin sesión.
+// Devuelve el usuario logueado (o null), así la página sabe quién la ve (el detalle, para reservar).
 async function armarEncabezadoPublico() {
     let usuario = null;
     try {
@@ -83,11 +92,18 @@ async function armarEncabezadoPublico() {
         console.error('No se pudo conectar con el back:', error);
     }
     if (usuario === null) {
-        document.getElementById('acceso').hidden = false;
-        return;
+        const acceso = document.getElementById('acceso');
+        // "Iniciar sesión" vuelve a esta página (con las fechas elegidas): el enlace se arma recién al tocarlo,
+        // porque mientras tanto el usuario pudo cambiar las fechas
+        acceso.querySelector('a[href*="inicio-sesion"]').addEventListener('click', (evento) => {
+            evento.currentTarget.href = urlParaIniciarSesionYVolver();
+        });
+        acceso.hidden = false;
+        return null;
     }
     armarMenu(usuario.rol);
     document.getElementById('enlace-perfil').hidden = false;
+    return usuario;
 }
 
 // El estado de publicación como se le muestra al usuario
@@ -99,9 +115,10 @@ const NOMBRES_DE_ESTADO = {
 
 // Pide confirmación antes de una acción que no se puede deshacer, con un diálogo propio (<dialog>) en vez del confirm() del navegador.
 // titulo: la pregunta ("¿Quitar a Nadia como operador?"); detalle: qué pasa si confirma; textoConfirmar: el botón ("Quitar").
+// textoCancelar: el botón para no hacer nada ("Cancelar"; "Volver" cuando la acción misma es cancelar algo).
 // Devuelve una promesa: true si confirma, false si cancela o cierra con Escape.
-// Es modal: el foco queda adentro, arranca en "Cancelar" (lo seguro) y al cerrarse vuelve al botón que lo abrió.
-function confirmar({ titulo, detalle = '', textoConfirmar }) {
+// Es modal: el foco queda adentro, arranca en el botón para no hacer nada (lo seguro) y al cerrarse vuelve al botón que lo abrió.
+function confirmar({ titulo, detalle = '', textoConfirmar, textoCancelar = 'Cancelar' }) {
     const dialogo = document.createElement('dialog');
     dialogo.className = 'dialogo-confirmar';
     dialogo.setAttribute('role', 'alertdialog');
@@ -126,7 +143,7 @@ function confirmar({ titulo, detalle = '', textoConfirmar }) {
     const cancelar = document.createElement('button');
     cancelar.value = 'cancelar';
     cancelar.className = 'boton boton-outline';
-    cancelar.textContent = 'Cancelar';
+    cancelar.textContent = textoCancelar;
     cancelar.autofocus = true;
     const aceptar = document.createElement('button');
     aceptar.value = 'confirmar';
