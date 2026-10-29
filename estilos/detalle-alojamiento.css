@@ -218,7 +218,8 @@ article > section {
     }
 }
 
-/* style.css les pone display a algunos elementos, y eso le gana al atributo hidden */
+/* style.css y esta hoja les ponen display a algunos elementos (por ejemplo, .estadia dl), y eso le gana al atributo
+   hidden. Con !important, hidden siempre oculta: si no, quedaban a la vista el precio y la seña de una estadía anterior. */
 [hidden] {
-    display: none;
+    display: none !important;
 }

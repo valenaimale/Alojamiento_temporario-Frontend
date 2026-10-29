@@ -95,6 +95,21 @@ function puedeSerEgreso(fecha) {
     return true;
 }
 
+// Si el egreso está limitado por una noche no disponible (mirando los meses ya pedidos), esa fecha: es el último
+// día en que se puede salir (esa noche no se duerme). null si no hay un límite así a la vista.
+function ultimoEgresoPorNocheNoDisponible() {
+    for (let fecha = sumarDias(estado.ingreso, 1); nochesEntre(estado.ingreso, fecha) <= MAXIMO_NOCHES; fecha = sumarDias(fecha, 1)) {
+        const datos = noche(fecha);
+        if (datos === null) {
+            return null;   // mes todavía no pedido: no se sabe
+        }
+        if (datos.estado !== 'libre') {
+            return fecha;
+        }
+    }
+    return null;
+}
+
 // Si esa fecha se puede tocar: como egreso (si ya hay ingreso), o como ingreso nuevo (si es una noche libre)
 function sePuedeElegir(fecha) {
     return puedeSerEgreso(fecha) || noche(fecha)?.estado === 'libre';
@@ -133,7 +148,11 @@ async function elegir(fecha) {
     dibujarCalendario();
     enfocar(fecha);
     mostrarEstadia(null);
-    document.getElementById('seleccion').textContent = `Ingreso: ${fechaEnPalabras(fecha)}. Ahora elegí el día de egreso.`;
+    // si el egreso tiene un límite por una noche ocupada, se explica: si no, parece raro poder tocar un día tachado
+    const limite = ultimoEgresoPorNocheNoDisponible();
+    document.getElementById('seleccion').textContent = limite === null
+        ? `Ingreso: ${fechaEnPalabras(fecha)}. Ahora elegí el día de egreso.`
+        : `Ingreso: ${fechaEnPalabras(fecha)}. Ahora elegí el día de egreso: como mucho el ${fechaEnPalabras(limite)}. Esa noche no está disponible, pero ese día podés salir.`;
 }
 
 // ---------- calendario: dibujo ----------

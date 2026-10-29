@@ -66,7 +66,8 @@ header .acceso .boton {
     }
 }
 
-/* style.css les pone display a algunos elementos, y eso le gana al atributo hidden */
+/* style.css y esta hoja les ponen display a algunos elementos (por ejemplo, header .acceso), y eso le gana al atributo
+   hidden. Con !important, hidden siempre oculta: si no, con sesión se veían "Iniciar sesión" y "Registrarme". */
 [hidden] {
-    display: none;
+    display: none !important;
 }
