@@ -1,16 +1,18 @@
 <!DOCTYPE html>
-<!-- "Mis hospedajes" del propietario: sus unidades y sus liquidaciones (por ahora, una maqueta). -->
+<!-- "Mis hospedajes" del propietario: sus unidades, con su estado y un acceso para configurar cada una, y sus liquidaciones (por ahora, una maqueta). -->
 <html lang="es">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Propietario index</title>
-        <meta name="description" content="Gestioná tus hospedajes, reservas y liquidaciones">
+        <title>Mis hospedajes</title>
+        <meta name="description" content="Gestioná tus hospedajes y tus liquidaciones">
         <link rel="stylesheet" href="../../estilos/style.css">
         <link rel="stylesheet" href="../../estilos/index-propietario.css">
         <script src="../../funcionalidades/sesion.js" defer></script>
         <script src="../../funcionalidades/menu.js" defer></script>
         <script src="../../funcionalidades/proteger-pagina.js" defer></script>
+        <script src="../../funcionalidades/unidades-comun.js" defer></script>
+        <script src="../../funcionalidades/mis-unidades.js" defer></script>
         <link rel="stylesheet" href="../../estilos/aviso-verificacion.css">
         <script src="../../funcionalidades/aviso-verificacion.js" defer></script>
     </head>
@@ -23,39 +25,55 @@
         <main>
             <div class="encabezado-seccion">
                 <h1>Mis hospedajes</h1>
-                <a href="alta-hospedaje.html" class="boton boton-primario">+ Dar de alta hospedaje</a>
+                <a href="../unidades/alta-unidad.html" class="boton boton-primario">Dar de alta una unidad</a>
             </div>
 
-            <ul class="lista-hospedajes">
-                <li>
-                    <article class="tarjeta">
-                        <img src="cabania1.png" alt="Cabaña 1 en Las Grutas">
-                        <header>
-                            <h2>Cabaña 1 — Las Grutas</h2>
-                            <p class="estado estado-publicada">Publicada</p>
-                        </header>
-                        <p>Admin.: Cacho F. · Comisión 15% · Depósito $15.000</p>
-                        <a href="configurar-hospedaje.html?id=1" class="boton">Configurar</a>
-                        <a href="reservas-hospedaje.html?id=1" class="boton">Ver reservas</a>
-                    </article>
-                </li>
-                <li>
-                    <article class="tarjeta">
-                        <img src="cabania2.png" alt="Cabaña 2 en Las Grutas">
-                        <header>
-                            <h2>Cabaña 2 — Las Grutas</h2>
-                            <p class="estado estado-no-publicada">No publicada</p>
-                        </header>
-                        <p>Autogestión · Falta cargar tarifa</p>
-                        <a href="configurar-hospedaje.html?id=2" class="boton">Completar configuración</a>
-                    </article>
-                </li>
-            </ul>
+            <section aria-labelledby="titulo-unidades">
+                <h2 id="titulo-unidades" class="visualmente-oculto">Tus unidades</h2>
+                <p id="estado-carga" aria-live="polite">Cargando tus unidades...</p>
+                <p id="mensaje-error" role="alert"></p>
+                <p id="sin-unidades" hidden>
+                    Todavía no diste de alta ninguna unidad.
+                    <a href="../unidades/alta-unidad.html">Dar de alta mi primera unidad</a>
+                </p>
+                <ul id="lista-unidades" class="lista-hospedajes"></ul>
+            </section>
 
             <section aria-labelledby="titulo-liquidaciones">
                 <h2 id="titulo-liquidaciones">Próximas liquidaciones</h2>
                 <p>Tabla o lista de liquidaciones pendientes.</p>
             </section>
         </main>
+
+        <!-- La tarjeta de cada unidad: mis-unidades.js la copia y la llena (con textContent) por cada unidad -->
+        <template id="plantilla-unidad">
+            <li>
+                <article class="tarjeta">
+                    <img data-campo="foto" alt="">
+                    <p data-campo="sin-fotos" class="sin-fotos">Sin fotos</p>
+                    <header>
+                        <h3 data-campo="nombre"></h3>
+                        <p data-campo="estado" class="estado"></p>
+                    </header>
+                    <p data-campo="ubicacion" class="ubicacion"></p>
+                    <p data-campo="no-disponible" class="no-disponible">No disponible</p>
+                    <section data-campo="faltantes" class="faltantes">
+                        <h4>Para publicarla te falta</h4>
+                        <ul data-campo="lista-faltantes"></ul>
+                    </section>
+                    <dl>
+                        <div>
+                            <dt>Gestión</dt>
+                            <dd data-campo="gestion"></dd>
+                        </div>
+                        <div>
+                            <dt>Depósito</dt>
+                            <dd data-campo="deposito"></dd>
+                        </div>
+                    </dl>
+                    <a data-campo="configurar" class="boton">Configurar<span data-campo="nombre-oculto" class="visualmente-oculto"></span></a>
+                </article>
+            </li>
+        </template>
     </body>
 </html>

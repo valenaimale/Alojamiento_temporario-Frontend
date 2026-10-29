@@ -18,12 +18,88 @@
     aspect-ratio: 16 / 9;
 }
 
-.lista-hospedajes .boton {
-    margin-bottom: 0.5rem;
+/* en lugar de la foto, un recuadro del mismo tamaño */
+.lista-hospedajes .sin-fotos {
+    margin: -1rem -1rem 0.5rem;
+    aspect-ratio: 16 / 9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    background-color: var(--color-gray-light);
+    color: var(--color-text-muted);
 }
 
-.lista-hospedajes .boton:last-of-type {
-    margin-bottom: 0;
+.lista-hospedajes h3 {
+    margin: 0;
+}
+
+.lista-hospedajes p {
+    margin: 0;
+}
+
+.lista-hospedajes .ubicacion {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+}
+
+.lista-hospedajes .no-disponible {
+    color: var(--color-danger);
+    font-weight: 600;
+}
+
+/* por qué no está publicada: un aviso, para que se note */
+.lista-hospedajes .faltantes {
+    background-color: var(--color-danger-light);
+    border-radius: var(--radius-sm);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+}
+
+.lista-hospedajes .faltantes h4 {
+    margin: 0 0 0.25rem;
+    font-size: 0.9rem;
+}
+
+.lista-hospedajes .faltantes ul {
+    margin: 0;
+    padding-left: 1.25rem;
+}
+
+.lista-hospedajes dl {
+    margin: 0 0 0.5rem;
+    font-size: 0.9rem;
+}
+
+.lista-hospedajes dl div {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.lista-hospedajes dt {
+    font-weight: 600;
+    color: var(--color-text-muted);
+}
+
+.lista-hospedajes dt::after {
+    content: ":";
+}
+
+.lista-hospedajes dd {
+    margin: 0;
+}
+
+.lista-hospedajes .boton {
+    margin-top: auto;   /* el botón queda abajo aunque las tarjetas tengan distinto alto */
+}
+
+#mensaje-error {
+    color: var(--color-danger);
+}
+
+#mensaje-error:empty,
+#estado-carga:empty {
+    display: none;
 }
 
 #titulo-liquidaciones + p {
@@ -39,10 +115,9 @@
     .lista-hospedajes {
         grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     }
+}
 
-    .lista-hospedajes .boton {
-        width: auto;
-        margin-bottom: 0;
-        margin-right: 0.5rem;
-    }
+/* style.css les pone display a algunos elementos, y eso le gana al atributo hidden */
+[hidden] {
+    display: none;
 }
