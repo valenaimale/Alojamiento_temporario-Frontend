@@ -18,6 +18,11 @@ function formatearPrecio(monto) {
     return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(Number(monto));
 }
 
+// Un porcentaje del backend como se lee acá: "15.00" → "15 %", "17.50" → "17,5 %"
+function formatearPorcentaje(valor) {
+    return `${Number(valor).toLocaleString('es-AR')} %`;
+}
+
 // Una fecha del backend como se lee acá: "2026-10-05" → "05/10/2026".
 // Se corta el texto en lugar de usar Date, así no hay corrimientos por zona horaria.
 function formatearFecha(fecha) {

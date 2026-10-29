@@ -37,11 +37,6 @@ function limpiarMensajes(tarjeta) {
     document.getElementById(`ok-${tarjeta}`).textContent = '';
 }
 
-// "15.00" → "15 %", "17.50" → "17,5 %"
-function formatearPorcentaje(valor) {
-    return `${Number(valor).toLocaleString('es-AR')} %`;
-}
-
 // ---------- mostrar ----------
 
 // Pide la gestión al backend y la muestra. Lanza el error si el backend no responde o responde un error.
