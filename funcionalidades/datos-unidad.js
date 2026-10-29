@@ -179,7 +179,11 @@ async function elegirPrincipal(foto, numero) {
 
 // Quita una foto, con confirmación, y anuncia el resultado. El foco va al título de las fotos.
 async function quitarFoto(foto, numero) {
-    if (!window.confirm(`¿Quitar la foto ${numero}?`)) {
+    if (!await confirmar({
+        titulo: `¿Quitar la foto ${numero}?`,
+        detalle: 'Deja de verse en la publicación. Si es la principal, la siguiente pasa a ser la principal.',
+        textoConfirmar: 'Quitar',
+    })) {
         return;
     }
     aviso('fotos').textContent = '';
