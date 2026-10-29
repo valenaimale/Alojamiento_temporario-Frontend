@@ -4,15 +4,18 @@
 //   elegir como ingreso (o como noche de la estadía) una noche libre. El egreso no es una noche, así que puede caer
 //   en una noche ocupada, siempre que todas las noches anteriores estén libres.
 // - Con las dos fechas, el precio total y la seña: GET /alojamiento con las fechas (el mismo cálculo que la búsqueda).
-// Es pública: se ve con o sin sesión.
+// - Reservar (Épica 4, sin pago todavía): POST /reservas/crear, aceptando la política de cancelación.
+// Es pública: se ve con o sin sesión. Reservan el huésped y el propietario con el mail verificado.
 
 const MAXIMO_NOCHES = 60;
 const MESES_HACIA_ADELANTE = 24;   // el calendario se puede ver hasta dos años hacia adelante (como el backend)
+const ROLES_QUE_RESERVAN = ['huesped', 'propietario'];   // el propietario también es huésped (como en el backend)
 const fechaLarga = new Intl.DateTimeFormat('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
 
 // Lo que el usuario está viendo y eligiendo
 const estado = {
     id: null,
+    usuario: null,     // el usuario logueado, o null sin sesión
     alojamiento: null,
     ingreso: null,     // "AAAA-MM-DD" o null
     egreso: null,      // "AAAA-MM-DD" o null
@@ -320,13 +323,17 @@ async function calcularEstadia() {
     mostrarEstadia(resultado.estadia);
 }
 
-// Muestra el resultado de la estadía (o lo borra, con null): las noches, el total y la seña, o por qué no se puede
+// Muestra el resultado de la estadía (o lo borra, con null): las noches, el total y la seña, o por qué no se puede.
+// Si se puede, también el formulario para reservar (o por qué esta cuenta no puede).
 function mostrarEstadia(estadia) {
     const seleccion = document.getElementById('seleccion');
     const detalle = document.getElementById('precio-estadia');
     const saldo = document.getElementById('aclaracion-saldo');
     detalle.hidden = true;
     saldo.hidden = true;
+    document.getElementById('form-reservar').hidden = true;
+    document.getElementById('aviso-reservar').hidden = true;
+    document.getElementById('error-reserva').textContent = '';
     if (estadia === null) {
         if (estado.ingreso === null) {
             seleccion.textContent = 'Elegí las fechas en el calendario para ver el precio.';
@@ -347,6 +354,82 @@ function mostrarEstadia(estadia) {
     saldo.textContent = `El resto se paga ${estado.alojamiento.politica.dias_cobro_saldo} días antes del ingreso.`;
     detalle.hidden = false;
     saldo.hidden = false;
+    mostrarParaReservar();
+}
+
+// ---------- reservar ----------
+
+// Con la estadía disponible: el formulario para reservar si esta cuenta puede, o por qué no puede.
+// Sin sesión, el enlace para iniciarla vuelve a este mismo detalle con las mismas fechas.
+function mostrarParaReservar() {
+    const aviso = document.getElementById('aviso-reservar');
+    const { usuario } = estado;
+
+    if (usuario !== null && ROLES_QUE_RESERVAN.includes(usuario.rol) && usuario.mail_verificado) {
+        document.getElementById('form-reservar').hidden = false;
+        return;
+    }
+
+    aviso.replaceChildren();
+    if (usuario === null) {
+        const enlace = document.createElement('a');
+        enlace.href = urlParaIniciarSesionYVolver();   // unidades-comun.js; la URL ya tiene las fechas elegidas
+        enlace.textContent = 'Iniciá sesión';
+        aviso.append(enlace, ' para reservar. Si todavía no tenés cuenta, registrate: es gratis.');
+    } else if (!ROLES_QUE_RESERVAN.includes(usuario.rol)) {
+        aviso.textContent = 'Las reservas se hacen con una cuenta de huésped.';
+    } else {
+        aviso.textContent = 'Para reservar tenés que verificar tu mail: entrá al enlace del mail que te mandamos al registrarte.';
+    }
+    aviso.hidden = false;
+}
+
+// Reserva la estadía elegida. Si sale bien, lleva a "Mis reservas"; si no, muestra el motivo.
+// Si mientras tanto otro reservó esas noches (409), vuelve a pedir el calendario para que se vean ocupadas.
+async function reservar(evento) {
+    evento.preventDefault();   // frena el envío clásico del form: lo manejamos nosotros
+    const formulario = evento.target;
+    const errorReserva = document.getElementById('error-reserva');
+    errorReserva.textContent = '';
+    const boton = formulario.querySelector('button[type="submit"]');
+    boton.disabled = true;   // evita reservar dos veces con un doble clic
+
+    let respuesta;
+    let resultado;
+    try {
+        ({ respuesta, resultado } = await pedirAlBack('/reservas/crear', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                unidad_id: estado.id,
+                ingreso: estado.ingreso,
+                egreso: estado.egreso,
+                personas: Number(document.getElementById('personas').value),
+                acepta_politica: formulario.elements.acepta_politica.checked,
+            }),
+        }));
+    } catch (error) {
+        console.error('No se pudo conectar con el back:', error);
+        errorReserva.textContent = MENSAJE_SIN_CONEXION;
+        boton.disabled = false;
+        return;
+    }
+
+    if (respuesta.ok) {
+        window.location.href = '../reservas/mis-reservas.html?nueva=1';
+        return;
+    }
+    boton.disabled = false;
+    errorReserva.textContent = resultado.error;
+    if (respuesta.status === 409) {
+        estado.meses.clear();   // el calendario guardado ya no sirve: se pide de nuevo
+        try {
+            await cargarMes(fechaATexto(estado.mes).slice(0, 7));
+            dibujarCalendario();
+        } catch (error) {
+            console.error('No se pudo cargar el calendario:', error);
+        }
+    }
 }
 
 // ---------- los datos del alojamiento ----------
@@ -408,7 +491,7 @@ function mostrarAlojamiento(alojamiento) {
 // Arma la página: el encabezado, los datos del alojamiento, el calendario (en el mes del ingreso, si vino)
 // y, si vinieron las fechas en la URL, el precio de esa estadía
 async function cargarPagina() {
-    armarEncabezadoPublico();   // unidades-comun.js
+    estado.usuario = await armarEncabezadoPublico();   // unidades-comun.js; null sin sesión
 
     const parametros = new URLSearchParams(window.location.search);
     estado.id = idUnidadDeLaUrl();
@@ -456,6 +539,7 @@ async function cargarPagina() {
     document.getElementById('mes-anterior').addEventListener('click', () => cambiarMes(-1));
     document.getElementById('mes-siguiente').addEventListener('click', () => cambiarMes(1));
     document.getElementById('dias-del-mes').addEventListener('keydown', moverConTeclado);
+    document.getElementById('form-reservar').addEventListener('submit', reservar);
     document.getElementById('personas').addEventListener('change', () => {
         if (estado.ingreso && estado.egreso) {
             calcularEstadia();

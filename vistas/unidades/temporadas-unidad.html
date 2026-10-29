@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<!-- Las temporadas y los precios por noche de una unidad (?id=), US2.7 y US2.9. Solo los ve y los cambia el propietario.
+<!-- Las temporadas y los precios por noche de una unidad (?id=), US2.7 y US2.9. Los cambia solo el propietario;
+     el administrador asignado los ve (sin los formularios ni los botones).
      Arriba, las temporadas (con su mínimo de noches); abajo, un calendario por mes con el precio de cada noche
      y el formulario para cargar el precio de un rango de fechas. -->
 <html lang="es">
@@ -28,6 +29,7 @@
             <article id="contenido" hidden>
                 <h1>Temporadas y precios</h1>
                 <p id="nombre-unidad" class="subtitulo"></p>
+                <p id="aviso-solo-lectura" class="ayuda" hidden>Podés ver las temporadas y los precios. Solo el propietario los puede cambiar.</p>
 
                 <section aria-labelledby="titulo-temporadas" class="seccion">
                     <h2 id="titulo-temporadas" tabindex="-1">Temporadas</h2>

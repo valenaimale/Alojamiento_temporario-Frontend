@@ -1,6 +1,7 @@
-// Publicación y fechas bloqueadas de una unidad (vistas/unidades/disponibilidad-unidad.html?id=5), US3.1 y US3.3.
+// Publicación, reservas y fechas bloqueadas de una unidad (vistas/unidades/disponibilidad-unidad.html?id=5), US3.1, US3.3 y Épica 4.
 // - Publicación: el estado, lo que le falta, y los botones Publicar o Pausar (POST /unidades/publicar y /pausar).
 //   Solo para el propietario: al administrador se le quita la sección.
+// - Reservas: las en curso y próximas (GET /unidades/reservas), solo para ver. Propietario y administrador.
 // - Fechas bloqueadas: la lista (GET /unidades/bloqueos), bloquear (POST .../crear) y liberar (POST .../liberar).
 //   Para el propietario y el administrador asignado. El backend responde 404 a cualquier otro.
 
@@ -125,6 +126,49 @@ async function cambiarPublicacion(accion) {
     document.getElementById(accion === 'publicar' ? 'pausar' : 'publicar').focus();
 }
 
+// ---------- reservas ----------
+
+// El estado de una reserva como lo ve el propietario
+const ESTADOS_DE_RESERVA = {
+    pendiente: 'Pendiente de pago',
+    confirmada: 'Confirmada',
+};
+
+// Pide las reservas en curso y próximas y las dibuja en la tabla. Lanza el error si el backend no responde.
+async function cargarReservas() {
+    const { respuesta, resultado } = await pedirAlBack(`/unidades/reservas?id=${encodeURIComponent(idUnidad)}`);
+    if (!respuesta.ok) {
+        throw new Error(resultado.error);
+    }
+    const { reservas } = resultado;
+    document.getElementById('sin-reservas').hidden = reservas.length > 0;
+    document.getElementById('tabla-reservas').hidden = reservas.length === 0;
+    document.getElementById('filas-reservas').replaceChildren(...reservas.map(filaDeReserva));
+}
+
+// Una fila de la tabla de reservas. El huésped es el encabezado de la fila: el lector de pantalla lo anuncia en cada celda.
+function filaDeReserva(reserva) {
+    const fila = document.createElement('tr');
+    const huesped = document.createElement('th');
+    huesped.scope = 'row';
+    huesped.textContent = reserva.huesped;
+    fila.appendChild(huesped);
+    const valores = [
+        formatearFecha(reserva.ingreso),
+        formatearFecha(reserva.egreso),
+        reserva.noches,
+        reserva.personas,
+        ESTADOS_DE_RESERVA[reserva.estado] ?? reserva.estado,
+        formatearPrecio(reserva.importe_total),
+    ];
+    for (const valor of valores) {
+        const celda = document.createElement('td');
+        celda.textContent = valor;
+        fila.appendChild(celda);
+    }
+    return fila;
+}
+
 // ---------- fechas bloqueadas ----------
 
 // Pide los bloqueos al backend y los dibuja. Lanza el error si el backend no responde.
@@ -237,7 +281,7 @@ async function recargarBloqueos(elementoError) {
 
 // ---------- arranque ----------
 
-// Arma la página: controla la sesión, arma el menú, pide el resumen de la unidad y sus bloqueos
+// Arma la página: controla la sesión, arma el menú, pide el resumen de la unidad, sus reservas y sus bloqueos
 async function cargarPagina() {
     let usuario;
     try {
@@ -267,14 +311,14 @@ async function cargarPagina() {
             return;
         }
         unidad = resultado.unidad;
-        await cargarBloqueos();
+        await Promise.all([cargarReservas(), cargarBloqueos()]);
     } catch (error) {
         console.error('No se pudo cargar la página:', error);
         mostrarErrorPagina(MENSAJE_SIN_CONEXION);
         return;
     }
 
-    document.title = `Publicación y fechas bloqueadas de ${unidad.nombre}`;
+    document.title = `Publicación, reservas y fechas bloqueadas de ${unidad.nombre}`;
     document.getElementById('nombre-unidad').textContent = `${unidad.nombre} · ${unidad.localidad}, ${unidad.provincia}`;
 
     if (unidad.es_propietario) {
@@ -284,8 +328,8 @@ async function cargarPagina() {
     } else {
         // el administrador no publica ni pausa: se quita la sección (no solo se oculta, así el lector de pantalla no la cuenta)
         document.getElementById('seccion-publicacion').remove();
-        document.querySelector('h1').textContent = 'Fechas bloqueadas';
-        document.title = `Fechas bloqueadas de ${unidad.nombre}`;
+        document.querySelector('h1').textContent = 'Reservas y fechas bloqueadas';
+        document.title = `Reservas y fechas bloqueadas de ${unidad.nombre}`;
     }
 
     // no se bloquean noches pasadas

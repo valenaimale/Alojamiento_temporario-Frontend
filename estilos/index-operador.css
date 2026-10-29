@@ -1,31 +1,76 @@
-/* Estilos de la agenda del operador (vistas/homes/index-operador.html). */
+/* Estilos de la agenda del operador (vistas/homes/index-operador.html). Pensada para el celular. */
 
 main {
-    max-width: 420px;
+    max-width: 520px;
 }
 
-main > p {
+.subtitulo {
     color: var(--color-text-muted);
-    font-weight: 600;
-    padding-bottom: 0.75rem;
-    border-bottom: 2px solid var(--color-primary-light);
-    margin-bottom: 1.25rem;
+    margin-top: -0.5rem;
 }
 
-.lista-agenda {
+/* los días, uno debajo del otro; sin números ni viñetas */
+.dias,
+.movimientos {
     list-style: none;
     padding: 0;
     margin: 0;
+}
+
+.dias {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* el título de cada día, con una línea abajo */
+.dias h2 {
+    font-size: 1.05rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--color-primary-light);
+    margin-bottom: 0.85rem;
+}
+
+.movimientos {
     display: flex;
     flex-direction: column;
     gap: 0.85rem;
 }
 
-.lista-agenda h2 {
+.movimientos h3 {
     font-size: 1rem;
+    margin: 0.25rem 0 0;
 }
 
-.lista-agenda .tarjeta > p:last-child {
-    margin-bottom: 0;
+.movimientos p {
+    margin: 0;
+}
+
+/* el badge ocupa solo su texto, no todo el ancho de la tarjeta */
+.movimientos .badge {
+    align-self: flex-start;
+}
+
+.estadia {
     color: var(--color-text-muted);
+    font-size: 0.9rem;
+}
+
+.pendiente {
+    color: var(--color-purple);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+#mensaje-error {
+    color: var(--color-danger);
+}
+
+#mensaje-error:empty {
+    display: none;
+}
+
+/* style.css le pone display a algunos elementos, y eso le gana al atributo hidden */
+[hidden] {
+    display: none !important;
 }
