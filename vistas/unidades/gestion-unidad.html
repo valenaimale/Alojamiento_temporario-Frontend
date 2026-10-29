@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<!-- Quién gestiona una unidad (?id=), US2.2 a US2.4: su administrador (con su comisión) y su operador de estadías.
+     El propietario maneja los dos. El administrador ve su propia asignación (sin poder cambiarla) y maneja el operador. -->
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Administrador y operador</title>
+        <meta name="description" content="Asigná el administrador y el operador de tu unidad">
+        <link rel="stylesheet" href="../../estilos/style.css">
+        <link rel="stylesheet" href="../../estilos/gestion-unidad.css">
+        <script src="../../funcionalidades/sesion.js" defer></script>
+        <script src="../../funcionalidades/menu.js" defer></script>
+        <script src="../../funcionalidades/unidades-comun.js" defer></script>
+        <script src="../../funcionalidades/gestion-unidad.js" defer></script>
+    </head>
+    <body hidden>
+        <header>
+            <nav id="menu" aria-label="Principal"></nav>
+            <a href="../perfil/perfil.html" class="enlace-perfil">Mi perfil</a>
+        </header>
+        <main>
+            <p><a href="configurar-unidad.html" id="enlace-volver">Volver a la unidad</a></p>
+
+            <p id="mensaje-error" role="alert"></p>
+
+            <article id="contenido" hidden>
+                <h1>Administrador y operador</h1>
+                <p id="nombre-unidad" class="subtitulo"></p>
+
+                <section aria-labelledby="titulo-administrador" class="tarjeta">
+                    <h2 id="titulo-administrador" tabindex="-1">Administrador</h2>
+                    <p class="ayuda">Gestiona la unidad a cambio de una comisión sobre cada estadía. Tiene que tener una cuenta de administrador en la plataforma. Le avisamos por mail cada cambio.</p>
+
+                    <div id="administrador-asignado" hidden>
+                        <dl class="datos">
+                            <dt>Nombre</dt>
+                            <dd id="administrador-nombre"></dd>
+                            <dt>Mail</dt>
+                            <dd id="administrador-mail"></dd>
+                            <dt>Comisión</dt>
+                            <dd id="administrador-comision"></dd>
+                            <dt>Desde</dt>
+                            <dd id="administrador-desde"></dd>
+                        </dl>
+
+                        <form id="form-comision" class="solo-propietario">
+                            <label>Nueva comisión (%)
+                                <input type="number" name="porcentaje_comision" min="0.01" max="99.99" step="0.01" inputmode="decimal" required aria-describedby="ayuda-comision">
+                            </label>
+                            <p class="ayuda" id="ayuda-comision">Vale para las liquidaciones de las próximas estadías.</p>
+                            <button type="submit" class="boton boton-outline">Cambiar la comisión</button>
+                        </form>
+                        <p class="solo-propietario">
+                            <button type="button" class="boton boton-outline" id="quitar-administrador">Quitar al administrador</button>
+                        </p>
+                        <p class="solo-administrador ayuda">Solo el propietario puede cambiar el administrador o la comisión.</p>
+                    </div>
+
+                    <div id="sin-administrador" hidden>
+                        <p><strong>Autogestión:</strong> la unidad no tiene administrador.</p>
+                        <form id="form-asignar-administrador">
+                            <fieldset>
+                                <legend>Asignar un administrador</legend>
+                                <label>Mail del administrador
+                                    <input type="email" name="mail" maxlength="255" autocomplete="off" required>
+                                </label>
+                                <label>Comisión (%)
+                                    <input type="number" name="porcentaje_comision" min="0.01" max="99.99" step="0.01" inputmode="decimal" required aria-describedby="ayuda-comision-nueva">
+                                </label>
+                                <p class="ayuda" id="ayuda-comision-nueva">Obligatoria: mayor que 0 y menor que 100. Es el porcentaje de cada estadía que cobra el administrador.</p>
+                            </fieldset>
+                            <button type="submit" class="boton boton-primario">Asignar</button>
+                        </form>
+                    </div>
+
+                    <p class="mensaje-error" id="error-administrador" role="alert"></p>
+                    <p class="mensaje-ok" id="ok-administrador" role="status"></p>
+                </section>
+
+                <section aria-labelledby="titulo-operador" class="tarjeta">
+                    <h2 id="titulo-operador" tabindex="-1">Operador de estadías</h2>
+                    <p class="ayuda">Recibe a los huéspedes en el ingreso y en el egreso. Tiene que tener una cuenta de operador en la plataforma. No ve los montos de las reservas.</p>
+
+                    <div id="operador-asignado" hidden>
+                        <dl class="datos">
+                            <dt>Nombre</dt>
+                            <dd id="operador-nombre"></dd>
+                            <dt>Mail</dt>
+                            <dd id="operador-mail"></dd>
+                        </dl>
+                        <p>
+                            <button type="button" class="boton boton-outline" id="quitar-operador">Quitar al operador</button>
+                        </p>
+                    </div>
+
+                    <div id="sin-operador" hidden>
+                        <p>La unidad no tiene operador.</p>
+                        <form id="form-asignar-operador">
+                            <label>Mail del operador
+                                <input type="email" name="mail" maxlength="255" autocomplete="off" required>
+                            </label>
+                            <button type="submit" class="boton boton-primario">Asignar</button>
+                        </form>
+                    </div>
+
+                    <p class="mensaje-error" id="error-operador" role="alert"></p>
+                    <p class="mensaje-ok" id="ok-operador" role="status"></p>
+                </section>
+            </article>
+        </main>
+    </body>
+</html>
