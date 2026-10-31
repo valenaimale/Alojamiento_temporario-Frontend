@@ -15,10 +15,15 @@
         <link rel="stylesheet" href="../../estilos/aviso-verificacion.css">
         <script src="../../funcionalidades/aviso-verificacion.js" defer></script>
         <script src="../../funcionalidades/unidades-comun.js" defer></script>
+        <script src="../../funcionalidades/estadias-modelo.js" defer></script>
         <script src="../../funcionalidades/agenda-operador.js" defer></script>
+        <link rel="stylesheet" href="../../estilos/haylugar.css">
+        <link rel="icon" href="../../imagenes/marca.svg" type="image/svg+xml">
+        <script src="../../funcionalidades/interfaz.js" defer></script>
     </head>
-    <body data-rol="operador" hidden>
-        <header>
+    <body class="operacion" data-rol="operador" hidden>
+        <header class="site-header">
+            <a class="marca" href="../homes/index-sin-sesion.html" aria-label="HayLugar, inicio"><svg viewBox="0 0 32 36" fill="none" aria-hidden="true"><path d="M5 31V13L16 5l11 8v18H5Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M12 31V19h8v12M20 24h.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg><span>HayLugar</span></a>
             <nav id="menu" aria-label="Principal"></nav>
             <a href="../perfil/perfil.html" class="enlace-perfil">Mi perfil</a>
         </header>
@@ -27,11 +32,35 @@
             <p class="subtitulo">Los ingresos y egresos de las unidades que tenés a cargo.</p>
 
             <p id="mensaje-error" role="alert"></p>
+            <p id="mensaje-ok" role="status"></p>
+            <button id="reintentar-agenda" type="button" class="boton boton-secundario" hidden>Reintentar carga</button>
+            <section id="pendientes-envio" class="envios-pendientes" aria-labelledby="titulo-pendientes" hidden>
+                <h2 id="titulo-pendientes">Pendientes de envío</h2>
+                <p>Guardados en este dispositivo. Se enviarán cuando vuelva la conexión. No borres los datos del sitio hasta que se envíen.</p>
+                <ul id="lista-pendientes"></ul>
+                <button id="reintentar-envio" type="button" class="boton boton-secundario">Reintentar envío</button>
+            </section>
             <p id="cargando" aria-live="polite">Cargando tu agenda…</p>
             <p id="agenda-vacia" hidden>No tenés ingresos ni egresos próximos.</p>
 
             <!-- un elemento por día con movimientos: su título (h2) y sus ingresos y egresos -->
             <ol class="dias" id="dias" aria-label="Días con ingresos o egresos"></ol>
         </main>
+        <dialog id="dialogo-movimiento" class="dialogo-movimiento" aria-labelledby="titulo-movimiento" aria-describedby="contexto-movimiento">
+            <h2 id="titulo-movimiento">Registrar movimiento</h2>
+            <p id="contexto-movimiento"></p>
+            <p class="ayuda">Se guardará la fecha y hora al confirmar. Las notas son opcionales.</p>
+            <form id="form-movimiento">
+                <label for="estado-movimiento">Estado de la unidad <span class="ayuda">(opcional)</span></label>
+                <textarea id="estado-movimiento" rows="2" maxlength="500" placeholder="Por ejemplo: unidad limpia, sin daños"></textarea>
+                <label for="notas-movimiento">Notas <span class="ayuda">(opcional)</span></label>
+                <textarea id="notas-movimiento" rows="3" maxlength="1000" placeholder="Llaves, observaciones o daños detectados"></textarea>
+                <p id="error-movimiento" role="alert"></p>
+                <div class="acciones-movimiento">
+                    <button id="cancelar-movimiento" class="boton boton-secundario" type="button">Volver</button>
+                    <button id="confirmar-movimiento" class="boton boton-primario" type="submit">Registrar</button>
+                </div>
+            </form>
+        </dialog>
     </body>
 </html>

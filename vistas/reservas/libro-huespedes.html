@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Libro de huéspedes · HayLugar</title>
+<link rel="stylesheet" href="../../estilos/style.css">
+<link rel="stylesheet" href="../../estilos/haylugar.css">
+<link rel="stylesheet" href="../../estilos/libro-huespedes.css">
+<link rel="icon" href="../../imagenes/marca.svg" type="image/svg+xml">
+<script src="../../funcionalidades/sesion.js" defer></script>
+<script src="../../funcionalidades/menu.js" defer></script>
+<script src="../../funcionalidades/unidades-comun.js" defer></script>
+<script src="../../funcionalidades/estadias-modelo.js" defer></script>
+<script src="../../funcionalidades/libro-huespedes.js" defer></script>
+<script src="../../funcionalidades/interfaz.js" defer></script>
+</head>
+<body class="libro-huespedes" hidden>
+        <header class="site-header">
+            <a class="marca" href="../homes/index-sin-sesion.html" aria-label="HayLugar, inicio"><svg viewBox="0 0 32 36" fill="none" aria-hidden="true"><path d="M5 31V13L16 5l11 8v18H5Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M12 31V19h8v12M20 24h.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg><span>HayLugar</span></a>
+            <nav id="menu" aria-label="Principal"></nav>
+            <a href="../perfil/perfil.html" class="enlace-perfil">Mi perfil</a>
+        </header>
+
+<main>
+    <a id="volver-libro" href="mis-reservas.html" class="enlace-volver">← Mis reservas</a>
+    <h1 id="titulo-libro" tabindex="-1">Datos de huéspedes</h1>
+    <p id="contexto-libro" class="subtitulo"></p>
+    <p id="error-libro" role="alert"></p>
+    <p id="ok-libro" role="status"></p>
+    <p id="cargando-libro" role="status">Cargando huéspedes…</p>
+    <button type="button" id="recargar-libro" class="boton boton-secundario" hidden>Volver a cargar</button>
+    <section id="indice-libro" hidden aria-labelledby="titulo-lista-libro">
+        <h2 id="titulo-lista-libro">Reservas del mes</h2>
+        <label for="mes-libro">Mes de la estadía</label>
+        <input id="mes-libro" type="month" required>
+        <p class="ayuda">Incluye las reservas que transcurren durante este mes.</p>
+        <ul id="reservas-libro" class="reservas-libro"></ul>
+    </section>
+    <section id="detalle-libro" hidden aria-label="Huéspedes de la reserva">
+        <div class="resumen-libro"><p id="progreso-libro"></p><a id="exportar-libro" class="boton boton-secundario">Descargar CSV</a></div>
+        <p id="ayuda-libro" class="ayuda"></p>
+        <form id="form-libro">
+            <div id="personas-libro"></div>
+            <div id="acciones-libro" class="acciones-libro" hidden>
+                <button type="button" id="agregar-huesped" class="boton boton-secundario">Agregar acompañante</button>
+                <button type="submit" id="guardar-libro" class="boton boton-primario">Guardar huéspedes</button>
+            </div>
+        </form>
+    </section>
+</main>
+</body></html>

@@ -31,10 +31,13 @@ function mostrarPantallaSinConexion(error) {
 // Cierra la sesión en el backend y vuelve al inicio sin sesión
 async function cerrarSesion() {
     try {
-        await fetch(URL_BACK + '/cerrar-sesion', {
+        const respuesta = await fetch(URL_BACK + '/cerrar-sesion', {
             method: 'POST',
             credentials: 'include',
         });
+        if (!respuesta.ok) {
+            throw new Error('No se pudo cerrar la sesión');
+        }
     } catch (error) {//fetch falla solo si no pudo llegar al back
         console.error('No se pudo conectar con el back:', error);
         alert(MENSAJE_SIN_CONEXION);
@@ -53,12 +56,18 @@ async function obtenerSesion() {
     });
 
     //si el back respondió 401 (no hay sesión), devolvemos null y cortamos acá
-    if (!respuesta.ok) {
+    if (respuesta.status === 401) {
         return null;
+    }
+    if (!respuesta.ok) {
+        throw new Error('No se pudo comprobar la sesión');
     }
 
     //leemos el JSON {"usuario": {...}} y devolvemos solo lo de adentro
     const resultado = await respuesta.json();
+    if (!resultado.usuario || typeof resultado.usuario !== 'object' || !resultado.usuario.rol) {
+        throw new Error('La respuesta de sesión no es válida');
+    }
     return resultado.usuario;
 }
 // Qué páginas puede ver cada rol: para cada rol, los roles que "incluye".
@@ -133,4 +142,12 @@ function irAlHome(rol) {
             window.location.href= '../homes/index-backoffice.html';
             break;
     }
+}
+// La página a la que hay que volver después de iniciar sesión (?volver=...): el detalle de un alojamiento con las
+// fechas elegidas para reservar, o el listado con su búsqueda. Solo se aceptan esas dos páginas: si se aceptara
+// cualquier URL, un enlace armado por otro podría llevar al usuario a un sitio falso justo después de poner su contraseña.
+// Devuelve la ruta, o null para ir al inicio de su rol.
+function paginaParaVolver() {
+    const volver = new URLSearchParams(window.location.search).get('volver');
+    return volver !== null && /^\.\.\/alojamientos\/(detalle|listado)\.html(\?[\w=&%.-]*)?$/.test(volver) ? volver : null;
 }

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<title>Recuperá tu cuenta · HayLugar</title>
+<link rel="stylesheet" href="../../estilos/style.css">
+<link rel="stylesheet" href="../../estilos/inicio-sesion.css">
+<link rel="stylesheet" href="../../estilos/haylugar.css">
+<link rel="stylesheet" href="../../estilos/recuperacion-contrasenia.css">
+<link rel="icon" href="../../imagenes/marca.svg" type="image/svg+xml">
+<script src="../../funcionalidades/sesion.js" defer></script>
+<script src="../../funcionalidades/recuperar-contrasenia.js" defer></script>
+<script src="../../funcionalidades/interfaz.js" defer></script>
+</head>
+<body class="cuenta">
+<header class="site-header"><a class="marca" href="../homes/index-sin-sesion.html" aria-label="HayLugar, inicio"><svg viewBox="0 0 32 36" fill="none" aria-hidden="true"><path d="M5 31V13L16 5l11 8v18H5Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M12 31V19h8v12M20 24h.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg><span>HayLugar</span></a></header>
+<main>
+<h1>Recuperá tu cuenta</h1>
+<p id="introduccion-recuperacion">Ingresá el mail que usás en HayLugar. Te enviaremos un enlace para crear una nueva contraseña.</p>
+<form id="form-recuperacion">
+<label>Mail<input type="email" name="mail" autocomplete="email" maxlength="254" required></label>
+<button type="submit" class="boton boton-primario">Enviar enlace</button>
+</form>
+<section id="recuperacion-enviada" hidden aria-labelledby="titulo-enviado">
+<h2 id="titulo-enviado" tabindex="-1">Revisá tu correo</h2>
+<p>Si hay una cuenta con ese mail y contraseña, te vamos a enviar un enlace para recuperar el acceso.</p>
+<p>Puede tardar unos minutos. Revisá también la carpeta de spam. El enlace vence en 30 minutos.</p>
+<button type="button" class="boton boton-outline" id="reenviar-enlace" disabled>Volver a enviar en 60 s</button>
+<button type="button" class="boton boton-texto" id="cambiar-mail">Usar otro mail</button>
+</section>
+<p class="ayuda">Si creaste tu cuenta con Google, elegí «Continuar con Google» al iniciar sesión.</p>
+<p id="mensaje-error" role="alert"></p>
+<p><a href="inicio-sesion.html">Volver a iniciar sesión</a></p>
+</main>
+<footer class="site-footer"><strong>HayLugar</strong><span>Alojamientos temporarios</span></footer>
+</body>
+</html>
+

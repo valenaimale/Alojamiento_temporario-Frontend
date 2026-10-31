@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="referrer" content="no-referrer">
+<meta name="robots" content="noindex, nofollow">
+<title>Elegí una nueva contraseña · HayLugar</title>
+<link rel="stylesheet" href="../../estilos/style.css">
+<link rel="stylesheet" href="../../estilos/inicio-sesion.css">
+<link rel="stylesheet" href="../../estilos/haylugar.css">
+<link rel="stylesheet" href="../../estilos/recuperacion-contrasenia.css">
+<link rel="icon" href="../../imagenes/marca.svg" type="image/svg+xml">
+<script src="../../funcionalidades/sesion.js" defer></script>
+<script src="../../funcionalidades/restablecer-contrasenia.js" defer></script>
+<script src="../../funcionalidades/interfaz.js" defer></script>
+</head>
+<body class="cuenta">
+<header class="site-header"><a class="marca" href="../homes/index-sin-sesion.html" aria-label="HayLugar, inicio"><svg viewBox="0 0 32 36" fill="none" aria-hidden="true"><path d="M5 31V13L16 5l11 8v18H5Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M12 31V19h8v12M20 24h.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg><span>HayLugar</span></a></header>
+<main>
+<h1>Elegí una nueva contraseña</h1>
+<p id="introduccion-recuperacion">Usá una contraseña que no uses en otros sitios.</p>
+<form id="form-restablecer" hidden>
+<label>Nueva contraseña<input type="password" name="contrasenia" autocomplete="new-password" minlength="8" maxlength="72" aria-describedby="ayuda-clave" required></label>
+<p class="ayuda" id="ayuda-clave">Al menos 8 caracteres. Se cerrarán tus sesiones anteriores.</p>
+<label>Repetí la nueva contraseña<input type="password" name="confirmar_contrasenia" autocomplete="new-password" minlength="8" maxlength="72" required></label>
+<button type="submit" class="boton boton-primario">Guardar contraseña</button>
+</form>
+<section id="recuperacion-completa" hidden aria-labelledby="titulo-completo">
+<h2 id="titulo-completo" tabindex="-1">Contraseña actualizada</h2>
+<p>Ya podés entrar con tu nueva contraseña. Tus sesiones anteriores quedaron cerradas.</p>
+<a href="inicio-sesion.html" class="boton boton-primario">Iniciar sesión</a>
+</section>
+<p id="mensaje-error" role="alert"></p>
+<p id="pedir-nuevo-enlace" hidden><a href="recuperar-contrasenia.html">Pedir un nuevo enlace</a></p>
+<p id="volver-login"><a href="inicio-sesion.html">Volver a iniciar sesión</a></p>
+</main>
+<footer class="site-footer"><strong>HayLugar</strong><span>Alojamientos temporarios</span></footer>
+</body>
+</html>
+

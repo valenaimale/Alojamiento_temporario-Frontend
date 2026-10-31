@@ -5,7 +5,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Alquiler temporario</title>
+        <title>HayLugar · Alojamientos temporarios</title>
         <meta name="description" content="Buscá alojamientos disponibles por destino y fechas">
         <link rel="stylesheet" href="../../estilos/style.css">
         <link rel="stylesheet" href="../../estilos/busqueda.css">
@@ -14,36 +14,34 @@
         <script src="../../funcionalidades/unidades-comun.js" defer></script>
         <script src="../../funcionalidades/busqueda.js" defer></script>
         <script src="../../funcionalidades/index-sin-sesion.js" defer></script>
+        <link rel="stylesheet" href="../../estilos/haylugar.css">
+        <link rel="icon" href="../../imagenes/marca.svg" type="image/svg+xml">
+        <script src="../../funcionalidades/destinos.js" defer></script>
+        <script src="../../funcionalidades/interfaz.js" defer></script>
     </head>
-    <body hidden>
-        <header>
+    <body class="inicio" hidden>
+        <header class="site-header">
+            <a class="marca" href="../homes/index-sin-sesion.html" aria-label="HayLugar, inicio"><svg viewBox="0 0 32 36" fill="none" aria-hidden="true"><path d="M5 31V13L16 5l11 8v18H5Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M12 31V19h8v12M20 24h.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg><span>HayLugar</span></a>
             <a href="../sesion/inicio-sesion.html" class="boton boton-outline">Iniciar sesión</a>
             <a href="../registros/pre-registro.html" class="boton boton-primario">Registrarme</a>
         </header>
         <main>
-            <h1>Alquiler temporario sin intermediarios</h1>
-            <p>Buscá alojamiento por destino y fechas: te mostramos solo lo que está disponible, con el precio final.</p>
+            <div class="intro-busqueda"><h1>¿Dónde querés quedarte?</h1><p>Encontrá alojamiento para tu próxima escapada.</p></div>
             <form class="form-busqueda" id="form-busqueda" action="../alojamientos/listado.html" method="get">
-                <fieldset>
-                    <legend>Buscá alojamiento</legend>
-                    <label>Destino
-                        <select name="localidad_id">
-                            <option value="">Todos los destinos</option>
-                        </select>
-                    </label>
-                    <label>Ingreso
-                        <input type="date" name="ingreso" required>
-                    </label>
-                    <label>Egreso
-                        <input type="date" name="egreso" required>
-                    </label>
-                    <label>Personas
-                        <input type="number" name="personas" min="1" max="50" step="1" value="2" inputmode="numeric" required>
-                    </label>
-                    <button type="submit" class="boton boton-primario">Buscar</button>
-                </fieldset>
-                <p class="mensaje-error" id="error-busqueda" role="alert"></p>
-            </form>
+ <fieldset><legend class="visualmente-oculto">Buscá alojamiento</legend>
+ <label class="campo-destino">Destino<select name="localidad_id"><option value="">Todos los destinos</option></select></label>
+ <div class="campo-fechas"><span class="etiqueta-fechas" aria-hidden="true">Fechas</span><div class="rango-busqueda"><label><span class="visualmente-oculto">Ingreso</span><input type="date" name="ingreso" required aria-label="Ingreso"></label><span aria-hidden="true">—</span><label><span class="visualmente-oculto">Egreso</span><input type="date" name="egreso" required aria-label="Egreso"></label></div></div>
+ <label class="campo-personas">Huéspedes<span class="contador-personas"><button type="button" data-personas="-1" aria-label="Quitar un huésped">−</button><input type="number" name="personas" min="1" max="50" step="1" value="2" inputmode="numeric" required aria-label="Cantidad de huéspedes"><button type="button" data-personas="1" aria-label="Agregar un huésped">+</button></span></label>
+ <button type="submit" class="boton boton-primario buscar-boton"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" stroke-width="2"/><path d="m16 16 5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Buscar</button>
+ </fieldset><p class="mensaje-error" id="error-busqueda" role="alert"></p>
+</form>
+        <section class="explorar" aria-labelledby="titulo-destinos">
+ <div class="encabezado-fila"><div><h2 id="titulo-destinos">Un lugar para tu próxima escapada</h2><p>Elegí un destino y encontrá alojamiento para tus fechas.</p></div><div class="controles-fila"><button type="button" class="boton-icono" id="destinos-anterior" aria-label="Destinos anteriores" aria-controls="destinos-fila">‹</button><button type="button" class="boton-icono" id="destinos-siguiente" aria-label="Más destinos" aria-controls="destinos-fila">›</button></div></div>
+ <p id="estado-destinos" role="status">Cargando destinos…</p><button type="button" class="boton" id="reintentar-destinos" hidden>Volver a cargar destinos</button>
+ <ul class="destinos-fila" id="destinos-fila" aria-label="Destinos para explorar" tabindex="0"></ul>
+</section>
+<section class="explorar" aria-labelledby="titulo-todos-destinos"><div class="encabezado-fila"><h2 id="titulo-todos-destinos">Explorá todos los destinos</h2></div><ul class="destinos-lista" id="todos-destinos"></ul></section>
         </main>
+        <footer class="site-footer"><strong>HayLugar</strong><span>Alojamientos temporarios</span></footer>
     </body>
 </html>

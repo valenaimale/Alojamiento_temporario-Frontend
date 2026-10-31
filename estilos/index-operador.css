@@ -74,3 +74,20 @@ main {
 [hidden] {
     display: none !important;
 }
+
+/* Registro operativo: una acción principal por movimiento. */
+.operacion .movimientos .tarjeta { align-items: flex-start; gap: .65rem; }
+.operacion .movimientos .boton { margin-top: .35rem; }
+.movimiento-hora { font-weight: 650; color: var(--color-primary); }
+.movimiento-notas { white-space: pre-wrap; overflow-wrap: anywhere; }
+.envios-pendientes { padding: 1.2rem; margin: 1.5rem 0; border: 1px solid var(--color-border); border-radius: 16px; background: var(--color-primary-light); }
+.envios-pendientes li { margin-bottom: .6rem; }
+.dialogo-movimiento { width: min(520px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); border: 1px solid var(--color-border); border-radius: 20px; padding: 28px; color: var(--color-text); }
+.dialogo-movimiento::backdrop { background: rgb(20 30 25 / 40%); }
+.dialogo-movimiento h2 { margin-top: 0; }
+.dialogo-movimiento form { display: flex; flex-direction: column; gap: .65rem; }
+.dialogo-movimiento textarea { width: 100%; resize: vertical; font: inherit; padding: .8rem; border: 1px solid var(--color-border); border-radius: 10px; }
+.acciones-movimiento { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: .75rem; margin-top: 1rem; }
+#error-movimiento { color: var(--color-danger); }
+#error-movimiento:empty, #mensaje-ok:empty { display: none; }
+@media (max-width: 600px) { .dialogo-movimiento { padding: 20px; } .acciones-movimiento .boton { flex: 1; } }

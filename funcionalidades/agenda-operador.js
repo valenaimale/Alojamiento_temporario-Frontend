@@ -1,123 +1,123 @@
-// La agenda del operador (vistas/homes/index-operador.html), RF-10.
-// Pide GET /operador/agenda (las reservas en curso y próximas de sus unidades) y arma, para cada día,
-// los egresos y los ingresos. Los egresos van primero: la unidad se libera a la mañana y se recibe a la tarde.
-// Nunca muestra montos (RN-19): el backend ni siquiera los manda.
-// La sesión y el rol los controla proteger-pagina.js (sin sesión o con otro rol, redirige).
-
-const fechaDelDia = new Intl.DateTimeFormat('es-AR', { weekday: 'long', day: 'numeric', month: 'long' });
-
-// "AAAA-MM-DD" de hoy más esa cantidad de días, con la fecha local (la del usuario, en Argentina)
-function diaDesdeHoy(dias) {
-    const fecha = new Date();
-    fecha.setDate(fecha.getDate() + dias);
-    return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`;
+// RF-10: agenda y registro de hechos. No contiene importes ni documentos de huéspedes.
+const $agenda = id => document.getElementById(id);
+const fechaMovimiento = new Intl.DateTimeFormat('es-AR', {timeZone:'America/Argentina/Buenos_Aires', dateStyle:'short', timeStyle:'short'});
+let usuarioAgenda, almacenAgenda, enviandoAgenda = false, movimientoAbierto;
+const dialogoMovimiento = $agenda('dialogo-movimiento');
+function avisoAgenda(texto, error = false) {
+  $agenda(error ? 'mensaje-error' : 'mensaje-ok').textContent = texto;
 }
-
-// El título de un día: "Hoy, sábado 31 de octubre", "Mañana, …" o "Lunes 2 de noviembre"
-function tituloDelDia(texto) {
-    const [anio, mes, dia] = texto.split('-').map(Number);
-    const enPalabras = fechaDelDia.format(new Date(anio, mes - 1, dia));
-    if (texto === diaDesdeHoy(0)) return `Hoy, ${enPalabras}`;
-    if (texto === diaDesdeHoy(1)) return `Mañana, ${enPalabras}`;
-    return enPalabras.charAt(0).toUpperCase() + enPalabras.slice(1);
+function elementoAgenda(tag, texto, clase = '') {
+  const el = document.createElement(tag); el.textContent = texto; el.className = clase; return el;
 }
-
-// Los movimientos de cada día a partir de las reservas: Map("AAAA-MM-DD" → [{tipo, reserva}]), ordenado por fecha.
-// Una reserva en curso ya ingresó: solo se agenda su egreso.
-function movimientosPorDia(reservas) {
-    const hoy = diaDesdeHoy(0);
-    const movimientos = [];
-    for (const reserva of reservas) {
-        if (reserva.ingreso >= hoy) {   // AAAA-MM-DD se compara como texto
-            movimientos.push({ fecha: reserva.ingreso, tipo: 'ingreso', reserva });
-        }
-        movimientos.push({ fecha: reserva.egreso, tipo: 'egreso', reserva });
-    }
-    // por fecha; en el mismo día, los egresos antes que los ingresos
-    movimientos.sort((a, b) => a.fecha.localeCompare(b.fecha) || (a.tipo === 'egreso' ? -1 : 1) - (b.tipo === 'egreso' ? -1 : 1));
-
-    const dias = new Map();
-    for (const movimiento of movimientos) {
-        if (!dias.has(movimiento.fecha)) {
-            dias.set(movimiento.fecha, []);
-        }
-        dias.get(movimiento.fecha).push(movimiento);
-    }
-    return dias;
+function tarjetaDeMovimiento({tipo, reserva: r}) {
+  const item = document.createElement('li'), tarjeta = elementoAgenda('article', '', 'tarjeta');
+  const realizado = r.estadia?.[`${tipo}_en`];
+  tarjeta.append(elementoAgenda('p', `${tipo === 'ingreso' ? 'Ingreso' : 'Egreso'}${realizado ? ' registrado' : ''}`, `badge badge-${tipo}`), elementoAgenda('h3', r.huesped), elementoAgenda('p', r.unidad.nombre, 'unidad'), elementoAgenda('p', `${r.unidad.direccion}, ${r.unidad.localidad}`), elementoAgenda('p', `${r.personas} huéspedes · Del ${formatearFecha(r.ingreso)} al ${formatearFecha(r.egreso)}`, 'estadia'));
+  if (realizado) {
+    if (tipo === 'egreso') tarjeta.append(elementoAgenda('p', `Ingreso: ${fechaMovimiento.format(new Date(r.estadia.ingreso_en))}`, 'ayuda'));
+    tarjeta.append(elementoAgenda('p', fechaMovimiento.format(new Date(realizado)), 'movimiento-hora'));
+    for (const campo of ['estado', 'notas']) if (r.estadia[`${campo}_${tipo}`]) tarjeta.append(elementoAgenda('p', r.estadia[`${campo}_${tipo}`], 'movimiento-notas'));
+  } else if (r.estado === 'pendiente') tarjeta.append(elementoAgenda('p', 'Pendiente de confirmación. Todavía no se puede registrar.', 'ayuda'));
+  else if (r[`puede_registrar_${tipo}`]) {
+    const boton = elementoAgenda('button', `Registrar ${tipo}`, 'boton boton-primario'); boton.type = 'button';
+    boton.addEventListener('click', () => abrirMovimiento(r, tipo)); tarjeta.append(boton);
+  } else tarjeta.append(elementoAgenda('p', tipo === 'ingreso' ? `Disponible desde el ${formatearFecha(r.ingreso)}.` : 'Primero debe registrarse el ingreso.', 'ayuda'));
+  item.append(tarjeta); return item;
 }
-
-// La tarjeta de un ingreso o egreso: el tipo, la unidad con su dirección, el huésped, las personas y las fechas
-function tarjetaDeMovimiento({ tipo, reserva }) {
-    const item = document.createElement('li');
-    const tarjeta = document.createElement('article');
-    tarjeta.className = 'tarjeta';
-
-    const badge = document.createElement('p');
-    badge.className = `badge badge-${tipo}`;
-    badge.textContent = tipo === 'ingreso' ? 'Ingreso' : 'Egreso';
-
-    const huesped = document.createElement('h3');
-    huesped.textContent = reserva.huesped;
-
-    const unidad = document.createElement('p');
-    unidad.className = 'unidad';
-    unidad.textContent = reserva.unidad.nombre;
-    const direccion = document.createElement('p');
-    direccion.textContent = `${reserva.unidad.direccion}, ${reserva.unidad.localidad}`;
-
-    const estadia = document.createElement('p');
-    estadia.className = 'estadia';
-    const personas = reserva.personas === 1 ? '1 persona' : `${reserva.personas} personas`;
-    const noches = reserva.noches === 1 ? '1 noche' : `${reserva.noches} noches`;
-    estadia.textContent = `${personas} · ${noches}, del ${formatearFecha(reserva.ingreso)} al ${formatearFecha(reserva.egreso)}`;
-
-    tarjeta.append(badge, huesped, unidad, direccion, estadia);
-    if (reserva.estado === 'pendiente') {
-        const aviso = document.createElement('p');
-        aviso.className = 'pendiente';
-        aviso.textContent = 'Reserva pendiente de pago';
-        tarjeta.appendChild(aviso);
-    }
-    item.appendChild(tarjeta);
-    return item;
-}
-
-// Pide la agenda y la dibuja: un elemento por día, con su título y sus movimientos
 async function cargarAgenda() {
-    const { respuesta, resultado } = await pedirAlBack('/operador/agenda');
-    if (!respuesta.ok) {   // 401 o 403: proteger-pagina.js ya está redirigiendo
-        return;
-    }
-    document.getElementById('cargando').hidden = true;
-    const dias = movimientosPorDia(resultado.reservas);
-    document.getElementById('agenda-vacia').hidden = dias.size > 0;
-
-    const listaDeDias = document.getElementById('dias');
-    listaDeDias.replaceChildren();
-    for (const [fecha, movimientos] of dias) {
-        const dia = document.createElement('li');
-        const titulo = document.createElement('h2');
-        const tiempo = document.createElement('time');
-        tiempo.dateTime = fecha;
-        tiempo.textContent = tituloDelDia(fecha);
-        titulo.appendChild(tiempo);
-        const listaDeMovimientos = document.createElement('ul');
-        listaDeMovimientos.className = 'movimientos';
-        listaDeMovimientos.append(...movimientos.map(tarjetaDeMovimiento));
-        dia.append(titulo, listaDeMovimientos);
-        listaDeDias.appendChild(dia);
-    }
+  const {respuesta, resultado} = await pedirAlBack('/operador/agenda');
+  if (!respuesta.ok) throw new Error(resultado.error || 'No pudimos cargar la agenda.');
+  const dias = new Map();
+  for (const m of EstadiasModelo.movimientos(resultado.reservas)) {
+    if (!dias.has(m.fecha)) dias.set(m.fecha, []); dias.get(m.fecha).push(m);
+  }
+  $agenda('dias').replaceChildren();
+  for (const [fecha, movimientos] of dias) {
+    const item = document.createElement('li');
+    const titulo = new Intl.DateTimeFormat('es-AR', {timeZone:'America/Argentina/Buenos_Aires', weekday:'long', day:'numeric', month:'long'}).format(new Date(`${fecha}T12:00:00-03:00`));
+    const lista = elementoAgenda('ul', '', 'movimientos'); lista.append(...movimientos.map(tarjetaDeMovimiento));
+    item.append(elementoAgenda('h2', `${fecha === EstadiasModelo.dia() ? 'Hoy · ' : ''}${titulo}`), lista); $agenda('dias').append(item);
+  }
+  $agenda('agenda-vacia').hidden = dias.size > 0;
+  $agenda('cargando').hidden = true; $agenda('reintentar-agenda').hidden = true;
 }
-
-// Arma la página; si el backend no responde, lo dice
-async function cargarPagina() {
-    try {
-        await cargarAgenda();
-    } catch (error) {
-        console.error('No se pudo cargar la agenda:', error);
-        document.getElementById('cargando').hidden = true;
-        document.getElementById('mensaje-error').textContent = MENSAJE_SIN_CONEXION;
-    }
+function pendientesAgenda() {
+  const lista = almacenAgenda.leer().pendientes;
+  $agenda('pendientes-envio').hidden = !lista.length;
+  $agenda('lista-pendientes').replaceChildren();
+  for (const e of lista) {
+    const item = elementoAgenda('li', `${e.tipo === 'ingreso' ? 'Ingreso' : 'Egreso'} · ${e.alojamiento} · ${fechaMovimiento.format(new Date(e.ocurrido_en))}`);
+    if (e.error) item.append(elementoAgenda('p', e.error, 'ayuda'));
+    $agenda('lista-pendientes').append(item);
+  }
 }
-
-cargarPagina();
+function guardarBorrador() {
+  if (!movimientoAbierto || !almacenAgenda) return;
+  try {
+    almacenAgenda.borrador(`${movimientoAbierto.reserva_id}.${movimientoAbierto.tipo}`, {estado_unidad:$agenda('estado-movimiento').value, notas:$agenda('notas-movimiento').value});
+  } catch { $agenda('error-movimiento').textContent = 'No pudimos guardar el borrador en este dispositivo. Mantené esta ventana abierta.'; }
+}
+function abrirMovimiento(r, tipo) {
+  try {
+    const datos = almacenAgenda.leer();
+    if (datos.pendientes.some(e => e.reserva_id === r.id && e.tipo === tipo)) { avisoAgenda('Este movimiento ya está guardado y pendiente de envío. Usá Reintentar envío.', true); return; }
+    const borrador = datos.borradores[`${r.id}.${tipo}`] || {};
+    movimientoAbierto = {reserva_id:r.id, tipo, alojamiento:r.unidad.nombre};
+    $agenda('titulo-movimiento').textContent = `Registrar ${tipo}`;
+    $agenda('contexto-movimiento').textContent = `${r.huesped} · ${r.unidad.nombre}`;
+    $agenda('estado-movimiento').value = borrador.estado_unidad || ''; $agenda('notas-movimiento').value = borrador.notas || '';
+    $agenda('confirmar-movimiento').textContent = `Registrar ${tipo}`; $agenda('error-movimiento').textContent = '';
+    dialogoMovimiento.showModal();
+  } catch { avisoAgenda('No pudimos abrir el almacenamiento local. Habilitá el almacenamiento del sitio y reintentá.', true); }
+}
+async function enviarPendientes(manual = false) {
+  if (enviandoAgenda || !almacenAgenda) return;
+  enviandoAgenda = true; $agenda('reintentar-envio').disabled = true;
+  $agenda('mensaje-error').textContent = '';
+  try {
+    // Una pestaña vieja no puede enviar movimientos con la sesión de otra persona.
+    const actual = await obtenerSesion();
+    if (!actual || actual.id !== usuarioAgenda.id || actual.rol !== 'operador') throw new Error('Volvé a iniciar sesión con la misma cuenta para enviar tus movimientos.');
+    for (const e of almacenAgenda.leer().pendientes) {
+      if (e.error && !manual) continue;
+      const {alojamiento, error, ...datos} = e;
+      const respuesta = await fetch(URL_BACK + '/operador/estadias/registrar', {method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify(datos)});
+      const resultado = await respuesta.json();
+      if (respuesta.ok) { almacenAgenda.quitar(e.evento_id); avisoAgenda(`${resultado.ok}.`); }
+      else if (respuesta.status >= 500 || respuesta.status === 401) throw new Error(resultado.error || 'No pudimos enviar el movimiento. Reintentá en unos minutos.');
+      else { almacenAgenda.error(e.evento_id, resultado.error || 'Revisá este movimiento con el responsable de la unidad.'); avisoAgenda('Hay un movimiento que requiere revisión. Sus datos siguen guardados.', true); }
+    }
+    await cargarAgenda();
+  } catch (error) {
+    const mensaje = error instanceof TypeError ? 'No hay conexión con el servidor.' : error.message;
+    avisoAgenda(`${mensaje || 'Sin conexión.'} Los movimientos pendientes siguen guardados en este dispositivo.`, true);
+  }
+  finally { enviandoAgenda = false; $agenda('reintentar-envio').disabled = false; pendientesAgenda(); }
+}
+$agenda('form-movimiento').addEventListener('input', guardarBorrador);
+$agenda('cancelar-movimiento').addEventListener('click', () => dialogoMovimiento.close());
+dialogoMovimiento.addEventListener('close', () => { movimientoAbierto = null; });
+$agenda('form-movimiento').addEventListener('submit', async event => {
+  event.preventDefault();
+  if (!movimientoAbierto) return;
+  try {
+    const evento = {...movimientoAbierto, evento_id:crypto.randomUUID(), ocurrido_en:new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'), estado_unidad:$agenda('estado-movimiento').value.trim(), notas:$agenda('notas-movimiento').value.trim()};
+    almacenAgenda.agregar(evento); dialogoMovimiento.close(); pendientesAgenda();
+    avisoAgenda('Movimiento guardado en este dispositivo. Enviando…'); await enviarPendientes();
+  } catch { $agenda('error-movimiento').textContent = 'No pudimos guardar el movimiento. Revisá el almacenamiento del sitio y reintentá; tus notas siguen acá.'; }
+});
+$agenda('reintentar-envio').addEventListener('click', () => enviarPendientes(true));
+$agenda('reintentar-agenda').addEventListener('click', cargarPaginaAgenda);
+window.addEventListener('online', () => enviarPendientes());
+window.addEventListener('storage', () => { if (almacenAgenda) pendientesAgenda(); });
+async function cargarPaginaAgenda() {
+  try {
+    usuarioAgenda = await obtenerSesion();
+    if (!usuarioAgenda || usuarioAgenda.rol !== 'operador') return;
+    almacenAgenda = EstadiasModelo.almacen(localStorage, usuarioAgenda.id);
+    pendientesAgenda(); await cargarAgenda();
+    if (almacenAgenda.leer().pendientes.some(e => !e.error)) await enviarPendientes();
+  } catch (error) { avisoAgenda(error.message || MENSAJE_SIN_CONEXION, true); $agenda('reintentar-agenda').hidden = false; }
+  finally { $agenda('cargando').hidden = true; }
+}
+cargarPaginaAgenda();

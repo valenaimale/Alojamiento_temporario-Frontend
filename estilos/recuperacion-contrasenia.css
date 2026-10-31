@@ -1,0 +1,22 @@
+.cuenta #recuperacion-enviada,
+.cuenta #recuperacion-completa {
+    margin-top: 1.5rem;
+}
+.cuenta #recuperacion-enviada h2,
+.cuenta #recuperacion-completa h2 {
+    font-size: 1.25rem;
+}
+.cuenta #cambiar-mail {
+    margin-top: .75rem;
+}
+.cuenta #reenviar-enlace,
+.cuenta #cambiar-mail,
+.cuenta #recuperacion-completa .boton {
+    width: 100%;
+}
+.cuenta #form-restablecer .ayuda {
+    margin: -.5rem 0 0;
+}
+.cuenta main > .ayuda {
+    margin-top: 1rem;
+}

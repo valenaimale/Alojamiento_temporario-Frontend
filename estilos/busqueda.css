@@ -1,45 +1,171 @@
-/* El formulario de búsqueda de alojamientos, que comparten los dos inicios y el listado (funcionalidades/busqueda.js). */
-
 .form-busqueda {
-    max-width: none;
-    margin: 1.5rem 0 2rem;
-    background-color: var(--color-surface);
-    border-radius: var(--radius-md);
-    box-shadow: var(--shadow-card);
-    padding: 1.25rem;
+  max-width: none;
+  margin: 0 0 8px;
+  background: white;
+  border: 1px solid #c8d0ca;
+  border-radius: 999px;
+  padding: 8px;
+  box-shadow: 0 6px 24px #203a290a;
+  gap: 0;
 }
-
-.form-busqueda legend {
-    margin-bottom: 0.75rem;
+.form-busqueda fieldset {
+  display: grid;
+  grid-template-columns: minmax(170px, 1.1fr) minmax(300px, 1.5fr) minmax(
+      175px,
+      0.8fr
+    ) auto;
+  gap: 0;
+  align-items: center;
 }
-
-.form-busqueda button {
-    width: 100%;
+.form-busqueda label,
+.campo-fechas {
+  font-size: 0.76rem;
+  font-weight: 650;
+  gap: 2px;
+  min-width: 0;
+  padding: 6px 24px;
+  color: var(--color-text);
 }
-
+.campo-fechas,
+.form-busqueda .campo-personas {
+  border-left: 1px solid var(--color-border);
+}
+.form-busqueda select {
+  border: 0;
+  padding: 4px 24px 0 0;
+  min-height: 30px;
+  border-radius: 0;
+  font-size: 0.95rem;
+  font-weight: 400;
+  background: white;
+}
+.rango-busqueda {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.form-busqueda .rango-busqueda label {
+  padding: 0;
+  flex: 1;
+}
+.form-busqueda input[type="date"] {
+  border: 0;
+  padding: 3px 0;
+  min-height: 30px;
+  font-size: 0.88rem;
+  letter-spacing: -0.035em;
+  border-radius: 0;
+  max-width: 150px;
+}
+.form-busqueda .contador-personas {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.contador-personas input {
+  width: 42px;
+  min-height: 30px;
+  padding: 0;
+  border: 0;
+  text-align: center;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+.contador-personas input::-webkit-inner-spin-button,
+.contador-personas input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.contador-personas button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #aab5ad;
+  border-radius: 50%;
+  background: white;
+  cursor: pointer;
+  color: var(--color-text);
+  font-size: 1rem;
+  padding: 0;
+  flex-shrink: 0;
+}
+.form-busqueda .buscar-boton {
+  border-radius: 999px;
+  min-height: 58px;
+  padding: 16px 26px;
+  font-size: 0.9rem;
+}
 .form-busqueda .mensaje-error {
-    color: var(--color-danger);
-    margin: 0;
+  margin: 0;
+  padding: 8px 24px;
+  color: var(--color-danger);
+  font-size: 0.9rem;
 }
-
 .form-busqueda .mensaje-error:empty {
-    display: none;
+  display: none;
 }
-
-/* en pantallas anchas, todos los campos en una fila */
-@media (min-width: 640px) {
-    .form-busqueda fieldset {
-        flex-direction: row;
-        flex-wrap: wrap;
-        align-items: flex-end;
-    }
-
-    .form-busqueda label {
-        flex: 1 1 140px;
-    }
-
-    .form-busqueda button {
-        width: auto;
-        flex: 0 0 auto;
-    }
+@media (max-width: 1050px) {
+  .form-busqueda fieldset {
+    grid-template-columns: 1fr 1.5fr 1fr;
+  }
+  .form-busqueda .buscar-boton {
+    grid-column: 1/-1;
+    margin: 8px 14px 8px;
+    min-height: 48px;
+  }
+  .form-busqueda {
+    border-radius: 22px;
+  }
+  .form-busqueda label,
+  .campo-fechas {
+    padding: 8px 16px;
+  }
+}
+@media (max-width: 700px) {
+  .form-busqueda {
+    border-radius: 18px;
+    padding: 8px 16px;
+    margin-top: 24px;
+    box-shadow: none;
+  }
+  .form-busqueda fieldset {
+    grid-template-columns: 1fr;
+  }
+  .form-busqueda label,
+  .campo-fechas {
+    padding: 12px 0;
+    font-size: 0.8rem;
+  }
+  .campo-fechas,
+  .form-busqueda .campo-personas {
+    border-left: 0;
+    border-top: 1px solid var(--color-border);
+  }
+  .form-busqueda .campo-personas {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .form-busqueda .contador-personas {
+    width: 140px;
+  }
+  .form-busqueda .rango-busqueda {
+    gap: 12px;
+  }
+  .form-busqueda input[type="date"] {
+    max-width: none;
+    min-height: 36px;
+    font-size: 1rem;
+  }
+  .form-busqueda .buscar-boton {
+    margin: 8px 0;
+  }
+  .form-busqueda select {
+    min-height: 40px;
+    font-size: 1rem;
+  }
 }

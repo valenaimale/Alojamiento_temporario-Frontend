@@ -4,47 +4,51 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Alquiler temporario</title>
+        <title>HayLugar · Alojamientos temporarios</title>
         <meta name="description" content="Busca unidades disponibles por localidad y fechas">
         <link rel="stylesheet" href="../../estilos/style.css">
         <link rel="stylesheet" href="../../estilos/pre-registro.css">
         <script src="../../funcionalidades/sesion.js" defer></script>
+        <link rel="stylesheet" href="../../estilos/haylugar.css">
+        <link rel="icon" href="../../imagenes/marca.svg" type="image/svg+xml">
+        <script src="../../funcionalidades/interfaz.js" defer></script>
     </head>
-    <body>
-        <header></header>
+    <body class="elegir-cuenta">
+        <header class="site-header">
+            <a class="marca" href="../homes/index-sin-sesion.html" aria-label="HayLugar, inicio"><svg viewBox="0 0 32 36" fill="none" aria-hidden="true"><path d="M5 31V13L16 5l11 8v18H5Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M12 31V19h8v12M20 24h.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg><span>HayLugar</span></a></header>
         <main>
-            <h1>¿Qué tipo de cuenta querés crear?</h1>
+            <h1>¿Cómo vas a usar HayLugar?</h1>
     <ul class="lista-roles">
-    <li>
+<li>
       <article class="tarjeta">
-        <h2><a href="registro-propietario.html">Propietario</a></h2>
+        <h2><a href="registro-huesped.html">Quiero reservar</a></h2>
+        <p>Buscá, reservá y gestioná tus propias estadías, pagos y cancelaciones.</p>
+      </article>
+    </li>
+<li>
+      <article class="tarjeta">
+        <h2><a href="registro-propietario.html">Quiero publicar</a></h2>
         <p>Publicá tus unidades y definí tarifas, temporadas, mínimo de noches y políticas de cancelación.</p>
       </article>
     </li>
-    <li>
+<li>
       <article class="tarjeta">
         <h2><a href="registro-administrador.html">Administrador de hospedaje</a></h2>
         <p>Gestioná unidades de terceros a cambio de una comisión, con visibilidad de toda tu cartera.</p>
       </article>
     </li>
-    <li>
+<li>
       <article class="tarjeta">
         <h2><a href="registro-operador.html">Operador de estadía</a></h2>
         <p>Encargate del check-in y check-out, la agenda diaria y las novedades de cada unidad.</p>
       </article>
-    </li>
-    <li>
-      <article class="tarjeta">
-        <h2><a href="registro-huesped.html">Huésped</a></h2>
-        <p>Buscá, reservá y gestioná tus propias estadías, pagos y cancelaciones.</p>
-      </article>
-    </li>
-    </ul>
+    </li></ul>
     <section>
       <h2>¿Querés reservar alojamientos? Registrate como huésped con Google</h2>
       <a href="#" data-ruta-back="/oauth/google" class="boton boton-outline">Continuar con Google</a>
       <p>Después vas a poder hacerte propietario desde tu perfil.</p>
     </section>
         </main>
+        <footer class="site-footer"><strong>HayLugar</strong><span>Alojamientos temporarios</span></footer>
     </body>
 </html>
