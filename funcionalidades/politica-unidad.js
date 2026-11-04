@@ -28,15 +28,34 @@ function mostrarError(texto) {
   document.body.hidden = false;
 }
 
-// Recalcula el ejemplo con los porcentajes que hay escritos en el formulario (un campo vacío o inválido muestra "—")
+// El porcentaje escrito en un campo, o null si está vacío o no es un número de 0 a 100
+function porcentajeDe(campo) {
+  const porcentaje = formPolitica.elements[campo].valueAsNumber; // NaN si está vacío o no es un número
+  return Number.isFinite(porcentaje) && porcentaje >= 0 && porcentaje <= 100
+    ? porcentaje
+    : null;
+}
+
+// Recalcula el ejemplo con los porcentajes que hay escritos en el formulario (un campo vacío o inválido muestra "—").
+// La seña es un % del total; cada retención es un % de la seña (corrección del profesor): el resto se le devuelve.
 function actualizarEjemplo() {
-  for (const campo of CAMPOS_POLITICA) {
-    const porcentaje = formPolitica.elements[campo].valueAsNumber; // NaN si está vacío o no es un número
-    const valido =
-      Number.isFinite(porcentaje) && porcentaje >= 0 && porcentaje <= 100;
-    document.getElementById(EJEMPLO_DE[campo]).textContent = valido
-      ? `${formatearPrecio((MONTO_EJEMPLO * porcentaje) / 100)} (${porcentaje.toLocaleString("es-AR")} %)` // 20.5 → "20,5 %"
-      : "—";
+  const porcentajeSena = porcentajeDe("porcentaje_sena");
+  const sena =
+    porcentajeSena === null ? null : (MONTO_EJEMPLO * porcentajeSena) / 100;
+  document.getElementById(EJEMPLO_DE.porcentaje_sena).textContent =
+    sena === null
+      ? "—"
+      : `${formatearPrecio(sena)} (${porcentajeSena.toLocaleString("es-AR")} % del total)`; // 20.5 → "20,5 %"
+
+  for (const campo of CAMPOS_POLITICA.slice(1)) {
+    const porcentaje = porcentajeDe(campo);
+    if (sena === null || porcentaje === null) {
+      document.getElementById(EJEMPLO_DE[campo]).textContent = "—";
+      continue;
+    }
+    const retenido = (sena * porcentaje) / 100;
+    document.getElementById(EJEMPLO_DE[campo]).textContent =
+      `${formatearPrecio(retenido)} (${porcentaje.toLocaleString("es-AR")} % de la seña) y se le devuelven ${formatearPrecio(sena - retenido)}`;
   }
 }
 

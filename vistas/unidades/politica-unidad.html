@@ -36,15 +36,15 @@
                 <form id="form-politica">
                     <fieldset aria-describedby="ayuda-sena">
                         <legend>Seña</legend>
-                        <p class="ayuda" id="ayuda-sena">El porcentaje del total que paga el huésped al reservar. No puede ser mayor que la retención más baja.</p>
+                        <p class="ayuda" id="ayuda-sena">El porcentaje del total que paga el huésped al reservar.</p>
                         <label>Porcentaje de seña (%)
                             <input type="number" name="porcentaje_sena" min="0" max="100" step="0.01" inputmode="decimal" required>
                         </label>
                     </fieldset>
 
                     <fieldset aria-describedby="ayuda-retenciones">
-                        <legend>Cuánto retenés si el huésped cancela</legend>
-                        <p class="ayuda" id="ayuda-retenciones">Es un porcentaje del total de la reserva, según cuántos días antes del cobro del saldo cancela el huésped. El saldo se cobra <span id="dias-cobro-saldo">5</span> días antes del ingreso. Cuanto más cerca de la fecha cancela, más retenés: cada tramo tiene que ser igual o mayor que el anterior.</p>
+                        <legend>Cuánto de la seña retenés si el huésped cancela</legend>
+                        <p class="ayuda" id="ayuda-retenciones">Es un porcentaje de la seña, según cuántos días antes del cobro del saldo cancela el huésped: como cancela antes de pagar el saldo, lo único que pagó es la seña, y se le devuelve lo que no retenés. El saldo se cobra <span id="dias-cobro-saldo">5</span> días antes del ingreso. Cuanto más cerca de la fecha cancela, más retenés: cada tramo tiene que ser igual o mayor que el anterior.</p>
                         <label>Cancela con más de 30 días de anticipación (%)
                             <input type="number" name="retencion_mas_de_30" min="0" max="100" step="0.01" inputmode="decimal" required>
                         </label>

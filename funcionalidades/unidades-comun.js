@@ -188,7 +188,7 @@ function mostrarNavegacionUnidad(unidad, activa) {
     ["calendario", "Calendario", "temporadas-unidad.html"],
     [
       "datos",
-      unidad.es_propietario ? "Datos y fotos" : "Depósito",
+      unidad.es_propietario ? "Datos y fotos" : "Fotos y depósito",
       "datos-unidad.html",
     ],
     ...(unidad.es_propietario
