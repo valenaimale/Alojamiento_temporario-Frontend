@@ -4,9 +4,39 @@
 //   navegador ve front y back como el MISMO sitio y la cookie de sesión funciona sin problemas.
 const URL_BACK = ['localhost', '127.0.0.1'].includes(window.location.hostname) ? 'http://localhost:8000' : '/api';
 
+/*es lo mismo que hacer esto:
+let URL_BACK;
+if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    URL_BACK = 'http://localhost:8000';   // desarrollo: el back está en tu máquina
+} else {
+    URL_BACK = '/api';                    // producción
+}
+al hacer el deploy, vercel lee el vercel.json y guarda
+las reglas que hay en él en su servidor. Tiene estas reglas:
+{
+  "redirects": [
+    { "source": "/", "destination": "/vistas/homes/index-sin-sesion.html", "permanent": false }
+  ],
+  "rewrites": [
+    { "source": "/api/:ruta*", "destination": "https://alojamientotemporario-backend-production.up.railway.app/:ruta*" }
+  ]
+}
+esto quiere decir que si el navegador le hace una peticion
+a la URL del front (https://alojamientotemporario-frontend.vercel.app/)
+sin nada despues de la barra (/), el servidor de vercel
+devuelve el html de vistas/home/index-sin-sesion.html. 
+La otra regla es que si la peticion que le hace el navegador
+a la URL del front lleva /api/:ruta*, se hace un rewrite
+a https://alojamientotemporario-backend-production.up.railway.app/:ruta*
+y es el mismo front de vercel quien le hace la peticion al back
+y quien le devuelve una respuesta al navegador.
+
+*/
+
 // Los enlaces que van directo al back (por ejemplo "Continuar con Google") no pueden usar URL_BACK desde el HTML.
 // Se escriben con href="#" y data-ruta-back="/ruta", y acá se completa su dirección real.
 // sesion.js se carga con defer, así que cuando esto corre los enlaces ya existen.
+//con defer el JavaScript se descarga cuando termina de leerse todo el html
 document.querySelectorAll('a[data-ruta-back]').forEach((enlace) => {
     enlace.href = URL_BACK + enlace.dataset.rutaBack;
 });
