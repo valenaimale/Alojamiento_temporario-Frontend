@@ -1,108 +1,47 @@
 <!DOCTYPE html>
-<!-- Publicación, reservas y fechas bloqueadas de una unidad (?id=), US3.1, US3.3 y Épica 4.
-     Publicación (publicar o pausar): solo el propietario; al administrador se le quita esa sección.
-     Reservas en curso y próximas (solo lectura) y fechas bloqueadas (bloquear y liberar): el propietario y el administrador asignado. -->
-<html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Publicación, reservas y fechas bloqueadas</title>
-        <meta name="description" content="Publicá o pausá tu unidad y bloqueá las fechas que no querés que se reserven">
-        <link rel="stylesheet" href="../../estilos/style.css">
-        <link rel="stylesheet" href="../../estilos/disponibilidad-unidad.css">
-        <script src="../../funcionalidades/sesion.js" defer></script>
-        <script src="../../funcionalidades/menu.js" defer></script>
-        <script src="../../funcionalidades/unidades-comun.js" defer></script>
-        <script src="../../funcionalidades/disponibilidad-unidad.js" defer></script>
-    </head>
-    <body hidden>
-        <header>
+<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Calendario y precios · HayLugar</title><meta name="description" content="Gestioná precios, temporadas, reservas y bloqueos desde un solo calendario.">
+<link rel="stylesheet" href="../../estilos/style.css"><link rel="stylesheet" href="../../estilos/haylugar.css"><link rel="stylesheet" href="../../estilos/calendario-unidad.css"><link rel="icon" href="../../imagenes/marca.svg" type="image/svg+xml">
+<script src="../../funcionalidades/sesion.js" defer></script><script src="../../funcionalidades/menu.js" defer></script><script src="../../funcionalidades/unidades-comun.js" defer></script><script src="../../funcionalidades/calendario-modelo.js" defer></script><script src="../../funcionalidades/calendario-unidad.js" defer></script><script src="../../funcionalidades/interfaz.js" defer></script></head>
+<body class="gestion agenda-unidad" hidden><header class="site-header">
+            <a class="marca" href="../homes/index-sin-sesion.html" aria-label="HayLugar, inicio"><svg viewBox="0 0 32 36" fill="none" aria-hidden="true"><path d="M5 31V13L16 5l11 8v18H5Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M12 31V19h8v12M20 24h.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg><span>HayLugar</span></a>
             <nav id="menu" aria-label="Principal"></nav>
             <a href="../perfil/perfil.html" class="enlace-perfil">Mi perfil</a>
         </header>
-        <main>
-            <p><a href="configurar-unidad.html" id="enlace-volver">Volver a la unidad</a></p>
-
-            <p id="mensaje-error" role="alert"></p>
-
-            <article id="contenido" hidden>
-                <h1>Publicación, reservas y fechas bloqueadas</h1>
-                <p id="nombre-unidad" class="subtitulo"></p>
-
-                <section aria-labelledby="titulo-publicacion" class="seccion tarjeta" id="seccion-publicacion">
-                    <h2 id="titulo-publicacion">Publicación</h2>
-                    <p>Estado: <strong id="estado-unidad"></strong></p>
-                    <p id="explicacion-estado"></p>
-                    <p id="no-disponible" class="aviso" hidden></p>
-                    <section id="faltantes" aria-labelledby="titulo-faltantes" class="aviso" hidden>
-                        <h3 id="titulo-faltantes">Para publicarla te falta</h3>
-                        <ul id="lista-faltantes"></ul>
-                    </section>
-                    <p class="mensaje-error" id="error-publicacion" role="alert"></p>
-                    <p class="mensaje-ok" id="ok-publicacion" role="status"></p>
-                    <p class="acciones">
-                        <button type="button" class="boton boton-primario" id="publicar" hidden>Publicar la unidad</button>
-                        <button type="button" class="boton boton-outline" id="pausar" hidden>Pausar la publicación</button>
-                    </p>
-                </section>
-
-                <section aria-labelledby="titulo-reservas" class="seccion">
-                    <h2 id="titulo-reservas">Reservas</h2>
-                    <p class="ayuda">Las reservas en curso y las próximas. Mientras la reserva está pendiente de pago, el huésped la puede cancelar y esas fechas vuelven a quedar libres.</p>
-                    <p id="sin-reservas" hidden>Todavía no hay reservas en curso ni próximas.</p>
-                    <table id="tabla-reservas" aria-labelledby="titulo-reservas" hidden>
-                        <thead>
-                            <tr>
-                                <th scope="col">Huésped</th>
-                                <th scope="col">Ingreso</th>
-                                <th scope="col">Egreso</th>
-                                <th scope="col">Noches</th>
-                                <th scope="col">Personas</th>
-                                <th scope="col">Estado</th>
-                                <th scope="col">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody id="filas-reservas"></tbody>
-                    </table>
-                </section>
-
-                <section aria-labelledby="titulo-bloqueos" class="seccion">
-                    <h2 id="titulo-bloqueos" tabindex="-1">Fechas bloqueadas</h2>
-                    <p class="ayuda">Las noches bloqueadas no se pueden reservar en la plataforma: por ejemplo, porque las reservaron por Airbnb o Booking, o porque no querés recibir huéspedes. El motivo solo lo ven el propietario y su administrador: el huésped solo ve que esas fechas están ocupadas. Las noches que ya pasaron no se pueden bloquear ni liberar.</p>
-
-                    <p id="sin-bloqueos" hidden>No tenés fechas bloqueadas.</p>
-                    <ul id="lista-bloqueos" class="lista-bloqueos"></ul>
-
-                    <form id="form-bloqueo" class="tarjeta">
-                        <fieldset>
-                            <legend>Bloquear fechas</legend>
-                            <label>Primera noche
-                                <input type="date" name="fecha_desde" required>
-                            </label>
-                            <label>Última noche (incluida)
-                                <input type="date" name="fecha_hasta" required>
-                            </label>
-                            <label>Motivo
-                                <select name="motivo" required>
-                                    <option value="">Elegí uno</option>
-                                    <option value="reserva_externa">Reserva por otro medio (Airbnb, Booking…)</option>
-                                    <option value="mantenimiento">Mantenimiento o arreglos</option>
-                                    <option value="danio">Daños en la unidad</option>
-                                    <option value="uso_personal">No quiero recibir reservas en esas fechas</option>
-                                    <option value="otro">Otro motivo</option>
-                                </select>
-                            </label>
-                            <label><span id="texto-detalle">Detalle (opcional)</span>
-                                <textarea name="detalle" rows="2" maxlength="255" aria-describedby="ayuda-detalle"></textarea>
-                            </label>
-                            <p class="ayuda" id="ayuda-detalle">Hasta 255 caracteres. Por ejemplo: "Reservada por Airbnb, código 4815".</p>
-                        </fieldset>
-                        <p class="mensaje-error" id="error-bloqueo" role="alert"></p>
-                        <p class="mensaje-ok" id="ok-bloqueo" role="status"></p>
-                        <button type="submit" class="boton boton-primario">Bloquear estas fechas</button>
-                    </form>
-                </section>
-            </article>
-        </main>
-    </body>
-</html>
+<main><p><a id="enlace-volver" href="configurar-unidad.html">← Volver al alojamiento</a></p><p id="mensaje-error" role="alert"></p>
+<article id="contenido" hidden>
+ <div class="cabecera-calendario"><div><p class="sobre-titulo" id="nombre-unidad"></p><h1>Calendario y precios</h1></div><div class="estado-publicacion"><span id="estado-unidad" class="estado"></span><button type="button" id="accion-publicacion" class="boton" hidden></button></div></div>
+ <nav class="navegacion-unidad" aria-label="Gestionar alojamiento"><a href="temporadas-unidad.html" data-enlace-unidad aria-current="page">Calendario</a><a href="datos-unidad.html" data-enlace-unidad>Datos y fotos</a><a href="politica-unidad.html" data-enlace-unidad data-propietario>Condiciones</a><a href="gestion-unidad.html" data-enlace-unidad>Equipo</a></nav>
+ <p id="aviso-publicacion" class="ayuda"></p><p id="error-publicacion" role="alert" class="mensaje-error"></p><p id="ok-publicacion" role="status" class="mensaje-ok"></p><ul id="lista-faltantes" class="aviso-faltantes" hidden></ul>
+ <p id="aviso-administrador" class="ayuda" hidden>Podés gestionar los bloqueos. Los precios y los mínimos de noches los modifica el propietario.</p>
+ <div class="espacio-calendario">
+  <section class="mes-gestion" aria-labelledby="titulo-mes">
+   <div class="barra-mes"><h2 id="titulo-mes" aria-live="polite"></h2><div><button type="button" id="ir-hoy" class="boton">Hoy</button><label class="visualmente-oculto" for="elegir-mes">Ir al mes</label><input type="month" id="elegir-mes" aria-label="Ir al mes"><button type="button" id="mes-anterior" class="boton-icono" aria-label="Mes anterior">‹</button><button type="button" id="mes-siguiente" class="boton-icono" aria-label="Mes siguiente">›</button></div></div>
+   <p id="ayuda-calendario" class="ayuda">Tocá la primera y la última noche. Ambas quedan incluidas.</p>
+   <div class="leyenda-calendario" aria-label="Estados del calendario"><span class="leyenda-libre">Libre</span><span class="leyenda-reservada">Reservada</span><span class="leyenda-bloqueada">Bloqueada</span><span class="leyenda-sin-precio">Sin precio</span></div>
+   <p id="estado-carga" role="status"></p><p id="error-calendario" role="alert" class="mensaje-error"></p><button type="button" id="reintentar-calendario" class="boton" hidden>Reintentar</button>
+   <table class="tabla-calendario" aria-describedby="ayuda-calendario"><caption class="visualmente-oculto">Noches del mes. Usá flechas para moverte y Enter para seleccionar.</caption><thead><tr><th scope="col">Lun</th><th scope="col">Mar</th><th scope="col">Mié</th><th scope="col">Jue</th><th scope="col">Vie</th><th scope="col">Sáb</th><th scope="col">Dom</th></tr></thead><tbody id="dias-del-mes"></tbody></table>
+   <p class="nota-calendario">Precios finales en ARS. Las reservas liberan la noche del día de egreso. Las fechas pasadas no muestran un historial completo de ocupación.</p>
+  </section>
+  <aside class="panel-fechas" aria-labelledby="titulo-seleccion">
+   <div class="encabezado-panel"><h2 id="titulo-seleccion" tabindex="-1">Elegí las noches</h2><button type="button" class="boton-texto" id="limpiar-seleccion" hidden>Limpiar</button></div>
+   <p id="resumen-seleccion" role="status" class="ayuda">Seleccioná un rango en el calendario para ver sus datos y hacer cambios.</p>
+   <details id="fechas-manuales"><summary>Ingresar fechas</summary><form id="form-rango"><label>Primera noche<input name="desde" type="date" required></label><label>Última noche (incluida)<input name="hasta" type="date" required></label><button class="boton" type="submit">Seleccionar rango</button></form></details>
+   <div id="detalle-seleccion"></div>
+   <section id="edicion-rango" hidden aria-label="Modificar noches seleccionadas">
+    <div class="acciones-rango" role="group" aria-label="Qué querés cambiar"><button type="button" data-accion="precio" aria-pressed="true" data-propietario>Precio</button><button type="button" data-accion="temporada" aria-pressed="false" data-propietario>Temporada</button><button type="button" data-accion="bloqueo" aria-pressed="false">Bloquear</button></div>
+    <form id="form-cambio">
+     <fieldset id="campos-precio"><legend>Precio por noche</legend><label>Monto final en pesos<input name="precio" type="number" min="0.01" step="0.01" inputmode="decimal" required></label><p id="ayuda-precio" class="ayuda">Se aplica a todas las noches seleccionadas. Las reservas existentes conservan su precio.</p></fieldset>
+     <fieldset id="campos-temporada" hidden disabled><legend id="titulo-temporada">Mínimo de noches</legend><label>Temporada<select name="nombre" required><option value="alta">Alta</option><option value="media">Media</option><option value="baja">Baja</option></select></label><label>Mínimo de noches por reserva<input name="minimo_noches" type="number" min="1" max="60" step="1" value="1" required></label><p class="ayuda">La temporada define el mínimo de estadía. El precio se guarda por separado.</p><button type="button" class="boton-texto" id="cancelar-edicion" hidden>Crear otra temporada</button></fieldset>
+     <fieldset id="campos-bloqueo" hidden disabled><legend>Bloquear noches</legend><label>Motivo<select name="motivo" required><option value="">Elegí un motivo</option><option value="reserva_externa">Reserva por otro medio</option><option value="mantenimiento">Mantenimiento</option><option value="danio">Daños en el alojamiento</option><option value="uso_personal">Uso personal</option><option value="otro">Otro motivo</option></select></label><label><span id="etiqueta-detalle">Detalle (opcional)</span><textarea name="detalle" rows="2" maxlength="255"></textarea></label><p class="ayuda">El motivo y el detalle solo los ven el propietario y el administrador.</p></fieldset>
+     <p class="mensaje-error" id="error-cambio" role="alert"></p><button class="boton boton-primario" type="submit" id="guardar-cambio">Guardar precio</button>
+    </form>
+   </section>
+   <p class="mensaje-ok" id="ok-cambio" role="status"></p><p class="mensaje-error" id="error-panel" role="alert"></p>
+  </aside>
+ </div>
+ <section class="actividad-calendario" aria-label="Reservas, temporadas y bloqueos">
+  <details open><summary>Reservas en curso y próximas <span id="cantidad-reservas"></span></summary><div class="tabla-scroll"><table id="tabla-reservas"><thead><tr><th>Huésped</th><th>Ingreso</th><th>Egreso</th><th>Huéspedes</th><th>Estado</th><th>Total</th><th><span class="visualmente-oculto">Ver fechas</span></th></tr></thead><tbody id="filas-reservas"></tbody></table></div><p id="sin-reservas" class="ayuda" hidden>No hay reservas en curso ni próximas.</p></details>
+  <details><summary>Temporadas <span id="cantidad-temporadas"></span></summary><p class="ayuda">Fuera de una temporada, la estadía mínima es de una noche.</p><ul id="lista-temporadas" class="lista-actividad"></ul></details>
+  <details><summary>Fechas bloqueadas <span id="cantidad-bloqueos"></span></summary><ul id="lista-bloqueos" class="lista-actividad"></ul><p id="sin-bloqueos" class="ayuda" hidden>No hay bloqueos vigentes.</p></details>
+ </section>
+</article></main></body></html>

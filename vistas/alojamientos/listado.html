@@ -1,60 +1,182 @@
-<!DOCTYPE html>
+<!doctype html>
 <!-- Los alojamientos disponibles para una búsqueda (US3.2): destino (opcional), fechas y personas, que llegan en la URL
      (listado.html?localidad_id=1&ingreso=...&egreso=...&personas=2). Es pública: se ve con o sin sesión. -->
 <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Alojamientos disponibles</title>
-        <meta name="description" content="Alojamientos disponibles para tus fechas, con el precio final">
-        <link rel="stylesheet" href="../../estilos/style.css">
-        <link rel="stylesheet" href="../../estilos/busqueda.css">
-        <link rel="stylesheet" href="../../estilos/listado-alojamientos.css">
-        <script src="../../funcionalidades/sesion.js" defer></script>
-        <script src="../../funcionalidades/menu.js" defer></script>
-        <script src="../../funcionalidades/unidades-comun.js" defer></script>
-        <script src="../../funcionalidades/busqueda.js" defer></script>
-        <script src="../../funcionalidades/listado-alojamientos.js" defer></script>
-    </head>
-    <body>
-        <header>
-            <nav id="menu" aria-label="Principal"></nav>
-            <a href="../perfil/perfil.html" class="enlace-perfil" id="enlace-perfil" hidden>Mi perfil</a>
-            <p class="acceso" id="acceso" hidden>
-                <a href="../sesion/inicio-sesion.html" class="boton boton-outline">Iniciar sesión</a>
-                <a href="../registros/pre-registro.html" class="boton boton-primario">Registrarme</a>
-            </p>
-        </header>
-        <main>
-            <h1>Alojamientos disponibles</h1>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Alojamientos disponibles</title>
+    <meta
+      name="description"
+      content="Alojamientos disponibles para tus fechas, con el precio final"
+    />
+    <link rel="stylesheet" href="../../estilos/style.css" />
+    <link rel="stylesheet" href="../../estilos/busqueda.css" />
+    <link rel="stylesheet" href="../../estilos/listado-alojamientos.css" />
+    <script src="../../funcionalidades/sesion.js" defer></script>
+    <script src="../../funcionalidades/menu.js" defer></script>
+    <script src="../../funcionalidades/unidades-comun.js" defer></script>
+    <script src="../../funcionalidades/busqueda.js" defer></script>
+    <script src="../../funcionalidades/listado-alojamientos.js" defer></script>
+    <link rel="stylesheet" href="../../estilos/haylugar.css" />
+    <link rel="icon" href="../../imagenes/marca.svg" type="image/svg+xml" />
+    <script src="../../funcionalidades/interfaz.js" defer></script>
+  </head>
+  <body class="catalogo">
+    <header class="site-header">
+      <a
+        class="marca"
+        href="../homes/index-sin-sesion.html"
+        aria-label="HayLugar, inicio"
+        ><svg viewBox="0 0 32 36" fill="none" aria-hidden="true">
+          <path
+            d="M5 31V13L16 5l11 8v18H5Z"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M12 31V19h8v12M20 24h.5"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+          /></svg
+        ><span>HayLugar</span></a
+      >
+      <nav id="menu" aria-label="Principal"></nav>
+      <a
+        href="../perfil/perfil.html"
+        class="enlace-perfil"
+        id="enlace-perfil"
+        hidden
+        >Mi perfil</a
+      >
+      <p class="acceso" id="acceso" hidden>
+        <a href="../sesion/inicio-sesion.html" class="boton boton-outline"
+          >Iniciar sesión</a
+        >
+        <a href="../registros/pre-registro.html" class="boton boton-primario"
+          >Registrarme</a
+        >
+      </p>
+    </header>
+    <main>
+      <h1 id="titulo-resultados">Encontrá tu alojamiento</h1>
 
-            <form class="form-busqueda" id="form-busqueda" action="listado.html" method="get">
-                <fieldset>
-                    <legend>Cambiar la búsqueda</legend>
-                    <label>Destino
-                        <select name="localidad_id">
-                            <option value="">Todos los destinos</option>
-                        </select>
-                    </label>
-                    <label>Ingreso
-                        <input type="date" name="ingreso" required>
-                    </label>
-                    <label>Egreso
-                        <input type="date" name="egreso" required>
-                    </label>
-                    <label>Personas
-                        <input type="number" name="personas" min="1" max="50" step="1" value="2" inputmode="numeric" required>
-                    </label>
-                    <button type="submit" class="boton boton-primario">Buscar</button>
-                </fieldset>
-                <p class="mensaje-error" id="error-busqueda" role="alert"></p>
-            </form>
+      <details class="busqueda-editar" id="busqueda-editar" open>
+        <summary>
+          <span id="criterios-busqueda">Elegí destino y fechas</span
+          ><span class="editar-busqueda">Modificar búsqueda</span>
+        </summary>
+        <form
+          class="form-busqueda"
+          id="form-busqueda"
+          action="../alojamientos/listado.html"
+          method="get"
+        >
+          <fieldset>
+            <legend class="visualmente-oculto">Buscá alojamiento</legend>
+            <label class="campo-destino"
+              >Destino<select name="localidad_id">
+                <option value="">Todos los destinos</option>
+              </select></label
+            >
+            <div class="campo-fechas">
+              <span class="etiqueta-fechas" aria-hidden="true">Fechas</span>
+              <div class="rango-busqueda">
+                <label
+                  ><span class="visualmente-oculto">Ingreso</span
+                  ><input
+                    type="date"
+                    name="ingreso"
+                    required
+                    aria-label="Ingreso" /></label
+                ><span aria-hidden="true">—</span
+                ><label
+                  ><span class="visualmente-oculto">Egreso</span
+                  ><input
+                    type="date"
+                    name="egreso"
+                    required
+                    aria-label="Egreso"
+                /></label>
+              </div>
+            </div>
+            <label class="campo-personas"
+              >Huéspedes<span class="contador-personas"
+                ><button
+                  type="button"
+                  data-personas="-1"
+                  aria-label="Quitar un huésped"
+                >
+                  −</button
+                ><input
+                  type="number"
+                  name="personas"
+                  min="1"
+                  max="50"
+                  step="1"
+                  value="2"
+                  inputmode="numeric"
+                  required
+                  aria-label="Cantidad de huéspedes"
+                /><button
+                  type="button"
+                  data-personas="1"
+                  aria-label="Agregar un huésped"
+                >
+                  +
+                </button></span
+              ></label
+            >
+            <button type="submit" class="boton boton-primario buscar-boton">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
+                <circle
+                  cx="10.5"
+                  cy="10.5"
+                  r="6.5"
+                  stroke="currentColor"
+                  stroke-width="2"
+                />
+                <path
+                  d="m16 16 5 5"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                /></svg
+              >Buscar
+            </button>
+          </fieldset>
+          <p class="mensaje-error" id="error-busqueda" role="alert"></p>
+        </form>
+      </details>
 
-            <section aria-labelledby="titulo-resultados">
-                <h2 id="titulo-resultados">Resultados</h2>
-                <p id="resumen-busqueda" role="status"></p>
-                <ul class="resultados" id="resultados"></ul>
-            </section>
-        </main>
-    </body>
+      <section aria-labelledby="titulo-resultados">
+        <p id="resumen-busqueda" role="status"></p>
+        <ul class="resultados" id="resultados"></ul>
+        <div class="estado-resultados" id="estado-resultados" hidden>
+          <h2 id="titulo-vacio"></h2>
+          <p id="texto-vacio"></p>
+          <button
+            class="boton boton-primario"
+            id="ajustar-busqueda"
+            type="button"
+          >
+            Cambiar fechas o destino</button
+          ><button class="boton" id="reintentar-busqueda" type="button" hidden>
+            Reintentar
+          </button>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <strong>HayLugar</strong><span>Alojamientos temporarios</span>
+    </footer>
+  </body>
 </html>

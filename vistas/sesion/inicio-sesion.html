@@ -5,30 +5,36 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Iniciar sesión</title>
-        <meta name="description" content="Iniciá sesión en tu cuenta de G-ONE">
+        <meta name="description" content="Iniciá sesión en tu cuenta de HayLugar">
         <link rel="stylesheet" href="../../estilos/style.css">
         <link rel="stylesheet" href="../../estilos/inicio-sesion.css">
         <script src="../../funcionalidades/sesion.js" defer></script>
         <script src="../../funcionalidades/inicio-sesion.js" defer></script>
+        <link rel="stylesheet" href="../../estilos/haylugar.css">
+        <link rel="icon" href="../../imagenes/marca.svg" type="image/svg+xml">
+        <script src="../../funcionalidades/interfaz.js" defer></script>
     </head>
-    <body>
-        <header></header>
+    <body class="cuenta">
+        <header class="site-header">
+            <a class="marca" href="../homes/index-sin-sesion.html" aria-label="HayLugar, inicio"><svg viewBox="0 0 32 36" fill="none" aria-hidden="true"><path d="M5 31V13L16 5l11 8v18H5Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M12 31V19h8v12M20 24h.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg><span>HayLugar</span></a></header>
         <main>
             <h1>Iniciá sesión</h1>
             <form id="form-inicio-sesion">
                 <label>Mail
-                    <input type="email" name="mail" required>
+                    <input type="email" name="mail" autocomplete="email" required>
                 </label>
                 <label>Contraseña
-                    <input type="password" name="contrasenia" required>
+                    <input type="password" name="contrasenia" autocomplete="current-password" required>
                 </label>
                 <button type="submit" class="boton boton-primario">Iniciar sesión</button>
             </form>
+            <p><a href="recuperar-contrasenia.html">Olvidé mi contraseña</a></p>
             <p class="separador"><span>o</span></p>
             <!-- Es un enlace y no un fetch: el inicio de sesión con Google es una navegación completa del navegador -->
             <a href="#" data-ruta-back="/oauth/google" class="boton boton-outline boton-google">Continuar con Google</a>
             <p>¿Todavía no tenés cuenta? <a href="../registros/pre-registro.html">Registrate acá</a>.</p>
             <p id="mensaje-error"></p>
         </main>
+        <footer class="site-footer"><strong>HayLugar</strong><span>Alojamientos temporarios</span></footer>
     </body>
 </html>

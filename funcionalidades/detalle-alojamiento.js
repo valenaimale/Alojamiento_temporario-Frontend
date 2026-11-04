@@ -22,6 +22,10 @@ const estado = {
     mes: null,         // el primer día del mes que se muestra (Date)
     foco: null,        // la fecha que tiene el foco del teclado en el calendario
     meses: new Map(),  // "AAAA-MM" → Map("AAAA-MM-DD" → noche): los meses ya pedidos al backend
+    cotizacion: null, // selección exacta cuyo precio y disponibilidad ya confirmó el backend
+    consultaEstadia: 0,
+    eleccionFecha: 0,
+    reservando: false,
 };
 
 // ---------- fechas ----------
@@ -122,6 +126,9 @@ function sePuedeElegir(fecha) {
 
 // Toca una fecha: si puede ser el egreso, completa la estadía; si no, si es una noche libre, empieza una nueva
 async function elegir(fecha) {
+    if (estado.reservando) return;
+    const eleccion = ++estado.eleccionFecha;
+    const ingresoInicial = estado.ingreso;
     const errorCalendario = document.getElementById('error-calendario');
     errorCalendario.textContent = '';
     estado.foco = fecha;
@@ -130,10 +137,12 @@ async function elegir(fecha) {
         try {
             await cargarMesesEntre(estado.ingreso, fecha);   // por si la estadía cruza meses que no se vieron
         } catch (error) {
+            if (eleccion !== estado.eleccionFecha) return;
             console.error('No se pudo cargar el calendario:', error);
             errorCalendario.textContent = MENSAJE_SIN_CONEXION;
             return;
         }
+        if (eleccion !== estado.eleccionFecha || ingresoInicial !== estado.ingreso) return;
         if (puedeSerEgreso(fecha)) {
             estado.egreso = fecha;
             dibujarCalendario();
@@ -150,7 +159,7 @@ async function elegir(fecha) {
     estado.egreso = null;
     dibujarCalendario();
     enfocar(fecha);
-    mostrarEstadia(null);
+    invalidarCotizacion();
     // si el egreso tiene un límite por una noche ocupada, se explica: si no, parece raro poder tocar un día tachado
     const limite = ultimoEgresoPorNocheNoDisponible();
     document.getElementById('seleccion').textContent = limite === null
@@ -223,6 +232,8 @@ function dibujarCalendario() {
             const precio = document.createElement('span');
             precio.className = 'precio';
             precio.textContent = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(Number(datos.precio));
+            // En pantallas angostas se abrevia la cifra; el botón anuncia el precio completo.
+            precio.dataset.corto = new Intl.NumberFormat('es-AR', { notation: 'compact', maximumFractionDigits: 1 }).format(Number(datos.precio));
             boton.appendChild(precio);
         }
         boton.addEventListener('click', () => {
@@ -296,30 +307,51 @@ function enfocar(fecha) {
 
 // ---------- la estadía ----------
 
+function claveDeEstadia() {
+    return new URLSearchParams({
+        id: estado.id, ingreso: estado.ingreso, egreso: estado.egreso,
+        personas: document.getElementById('personas').value,
+    }).toString();
+}
+
+// Una selección nueva deja sin validez el precio anterior y su aceptación.
+function invalidarCotizacion() {
+    estado.consultaEstadia++;
+    estado.cotizacion = null;
+    document.getElementById('form-reservar').elements.acepta_politica.checked = false;
+    mostrarEstadia(null);
+}
+
 // Pide al backend si se puede reservar la estadía elegida y cuánto sale, y lo muestra
 async function calcularEstadia() {
+    if (estado.reservando) return;
+    invalidarCotizacion();
+    const consulta = estado.consultaEstadia;
     const seleccion = document.getElementById('seleccion');
-    const personas = document.getElementById('personas').value;
-    const busqueda = new URLSearchParams({ id: estado.id, ingreso: estado.ingreso, egreso: estado.egreso, personas });
+    const busqueda = claveDeEstadia();
+    seleccion.textContent = 'Consultando disponibilidad y precio…';
+    // Guardar la selección al pedirla, no cuando llegue una respuesta que podría ser vieja.
+    history.replaceState(null, '', `?${busqueda}${localidadDeLaBusqueda()}`);
+    actualizarEnlaceVolver();
 
     let respuesta;
     let resultado;
     try {
         ({ respuesta, resultado } = await pedirAlBack(`/alojamiento?${busqueda}`));
     } catch (error) {
+        if (consulta !== estado.consultaEstadia || busqueda !== claveDeEstadia()) return;
         console.error('No se pudo conectar con el back:', error);
         seleccion.textContent = MENSAJE_SIN_CONEXION;
         return;
     }
+    if (consulta !== estado.consultaEstadia || busqueda !== claveDeEstadia()) return;
     if (!respuesta.ok) {   // 422: fechas o personas inválidas
         seleccion.textContent = resultado.error;
         mostrarEstadia(null);
         return;
     }
 
-    // la URL queda con la estadía elegida: si se recarga o se comparte, se ve lo mismo
-    history.replaceState(null, '', `?${busqueda}${localidadDeLaBusqueda()}`);
-    actualizarEnlaceVolver();
+    estado.cotizacion = resultado.estadia?.disponible ? busqueda : null;
     mostrarEstadia(resultado.estadia);
 }
 
@@ -365,7 +397,7 @@ function mostrarParaReservar() {
     const aviso = document.getElementById('aviso-reservar');
     const { usuario } = estado;
 
-    if (usuario !== null && ROLES_QUE_RESERVAN.includes(usuario.rol) && usuario.mail_verificado) {
+    if (usuario !== null && ROLES_QUE_RESERVAN.includes(usuario.rol) && usuario.mail_verificado && usuario.dni) {
         document.getElementById('form-reservar').hidden = false;
         return;
     }
@@ -378,8 +410,14 @@ function mostrarParaReservar() {
         aviso.append(enlace, ' para reservar. Si todavía no tenés cuenta, registrate: es gratis.');
     } else if (!ROLES_QUE_RESERVAN.includes(usuario.rol)) {
         aviso.textContent = 'Las reservas se hacen con una cuenta de huésped.';
-    } else {
+    } else if (!usuario.mail_verificado) {
         aviso.textContent = 'Para reservar tenés que verificar tu mail: entrá al enlace del mail que te mandamos al registrarte.';
+    } else {
+        const enlace = document.createElement('a');
+        const volver = `../alojamientos/detalle.html${window.location.search}`;
+        enlace.href = `../sesion/completar-datos.html?volver=${encodeURIComponent(volver)}`;
+        enlace.textContent = 'Completá tu DNI';
+        aviso.append(enlace, ' para reservar. Guardamos las fechas que elegiste.');
     }
     aviso.hidden = false;
 }
@@ -388,11 +426,22 @@ function mostrarParaReservar() {
 // Si mientras tanto otro reservó esas noches (409), vuelve a pedir el calendario para que se vean ocupadas.
 async function reservar(evento) {
     evento.preventDefault();   // frena el envío clásico del form: lo manejamos nosotros
+    if (estado.reservando) return;
     const formulario = evento.target;
     const errorReserva = document.getElementById('error-reserva');
     errorReserva.textContent = '';
+    if (!estado.cotizacion || estado.cotizacion !== claveDeEstadia()) {
+        errorReserva.textContent = 'Esperá a que confirmemos el precio de las fechas y personas elegidas.';
+        return;
+    }
+    if (!formulario.elements.acepta_politica.checked) {
+        errorReserva.textContent = 'Leé y aceptá la política de cancelación para continuar.';
+        return;
+    }
+    estado.reservando = true;
     const boton = formulario.querySelector('button[type="submit"]');
     boton.disabled = true;   // evita reservar dos veces con un doble clic
+    document.getElementById('personas').disabled = true;
 
     let respuesta;
     let resultado;
@@ -411,17 +460,31 @@ async function reservar(evento) {
     } catch (error) {
         console.error('No se pudo conectar con el back:', error);
         errorReserva.textContent = MENSAJE_SIN_CONEXION;
-        boton.disabled = false;
         return;
+    } finally {
+        estado.reservando = false;
+        boton.disabled = false;
+        document.getElementById('personas').disabled = false;
     }
 
     if (respuesta.ok) {
+        estado.reservando = true; // mantener bloqueado hasta que termine la navegación
+        boton.disabled = true;
+        document.getElementById('personas').disabled = true;
         window.location.href = '../reservas/mis-reservas.html?nueva=1';
         return;
     }
-    boton.disabled = false;
     errorReserva.textContent = resultado.error;
+    if (respuesta.status === 401) {
+        estado.usuario = null;
+        formulario.hidden = true;
+        mostrarParaReservar();
+        return;
+    }
     if (respuesta.status === 409) {
+        invalidarCotizacion();
+        errorReserva.textContent = resultado.error;
+        document.getElementById('seleccion').textContent = 'Las fechas ya no están disponibles. Elegí otra estadía.';
         estado.meses.clear();   // el calendario guardado ya no sirve: se pide de nuevo
         try {
             await cargarMes(fechaATexto(estado.mes).slice(0, 7));
@@ -430,6 +493,19 @@ async function reservar(evento) {
             console.error('No se pudo cargar el calendario:', error);
         }
     }
+}
+
+// Invalida al escribir, sin esperar a perder el foco del campo.
+function actualizarPersonas() {
+    if (estado.reservando) return;
+    const personas = Number(document.getElementById('personas').value);
+    const capacidad = estado.alojamiento.capacidad;
+    if (!Number.isInteger(personas) || personas < 1 || personas > capacidad) {
+        invalidarCotizacion();
+        document.getElementById('seleccion').textContent = `Elegí entre 1 y ${capacidad} personas.`;
+        return;
+    }
+    if (estado.ingreso && estado.egreso) return calcularEstadia();
 }
 
 // ---------- los datos del alojamiento ----------
@@ -540,11 +616,7 @@ async function cargarPagina() {
     document.getElementById('mes-siguiente').addEventListener('click', () => cambiarMes(1));
     document.getElementById('dias-del-mes').addEventListener('keydown', moverConTeclado);
     document.getElementById('form-reservar').addEventListener('submit', reservar);
-    document.getElementById('personas').addEventListener('change', () => {
-        if (estado.ingreso && estado.egreso) {
-            calcularEstadia();
-        }
-    });
+    document.getElementById('personas').addEventListener('input', actualizarPersonas);
 }
 
 cargarPagina();

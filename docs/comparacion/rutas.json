@@ -1,0 +1,188 @@
+[
+  {
+    "name": "01-inicio-huesped",
+    "route": "homes/index-huesped.html",
+    "role": "propietario",
+    "title": "Inicio con sesión"
+  },
+  {
+    "name": "02-resultados",
+    "route": "alojamientos/listado.html?ingreso=2026-12-05&egreso=2026-12-10&personas=2",
+    "role": "propietario",
+    "title": "Resultados de búsqueda"
+  },
+  {
+    "name": "03-detalle",
+    "route": "alojamientos/detalle.html?id=1&ingreso=2026-12-05&egreso=2026-12-10&personas=2",
+    "role": "propietario",
+    "title": "Detalle del alojamiento"
+  },
+  {
+    "name": "04-propietario",
+    "route": "homes/index-propietario.html",
+    "role": "propietario",
+    "title": "Mis alojamientos"
+  },
+  {
+    "name": "05-configurar-unidad",
+    "route": "unidades/configurar-unidad.html?id=1",
+    "role": "propietario",
+    "title": "Configurar alojamiento"
+  },
+  {
+    "name": "06-temporadas",
+    "route": "unidades/temporadas-unidad.html?id=1",
+    "role": "propietario",
+    "title": "Calendario y precios"
+  },
+  {
+    "name": "07-disponibilidad",
+    "route": "unidades/disponibilidad-unidad.html?id=1",
+    "role": "propietario",
+    "title": "Disponibilidad"
+  },
+  {
+    "name": "08-politica",
+    "route": "unidades/politica-unidad.html?id=1",
+    "role": "propietario",
+    "title": "Condiciones y cancelación"
+  },
+  {
+    "name": "09-datos-unidad",
+    "route": "unidades/datos-unidad.html?id=1",
+    "role": "propietario",
+    "title": "Datos y fotos"
+  },
+  {
+    "name": "10-gestion-unidad",
+    "route": "unidades/gestion-unidad.html?id=1",
+    "role": "propietario",
+    "title": "Equipo del alojamiento"
+  },
+  {
+    "name": "11-alta-unidad",
+    "route": "unidades/alta-unidad.html",
+    "role": "propietario",
+    "title": "Agregar alojamiento"
+  },
+  {
+    "name": "12-perfil",
+    "route": "perfil/perfil.html",
+    "role": "propietario",
+    "title": "Mi perfil"
+  },
+  {
+    "name": "13-inicio-publico",
+    "route": "homes/index-sin-sesion.html",
+    "role": "publico",
+    "title": "Inicio público"
+  },
+  {
+    "name": "14-iniciar-sesion",
+    "route": "sesion/inicio-sesion.html",
+    "role": "publico",
+    "title": "Iniciar sesión"
+  },
+  {
+    "name": "15-elegir-cuenta",
+    "route": "registros/pre-registro.html",
+    "role": "publico",
+    "title": "Elegir tipo de cuenta"
+  },
+  {
+    "name": "16-registro-huesped",
+    "route": "registros/registro-huesped.html",
+    "role": "publico",
+    "title": "Registro de huésped"
+  },
+  {
+    "name": "17-registro-propietario",
+    "route": "registros/registro-propietario.html",
+    "role": "publico",
+    "title": "Registro de propietario"
+  },
+  {
+    "name": "18-registro-administrador",
+    "route": "registros/registro-administrador.html",
+    "role": "publico",
+    "title": "Registro de administrador"
+  },
+  {
+    "name": "19-registro-operador",
+    "route": "registros/registro-operador.html",
+    "role": "publico",
+    "title": "Registro de operador"
+  },
+  {
+    "name": "20-post-registro",
+    "route": "registros/post-registro.html",
+    "role": "publico",
+    "title": "Después del registro"
+  },
+  {
+    "name": "21-verificar-mail",
+    "route": "sesion/verificar-mail.html",
+    "role": "publico",
+    "title": "Verificar correo"
+  },
+  {
+    "name": "22-oauth-retorno",
+    "route": "sesion/oauth-retorno.html",
+    "role": "publico",
+    "title": "Retorno de Google"
+  },
+  {
+    "name": "23-mis-reservas",
+    "route": "reservas/mis-reservas.html",
+    "role": "huesped",
+    "title": "Mis reservas"
+  },
+  {
+    "name": "24-hacerme-propietario",
+    "route": "perfil/hacerme-propietario.html",
+    "role": "huesped",
+    "title": "Convertirme en propietario"
+  },
+  {
+    "name": "25-completar-datos",
+    "route": "sesion/completar-datos.html",
+    "role": "huesped",
+    "title": "Completar datos"
+  },
+  {
+    "name": "26-acceso-denegado",
+    "route": "errores/acceso-denegado.html",
+    "role": "huesped",
+    "title": "Acceso denegado"
+  },
+  {
+    "name": "27-administrador",
+    "route": "homes/index-administrador.html",
+    "role": "administrador",
+    "title": "Panel de administrador"
+  },
+  {
+    "name": "28-operador",
+    "route": "homes/index-operador.html",
+    "role": "operador",
+    "title": "Panel de operador"
+  },
+  {
+    "name": "29-backoffice",
+    "route": "homes/index-backoffice.html",
+    "role": "backoffice",
+    "title": "Backoffice"
+  },
+  {
+    "name": "30-backoffice-usuario",
+    "route": "backoffice/usuario.html?id=7",
+    "role": "backoffice",
+    "title": "Usuario en backoffice"
+  },
+  {
+    "name": "31-calendario-administrador",
+    "route": "unidades/temporadas-unidad.html?id=2",
+    "role": "administrador",
+    "title": "Calendario del administrador"
+  }
+]

@@ -6,55 +6,107 @@
 
 // Una fecha de JavaScript como "AAAA-MM-DD", con la fecha local (la del usuario, en Argentina)
 function fechaATextoBusqueda(fecha) {
-    return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`;
+  return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, "0")}-${String(fecha.getDate()).padStart(2, "0")}`;
 }
 
 // "AAAA-MM-DD" más esa cantidad de días, otra vez como "AAAA-MM-DD"
 function sumarDias(texto, dias) {
-    const [anio, mes, dia] = texto.split('-').map(Number);
-    return fechaATextoBusqueda(new Date(anio, mes - 1, dia + dias));
+  const [anio, mes, dia] = texto.split("-").map(Number);
+  return fechaATextoBusqueda(new Date(anio, mes - 1, dia + dias));
 }
 
 // El egreso tiene que ser al menos el día siguiente al ingreso: ajusta el mínimo del egreso y, si ya no sirve, lo borra
 function ajustarEgreso(formulario) {
-    const { ingreso, egreso } = formulario.elements;
-    const manana = sumarDias(fechaATextoBusqueda(new Date()), 1);
-    egreso.min = sumarDias(ingreso.value || manana, 1);
-    if (egreso.value !== '' && egreso.value < egreso.min) {   // AAAA-MM-DD se compara como texto
-        egreso.value = '';
-    }
+  const { ingreso, egreso } = formulario.elements;
+  const manana = sumarDias(fechaATextoBusqueda(new Date()), 1);
+  egreso.min = sumarDias(ingreso.value || manana, 1);
+  if (egreso.value !== "" && egreso.value < egreso.min) {
+    // AAAA-MM-DD se compara como texto
+    egreso.value = "";
+  }
 }
 
 // Prepara el formulario de búsqueda de la página (#form-busqueda): carga los destinos, fija las fechas mínimas
 // (el ingreso es de mañana en adelante: hoy ya no se reserva) y lo completa con la búsqueda que vino en la URL.
 async function prepararBusqueda() {
-    const formulario = document.getElementById('form-busqueda');
-    const parametros = new URLSearchParams(window.location.search);
-    const { localidad_id: destino, ingreso, egreso, personas } = formulario.elements;
+  const formulario = document.getElementById("form-busqueda");
+  const parametros = new URLSearchParams(window.location.search);
+  const {
+    localidad_id: destino,
+    ingreso,
+    egreso,
+    personas,
+  } = formulario.elements;
 
-    ingreso.min = sumarDias(fechaATextoBusqueda(new Date()), 1);
-    ingreso.value = parametros.get('ingreso') ?? '';
-    egreso.value = parametros.get('egreso') ?? '';
-    personas.value = parametros.get('personas') ?? personas.value;
-    ajustarEgreso(formulario);
-    ingreso.addEventListener('change', () => ajustarEgreso(formulario));
-
-    // el navegador ya controla los campos obligatorios y los mínimos; esto cubre los navegadores que no lo hacen
-    formulario.addEventListener('submit', (evento) => {
-        const error = document.getElementById('error-busqueda');
-        error.textContent = '';
-        if (egreso.value !== '' && egreso.value <= ingreso.value) {
-            evento.preventDefault();
-            error.textContent = 'El egreso tiene que ser posterior al ingreso.';
-            egreso.focus();
-        }
+  ingreso.min = sumarDias(fechaATextoBusqueda(new Date()), 1);
+  ingreso.value = parametros.get("ingreso") ?? "";
+  egreso.value = parametros.get("egreso") ?? "";
+  personas.value = parametros.get("personas") ?? personas.value;
+  ajustarEgreso(formulario);
+  const actualizarContador = () =>
+    formulario.querySelectorAll("[data-personas]").forEach((boton) => {
+      const valor = Number(personas.value);
+      boton.disabled =
+        Number(boton.dataset.personas) < 0 ? valor <= 1 : valor >= 50;
     });
+  formulario.querySelectorAll("[data-personas]").forEach((boton) =>
+    boton.addEventListener("click", () => {
+      personas.value = Math.max(
+        1,
+        Math.min(
+          50,
+          (Number(personas.value) || 1) + Number(boton.dataset.personas),
+        ),
+      );
+      personas.dispatchEvent(new Event("input", { bubbles: true }));
+    }),
+  );
+  personas.addEventListener("input", actualizarContador);
+  actualizarContador();
+  ingreso.addEventListener("change", () => ajustarEgreso(formulario));
 
-    try {
-        const seleccionada = Number(parametros.get('localidad_id')) || null;
-        await cargarLocalidades(destino, seleccionada);
-    } catch (error) {   // sin las localidades se puede buscar igual, en todos los destinos
-        console.error('No se pudieron cargar las localidades:', error);
+  // el navegador ya controla los campos obligatorios y los mínimos; esto cubre los navegadores que no lo hacen
+  formulario.addEventListener("submit", (evento) => {
+    const error = document.getElementById("error-busqueda");
+    error.textContent = "";
+    if (egreso.value !== "" && egreso.value <= ingreso.value) {
+      evento.preventDefault();
+      error.textContent = "El egreso tiene que ser posterior al ingreso.";
+      egreso.focus();
     }
-    destino.options[0].textContent = 'Todos los destinos';   // la primera opción (vacía) = buscar en todos
+  });
+
+  try {
+    const seleccionada = Number(parametros.get("localidad_id")) || null;
+    await cargarLocalidades(destino, seleccionada);
+  } catch (error) {
+    // sin las localidades se puede buscar igual, en todos los destinos
+    console.error("No se pudieron cargar las localidades:", error);
+    document.getElementById("error-busqueda").textContent =
+      "No pudimos cargar los destinos. Podés buscar en todos o volver a cargar la página.";
+  }
+  destino.options[0].textContent = "Todos los destinos"; // la primera opción (vacía) = buscar en todos
+  const editor = document.getElementById("busqueda-editar");
+  if (editor) {
+    const fecha = (texto) =>
+      new Intl.DateTimeFormat("es-AR", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      }).format(new Date(texto + "T12:00:00"));
+    const fechasValidas =
+      ingreso.value &&
+      egreso.value &&
+      ingreso.validity.valid &&
+      egreso.validity.valid;
+    if (
+      fechasValidas &&
+      personas.validity.valid &&
+      !document.getElementById("error-busqueda").textContent
+    ) {
+      document.getElementById("criterios-busqueda").textContent =
+        `${destino.selectedOptions[0]?.textContent || "Todos los destinos"} · ${fecha(ingreso.value)} – ${fecha(egreso.value)} · ${personas.value} ${personas.value === "1" ? "huésped" : "huéspedes"}`;
+      editor.open = false;
+    }
+  }
 }

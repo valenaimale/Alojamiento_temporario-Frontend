@@ -52,7 +52,8 @@ textarea:focus {
 }
 
 button:disabled,
-input:disabled {
+input:disabled,
+select:disabled {
     opacity: 0.6;
     cursor: not-allowed;
 }
@@ -136,6 +137,21 @@ input:disabled {
 .boton-peligro {
     border-color: var(--color-danger);
     color: var(--color-danger);
+}
+
+.lista-fotos .orden-foto {
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+    font-size: .8rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+}
+.lista-fotos .orden-foto select {
+    width: 100%;
+    min-height: 44px;
+    margin: 0;
+    font-size: .9rem;
 }
 
 .boton-peligro:hover {

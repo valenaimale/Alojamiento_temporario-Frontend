@@ -4,15 +4,19 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Completar datos</title>
-        <meta name="description" content="Completá tu DNI para terminar de crear tu cuenta en G-ONE">
+        <meta name="description" content="Completá tu DNI para terminar de crear tu cuenta en HayLugar">
         <link rel="stylesheet" href="../../estilos/style.css">
         <link rel="stylesheet" href="../../estilos/completar-datos.css">
         <script src="../../funcionalidades/sesion.js" defer></script>
         <script src="../../funcionalidades/completar-datos.js" defer></script>
+        <link rel="stylesheet" href="../../estilos/haylugar.css">
+        <link rel="icon" href="../../imagenes/marca.svg" type="image/svg+xml">
+        <script src="../../funcionalidades/interfaz.js" defer></script>
     </head>
     <!-- hidden: se muestra recién cuando se sabe que el usuario tiene sesión y le falta el DNI -->
-    <body hidden>
-        <header></header>
+    <body class="cuenta" hidden>
+        <header class="site-header">
+            <a class="marca" href="../homes/index-sin-sesion.html" aria-label="HayLugar, inicio"><svg viewBox="0 0 32 36" fill="none" aria-hidden="true"><path d="M5 31V13L16 5l11 8v18H5Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M12 31V19h8v12M20 24h.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg><span>HayLugar</span></a></header>
         <main>
             <h1>Completá tus datos</h1>
             <p>Para terminar, necesitamos tu DNI. Es el mismo para todos tus roles en la plataforma.</p>
@@ -24,5 +28,6 @@
             </form>
             <p id="mensaje-error"></p>
         </main>
+        <footer class="site-footer"><strong>HayLugar</strong><span>Alojamientos temporarios</span></footer>
     </body>
 </html>

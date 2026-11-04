@@ -1,0 +1,25 @@
+{
+  "fecha": "2026-10-31",
+  "viewport_desktop": {
+    "width": 1440,
+    "height": 1000
+  },
+  "capturas_actualizadas": [
+    "02-resultados",
+    "04-propietario",
+    "05-configurar-unidad",
+    "08-politica",
+    "09-datos-unidad",
+    "10-gestion-unidad",
+    "11-alta-unidad",
+    "23-mis-reservas",
+    "31-calendario-administrador"
+  ],
+  "sin_cambios": "Las otras 22 vistas conservan la captura de la primera propuesta.",
+  "versiones": {
+    "antes": "GitHub 54ca5fd6",
+    "iteracion-1": "Primera propuesta HayLugar",
+    "despues": "Versión actual, segunda pasada"
+  },
+  "datos": "Sintéticos del entorno local"
+}

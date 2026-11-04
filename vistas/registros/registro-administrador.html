@@ -4,36 +4,41 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>G-ONE | Registro de administrador de hospedaje</title>
-        <meta name="description" content="Creá tu cuenta como administrador de hospedaje en G-ONE">
+        <title>HayLugar | Registro de administrador de hospedaje</title>
+        <meta name="description" content="Creá tu cuenta como administrador de hospedaje en HayLugar">
         <link rel="stylesheet" href="../../estilos/style.css">
         <link rel="stylesheet" href="../../estilos/registro.css">
         <script src="../../funcionalidades/sesion.js" defer></script>
         <script src="../../funcionalidades/registro.js" defer></script>
         <script src="../../funcionalidades/datos-fiscales.js" defer></script>
+        <link rel="stylesheet" href="../../estilos/haylugar.css">
+        <link rel="icon" href="../../imagenes/marca.svg" type="image/svg+xml">
+        <script src="../../funcionalidades/interfaz.js" defer></script>
     </head>
-    <body>
-        <header></header>
+    <body class="cuenta cuenta-larga">
+        <header class="site-header">
+            <a class="marca" href="../homes/index-sin-sesion.html" aria-label="HayLugar, inicio"><svg viewBox="0 0 32 36" fill="none" aria-hidden="true"><path d="M5 31V13L16 5l11 8v18H5Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M12 31V19h8v12M20 24h.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg><span>HayLugar</span></a></header>
         <main>
             <h1>Creá tu cuenta de administrador de hospedaje</h1>
             <form id="form-registro" data-rol="administrador">
                 <label>Nombre completo
-                    <input type="text" name="nombre" required>
+                    <input type="text" name="nombre" autocomplete="name" required>
                 </label>
                 <label>DNI
                     <input type="text" name="dni" inputmode="numeric" required>
                 </label>
+                <h2 class="form-seccion">Acceso a tu cuenta</h2>
                 <label>Mail
-                    <input type="email" name="mail" required>
+                    <input type="email" name="mail" autocomplete="email" required>
                 </label>
                 <label>Repetí tu mail
-                    <input type="email" name="mail_confirmacion" required autocomplete="off" onpaste="return false">
+                    <input type="email" name="mail_confirmacion" required autocomplete="off" >
                 </label>
                 <label>Contraseña
-                    <input type="password" name="contrasenia" required minlength="8">
+                    <input type="password" name="contrasenia" autocomplete="new-password" required minlength="8">
                 </label>
                 <label>Repetí tu contraseña
-                    <input type="password" name="contrasenia_confirmacion" required minlength="8" autocomplete="off" onpaste="return false">
+                    <input type="password" name="contrasenia_confirmacion" required minlength="8" autocomplete="off" >
                 </label>
                 <fieldset>
                     <legend>¿Cobrás IVA?</legend>
@@ -73,5 +78,6 @@
             <p id="mensaje-error" role="alert"></p>
             <p>¿Ya tenés una cuenta? <a href="../sesion/inicio-sesion.html">Iniciá sesión acá</a>.</p>
         </main>
+        <footer class="site-footer"><strong>HayLugar</strong><span>Alojamientos temporarios</span></footer>
     </body>
 </html>

@@ -1,0 +1,27 @@
+name: Frontend
+
+on:
+  push:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Sintaxis y tests de interfaz
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Validar sintaxis JavaScript
+        run: |
+          while IFS= read -r archivo; do
+            node --check "$archivo" || exit 1
+          done < <(git ls-files '*.js' '*.cjs')
+      - name: Probar reglas y estados de interfaz
+        run: node --test tests/*.test.cjs

@@ -1,5 +1,12 @@
+// Reutiliza la lista de destinos permitidos del login; nunca redirige a sitios externos.
+function volverDespuesDeCompletar(rol) {
+    const volver = paginaParaVolver();
+    if (volver !== null) window.location.href = volver;
+    else irAlHome(rol);
+}
+
 // Pide el DNI a las cuentas que no lo tienen (las creadas con Google, o usuarios viejos).
-// Sin sesión manda al login; si el DNI ya está cargado, manda al home.
+// Sin sesión manda al login; al completar vuelve al alojamiento o al inicio de su rol.
 async function prepararPagina() {
     let usuario;
     try {
@@ -14,7 +21,7 @@ async function prepararPagina() {
         return;
     }
     if (usuario.dni !== null) {
-        irAlHome(usuario.rol);
+        volverDespuesDeCompletar(usuario.rol);
         return;
     }
     document.body.hidden = false;
@@ -42,7 +49,7 @@ form.addEventListener('submit', async (evento) => {
         return;
     }
     if (respuesta.ok) {
-        irAlHome(resultado.usuario.rol);
+        volverDespuesDeCompletar(resultado.usuario.rol);
     }
     else {
         mensaje.textContent = resultado.error;
