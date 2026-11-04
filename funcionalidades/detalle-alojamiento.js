@@ -552,9 +552,9 @@ function mostrarAlojamiento(alojamiento) {
 
     const { politica } = alojamiento;
     document.getElementById('explicacion-politica').textContent =
-        `Si cancelás la reserva, el propietario retiene un porcentaje del total, según cuántos días antes del cobro del saldo cancelás (el saldo se cobra ${politica.dias_cobro_saldo} días antes del ingreso).`;
+        `Si cancelás la reserva, el propietario retiene un porcentaje de la seña y te devuelve el resto, según cuántos días antes del cobro del saldo cancelás (el saldo se cobra ${politica.dias_cobro_saldo} días antes del ingreso).`;
     for (const [tramo, id] of [['retencion_mas_de_30', 'retencion-mas-de-30'], ['retencion_de_15_a_30', 'retencion-de-15-a-30'], ['retencion_menos_de_15', 'retencion-menos-de-15']]) {
-        document.getElementById(id).textContent = `Se retiene el ${Number(politica[tramo]).toLocaleString('es-AR')} % del total`;
+        document.getElementById(id).textContent = `Se retiene el ${Number(politica[tramo]).toLocaleString('es-AR')} % de la seña`;
     }
 
     document.getElementById('deposito').textContent = alojamiento.deposito_garantia === null

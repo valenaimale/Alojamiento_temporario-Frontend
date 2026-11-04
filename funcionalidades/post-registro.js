@@ -5,7 +5,11 @@ sessionStorage.removeItem('mensajeRegistro'); //se elimina el item del session s
 // si el registro salió bien, se avisa que se envió el mail de verificación
 if (sessionStorage.getItem('registroExitoso') === '1') {
     document.getElementById('aviso-verificacion').hidden = false;
-}
+}//hidden es un atributo de html que le dice al navegador:
+//"no mostres este elemento", al ponerlo en falso se muestra
+//y tiene sentido que se muestre en este caso ya que
+//el registro fue exitoso y corresponde que aparezca el
+//texto que dice "te enviamos un mail para verificar tu cuenta"
 sessionStorage.removeItem('registroExitoso');
 // "Volver al inicio": si el registro dejó una sesión abierta, va al home de su rol; si no, al home sin sesión
 async function volverAlInicio() {

@@ -2,7 +2,7 @@
 // Pide al backend los datos de la unidad y arma tres secciones: los datos básicos (POST /unidades/editar),
 // las fotos (subir, ordenar, elegir la principal y quitar) y el depósito de garantía (POST /unidades/deposito).
 // No usa proteger-pagina.js porque la ven dos roles (propietario y administrador): quién puede ver ESTA unidad
-// lo decide el backend (responde 404 a cualquier otro). Al administrador solo le queda el depósito.
+// lo decide el backend (responde 404 a cualquier otro). El administrador maneja las fotos y el depósito, no los datos.
 
 const MAXIMO_FOTOS = 10; // el mismo límite que el backend
 
@@ -46,8 +46,8 @@ function mostrarNombre() {
   document.getElementById("nombre-unidad").textContent = unidad.nombre;
   document.querySelector("h1").textContent = unidad.es_propietario
     ? "Datos y fotos"
-    : "Depósito de garantía";
-  document.title = `${unidad.es_propietario ? "Datos" : "Depósito"} de ${unidad.nombre}`;
+    : "Fotos y depósito";
+  document.title = `${unidad.es_propietario ? "Datos" : "Fotos y depósito"} de ${unidad.nombre}`;
 }
 
 // ---------- Datos ----------
@@ -356,11 +356,11 @@ async function cargarPagina() {
   document.getElementById("enlace-volver").href =
     `configurar-unidad.html?id=${unidad.id}`;
   mostrarNombre();
+  prepararFotos(); // las fotos las manejan el propietario y el administrador asignado
   if (unidad.es_propietario) {
-    prepararFotos();
     await prepararDatos();
   } else {
-    // el administrador solo puede cambiar el depósito
+    // el administrador no puede cambiar los datos básicos
     for (const seccion of document.querySelectorAll(
       "[data-solo-propietario]",
     )) {

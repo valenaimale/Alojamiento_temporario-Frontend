@@ -30,8 +30,8 @@ form.addEventListener('submit', async (evento) => { // "escucha" el form: cada v
     let resultado;
     try {
         respuesta = await fetch(URL_BACK + '/registrarse', { // le pide al navegador que haga la petición al back; y con await espera a que llegue la respuesta
-            method: 'POST',
-            credentials: 'include',                                   // método HTTP: la ruta del back es POST@/registrarse
+            method: 'POST', // método HTTP: la ruta del back es POST@/registrarse
+            credentials: 'include',  //JavaScript le pide al navegador que guarde la cookie que le manda el back                                
             headers: { 'Content-Type': 'application/json' },  // le avisa al back que el cuerpo es JSON
             body: JSON.stringify(datos),                      // convierte el objeto datos a texto JSON (como json_encode en PHP)
         });
