@@ -158,3 +158,8 @@
         gap: 1rem;
     }
 }
+
+/* La dirección de la billetera (0x + 40 caracteres) no tiene espacios: se corta donde haga falta en pantallas chicas */
+#dato-billetera {
+    overflow-wrap: anywhere;
+}
