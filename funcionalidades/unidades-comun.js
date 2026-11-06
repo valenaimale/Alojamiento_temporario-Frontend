@@ -132,6 +132,7 @@ const NOMBRES_DE_ESTADO = {
 function confirmar({
   titulo,
   detalle = "",
+  datos = [],
   textoConfirmar,
   textoCancelar = "Cancelar",
 }) {
@@ -151,6 +152,19 @@ function confirmar({
     texto.textContent = detalle;
     dialogo.appendChild(texto);
     dialogo.setAttribute("aria-describedby", texto.id);
+  }
+
+  if (datos.length) {
+    const lista = document.createElement("dl");
+    lista.className = "resumen-confirmacion";
+    for (const [nombre, valor] of datos) {
+      const termino = document.createElement("dt");
+      termino.textContent = nombre;
+      const importe = document.createElement("dd");
+      importe.textContent = valor;
+      lista.append(termino, importe);
+    }
+    dialogo.appendChild(lista);
   }
 
   // method="dialog": cada botón cierra el diálogo y deja su value en dialogo.returnValue

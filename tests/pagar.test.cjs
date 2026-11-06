@@ -41,9 +41,10 @@ function pagina(opciones = {}) {
     ...opciones,
   };
   const eventos={}; const timers=new Map(); let timerId=0;
+  let reloj=Date.now();class Fecha extends Date {static now(){return reloj;}}
   const window = {addEventListener:(nombre,fn)=>eventos[nombre]=fn,location:{search:opciones.search || '?reserva_id=42&tipo=sena',href:''}};
   const contexto = vm.createContext({
-    document:{getElementById:get,body:{hidden:true}},window,URLSearchParams,Intl,Date,
+    document:{getElementById:get,body:{hidden:true}},window,URLSearchParams,Intl,Date:Fecha,
     PagosModelo,encodeURIComponent,crypto:require('node:crypto').webcrypto,
     setTimeout:(fn,ms)=>{timers.set(++timerId,{fn,ms});return timerId;},clearTimeout:id=>timers.delete(id),navigator:{locks:opciones.locks},
     sessionStorage:{getItem:clave=>datos.get(clave) ?? null,setItem:(clave,valor)=>{
@@ -77,7 +78,7 @@ function pagina(opciones = {}) {
     },
   };
   return {...api,get,datos,solicitudes,llamadas,configuracion,window,contexto,timers,eventos,
-    async avanzar(){const [id,{fn,ms}]=timers.entries().next().value;timers.delete(id);assert.equal(ms,3500);await fn();}
+    async avanzar(){const [id,{fn,ms}]=timers.entries().next().value;timers.delete(id);assert.ok(ms>0 && ms<=3500);reloj+=ms;await fn();}
   };
 }
 
@@ -188,8 +189,8 @@ test('saldo usa endpoint y tipo saldo; fecha sin hora conserva día argentino',a
   assert.equal(cotizaciones(p)[0].ruta,'/pagos/saldo?reserva_id=42');
 });
 
-test('permisos falsos, reservas ajenas, terminales o saldo vencido no cotizan',async()=>{
-  for(const cambios of [{id:43},{puede_pagar:false},{estado:'expirada'},{estado:'cancelada'},{estado:'confirmada',saldo:'50.00',puede_pagar_saldo:true,fecha_cobro:'2020-01-01'}]){
+test('permisos falsos, reservas ajenas y terminales no cotizan',async()=>{
+  for(const cambios of [{id:43},{puede_pagar:false},{estado:'expirada'},{estado:'cancelada'}]){
     const p=pagina({reservas:[reserva(cambios)]});await p.cargarPaginaPago();
     assert.equal(cotizaciones(p).length,0);assert.equal(p.get('boton-pagar').disabled,true);
   }
@@ -230,4 +231,36 @@ test('salir de página detiene reintentos automáticos conservando hash',async()
   const p=pagina({pedir:ruta=>ruta==='/pagos/confirmar'?respuesta({pendiente:true},202):undefined});
   await p.cargarPaginaPago();await p.pagarReserva();p.eventos.pagehide();
   assert.equal(p.timers.size,0);assert.ok(p.datos.get(CLAVE));
+});
+
+test('saldo vencido se cotiza y paga; fecha y aviso vienen de la cotización actual',async()=>{
+  const p=pagina({search:'?reserva_id=42&tipo=saldo',reservas:[reserva({estado:'confirmada',saldo:'100000.00',puede_pagar_saldo:true,fecha_cobro:'2020-01-01'})],cotizacion:cotizacion({tipo:'saldo',fecha_cobro:'2020-01-02',vencido:true,pago:{simulado:true,contrato:null,funcion:'pagarSaldo'}})});
+  await p.cargarPaginaPago();assert.match(p.get('plazo-pago').textContent,/Saldo vencido.*2 ene.*pagalo antes de ingresar/);
+  assert.equal(p.get('boton-pagar').disabled,false);await p.pagarReserva();assert.equal(p.estadoDelPago.completo,true);
+});
+test('202 se pausa a los dos minutos y Volver a verificar conserva el hash',async()=>{
+  let estado=202;
+  const p=pagina({pedir:ruta=>ruta==='/pagos/confirmar'?respuesta(estado===202?{mensaje:'Esperá la verificación del backend'}:{ok:'Pagaste el saldo: reserva paga'},estado):undefined});
+  await p.cargarPaginaPago();await p.pagarReserva();
+  assert.equal(p.get('estado-pago').textContent,'Esperá la verificación del backend');
+  const hash=JSON.parse(p.datos.get(CLAVE)).hash;
+  let veces=0;while(p.timers.size && veces++<40)await p.avanzar();
+  assert.equal(p.timers.size,0);assert.equal(p.get('boton-pagar').textContent,'Volver a verificar');
+  assert.equal(p.get('boton-pagar').disabled,false);assert.equal(p.estadoDelPago.completo,false);
+  assert.equal(JSON.parse(p.datos.get(CLAVE)).hash,hash);estado=200;await p.pagarReserva();
+  assert.equal(p.get('aviso-pago').textContent,'Pagaste el saldo: reserva paga');
+  assert.ok(confirmaciones(p).every(x=>JSON.parse(x.envio.body).tx_hash===hash));
+});
+test('404 conserva mensaje del servidor y no habilita cobro',async()=>{
+  const p=pagina({pedir:ruta=>ruta.startsWith('/pagos/sena?')?respuesta({error:'No encontramos esa reserva'},404):undefined});
+  await p.cargarPaginaPago();assert.equal(p.get('error-pago').textContent,'No encontramos esa reserva');assert.equal(p.get('boton-pagar').disabled,true);
+});
+
+test('seña vencida ofrece volver al alojamiento, sin enlazar otra reserva ni ofrecer pagar',async()=>{
+  const p=pagina({reservas:[reserva({estado:'expirada',puede_pagar:false,alojamiento:{id:5,nombre:'Casa'}})]});
+  await p.cargarPaginaPago();
+  assert.equal(p.get('volver-alojamiento').hidden,false);
+  assert.equal(p.get('volver-alojamiento').href,'../alojamientos/detalle.html?id=5');
+  assert.equal(p.get('boton-pagar').disabled,true);
+  assert.equal(cotizaciones(p).length,0);
 });

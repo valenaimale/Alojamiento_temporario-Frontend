@@ -109,6 +109,23 @@ test('permiso del servidor prevalece y saldo vence al terminar fecha argentina',
   assert.equal(modelo.estadoPagoReserva({estado:'pendiente'}).tipo,null);
   const r={estado:'confirmada',saldo:'50.00',puede_pagar_saldo:true,fecha_cobro:'2026-11-05'};
   assert.equal(modelo.estadoPagoReserva(r,Date.parse('2026-11-06T02:59:59Z')).tipo,'saldo');
-  assert.equal(modelo.estadoPagoReserva(r,Date.parse('2026-11-06T03:00:00Z')).texto,'Saldo vencido');
+  assert.equal(modelo.estadoPagoReserva(r,Date.parse('2026-11-06T03:00:00Z')).texto,'Saldo vencido: pagalo antes de ingresar');
   assert.equal(modelo.estadoPagoReserva({...r,puede_pagar_saldo:false},Date.parse('2026-11-05T12:00:00Z')).tipo,null);
+});
+
+const cancelacion = cambios => ({reserva_id:42,estado:'confirmada',tramo:'mas_de_30',dias_hasta_cobro:45,porcentaje_retencion:'30.00',pagado:{sena:'42000.00',saldo:'168000.00'},retencion:'12600.00',devolucion:'197400.00',devolucion_wei:'1974000000000000',...cambios});
+test('cancelación conserva importes del backend y wei exacto; explica cada tramo y saldo completo',()=>{
+  for(const [tramo,dias,texto] of [['mas_de_30',45,'más de 30'],['de_15_a_30',15,'entre 15 y 30'],['menos_de_15',-2,'ya pasó']]){
+    const q=modelo.normalizarCancelacion(cancelacion({tramo,dias_hasta_cobro:dias}),42);
+    assert.match(q.explicacion,new RegExp(texto));assert.match(q.explicacion,/saldo pagado se devuelve entero/);
+    assert.equal(q.devolucion,'197400.00');assert.equal(q.devolucion_wei,1974000000000000n);
+  }
+  const sinPago=modelo.normalizarCancelacion(cancelacion({pagado:{sena:'0.00',saldo:'0.00'},retencion:'0.00',devolucion:'0.00',devolucion_wei:'0'}),42);
+  assert.match(sinPago.explicacion,/no corresponde devolución/);
+  assert.equal(modelo.normalizarCancelacion(cancelacion({devolucion_wei:'9007199254740993123456789'}),42).devolucion_wei,9007199254740993123456789n);
+});
+test('vista previa ajena, mal formada o sin importes impide confirmar',()=>{
+  for(const cambio of [{reserva_id:43},{estado:'cancelada'},{tramo:'otro'},{pagado:null},{devolucion_wei:1974000000000000},{porcentaje_retencion:'101.00'},{devolucion:'NaN'}]){
+    assert.throws(()=>modelo.normalizarCancelacion(cancelacion(cambio),42));
+  }
 });

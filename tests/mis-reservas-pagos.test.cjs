@@ -16,25 +16,33 @@ function elemento(tag = 'div') {
   };
 }
 
-function pagina() {
+function pagina(opciones = {}) {
   const elementos = new Map();
   const get = id => {
     if (!elementos.has(id)) elementos.set(id, elemento());
     return elementos.get(id);
   };
   let confirmacion;
+  const solicitudes=[];
+  const previa={reserva_id:42,estado:'confirmada',tramo:'mas_de_30',dias_hasta_cobro:45,porcentaje_retencion:'30.00',pagado:{sena:'42000.00',saldo:'168000.00'},retencion:'12600.00',devolucion:'197400.00',devolucion_wei:'1974000000000000',...opciones.previa};
   const contexto = vm.createContext({
     document: { createElement: elemento, getElementById: get, querySelectorAll: () => [] },
     PagosModelo, Intl, Date, URLSearchParams, encodeURIComponent,
-    formatearPrecio: valor => `$ ${valor}`, formatearFecha: String,
+    MENSAJE_SIN_CONEXION:'Sin conexión', console,
+    formatearPrecio: valor => `$ ${valor}`, formatearFecha: String, formatearPorcentaje: valor => `${valor} %`,
+    pedirAlBack:async(ruta,envio)=>{
+      solicitudes.push({ruta,envio});
+      if(opciones.pedir){const r=await opciones.pedir(ruta,envio);if(r!==undefined)return r;}
+      return {respuesta:{ok:true,status:200},resultado:ruta.startsWith('/reservas/cancelacion?')?previa:ruta==='/reservas/mias'?{reservas:[]}:{ok:'Cancelación registrada',...opciones.resultado}};
+    },
     fotoConAncho: valor => valor,
-    confirmar: async opciones => { confirmacion = opciones; return false; },
+    confirmar: async datos => { confirmacion = datos; return opciones.confirmar === true; },
   });
   const fuente = fs.readFileSync(path.join(__dirname, '../funcionalidades/mis-reservas.js'), 'utf8')
     .replace(/\ncargarPagina\(\);\s*$/, '');
   vm.runInContext(fuente, contexto);
   return { ...vm.runInContext('({tarjetaDeReserva, cancelarReserva, fechaDePagoVisible, mostrarReservas})', contexto),
-    get, contexto, confirmacion: () => confirmacion };
+    get, contexto, solicitudes, confirmacion: () => confirmacion };
 }
 
 const reserva = cambios => ({
@@ -97,10 +105,11 @@ test('muestra plazos válidos sin exponer valores inválidos ni enlaces manipula
 });
 
 test('cancelar nunca afirma que no hubo pagos cuando el cobro puede estar en proceso', async () => {
-  const p = pagina();
+  const p = pagina({previa:{estado:'pendiente'}});
   await p.cancelarReserva(reserva());
   assert.doesNotMatch(p.confirmacion().detalle, /no pagaste nada|nada que devolver/);
-  assert.match(p.confirmacion().detalle, /devolución.*todavía no está disponible/);
+  assert.match(p.confirmacion().detalle, /revisá primero su confirmación/);
+  assert.equal(p.solicitudes.length,1);
 });
 
 test('reserva pendiente_pago permanece en próximas', () => {
@@ -112,10 +121,48 @@ test('reserva pendiente_pago permanece en próximas', () => {
   assert.equal(p.get('lista-reservas').children.length, 1);
 });
 
-test('rechaza permiso de seña y muestra saldo vencido sin botón',()=>{
+test('respeta permisos y permite saldar una reserva vencida cuando backend lo habilita',()=>{
   const p=pagina();
   assert.equal(cobros(p.tarjetaDeReserva(reserva({puede_pagar:false}))).length,0);
   const vencida=p.tarjetaDeReserva(reserva({estado:'confirmada',saldo:'400.00',fecha_cobro:'2020-01-01',puede_pagar_saldo:true}));
-  assert.equal(cobros(vencida).length,0);
+  assert.equal(cobros(vencida).length,1);
   assert.match(textos(vencida),/Saldo vencido/);
+});
+
+test('cancelación muestra desglose antes de POST y conserva resultado pendiente de devolución',async()=>{
+  const p=pagina({confirmar:true,resultado:{ok:'Reserva cancelada. La devolución está en proceso: te avisamos por mail',devolucion:{estado:'pendiente',tx_hash:null}}});
+  await p.cancelarReserva(reserva({estado:'confirmada'}));
+  assert.match(p.confirmacion().detalle,/saldo pagado se devuelve entero/);
+  assert.equal(p.confirmacion().datos.at(-1)[1],'$ 197400.00');
+  assert.equal(p.solicitudes[0].ruta,'/reservas/cancelacion?reserva_id=42');
+  assert.equal(p.solicitudes[1].ruta,'/reservas/cancelar');
+  assert.deepEqual(JSON.parse(p.solicitudes[1].envio.body),{reserva_id:42});
+  assert.match(p.get('mensaje-ok').textContent,/en proceso/);
+  assert.equal(p.get('comprobante-devolucion').hidden,true);
+});
+test('rechazar diálogo o fallar vista previa nunca cancela',async()=>{
+  for(const p of [pagina(),pagina({confirmar:true,previa:{reserva_id:99}}),pagina({confirmar:true,pedir:()=>({respuesta:{ok:false,status:409},resultado:{error:'La estadía ya empezó'}})})]){
+    await p.cancelarReserva(reserva({estado:'confirmada'}));
+    assert.equal(p.solicitudes.filter(x=>x.ruta==='/reservas/cancelar').length,0);
+  }
+});
+test('conflicto al cancelar muestra el error y no afirma devolución',async()=>{
+  const p=pagina({confirmar:true,pedir:ruta=>ruta==='/reservas/cancelar'?{respuesta:{ok:false,status:409},resultado:{error:'La reserva cambió mientras la cancelabas: actualizá la página'}}:undefined});
+  await p.cancelarReserva(reserva({estado:'confirmada'}));
+  assert.match(p.get('mensaje-error').textContent,/La reserva cambió/);assert.equal(p.get('mensaje-ok').textContent,'');
+});
+test('identificador de devolución no enlaza al explorador sin red real explícita',async()=>{
+  for(const meta of [{},{red:31337,simulado:true},{red:84532,simulado:false}]){
+    const hash='0x'+'a'.repeat(64);
+    const p=pagina({confirmar:true,resultado:{ok:'Devolución registrada',devolucion:{estado:'confirmado',tx_hash:hash,...meta}}});
+    await p.cancelarReserva(reserva({estado:'confirmada'}));
+    assert.equal(p.get('hash-devolucion').textContent,hash);
+    assert.equal(p.get('enlace-devolucion').hidden,meta.red!==84532);
+  }
+});
+test('doble clic durante consulta no abre dos diálogos ni cancela dos veces',async()=>{
+  let resolver;const espera=new Promise(r=>resolver=r);
+  const p=pagina({pedir:async ruta=>{if(ruta.startsWith('/reservas/cancelacion?'))await espera;}});
+  const primero=p.cancelarReserva(reserva());await p.cancelarReserva(reserva());
+  assert.equal(p.solicitudes.length,1);resolver();await primero;
 });
