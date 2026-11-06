@@ -128,6 +128,28 @@ main {
   font-size: 0.9rem;
 }
 
+/* El aviso de que falta la billetera de cobro. Es una advertencia y no un error: la liquidación está bien
+   calculada, lo que falta es un dato de la cuenta. Mismo tono ámbar que el aviso de verificar el mail. */
+.aviso-billetera {
+  margin: 0 0 24px;
+  padding: 16px 18px;
+  border: 1px solid #e6cf85;
+  border-left: 4px solid #e6cf85;
+  border-radius: var(--radius-sm);
+  background-color: #fdf4d8;
+  color: #6b4e0a;
+}
+
+.aviso-billetera h2 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+
+.aviso-billetera p {
+  margin: 0 0 14px;
+  font-size: 0.9rem;
+}
+
 /* ---------- La tabla de comisiones ---------- */
 
 .localidad,
