@@ -8,9 +8,161 @@ export const BASE_SEPOLIA = Object.freeze({
   blockExplorers: { default: { name: 'BaseScan', url: 'https://sepolia.basescan.org' } },
   testnet: true,
 });
-export const ABI_PAGOS = Object.freeze(['pagarSena', 'pagarSaldo'].map(name => ({
+// Errores de abi/PasarelaPago.json, repositorio Contratos, commit c2d90d9.
+export const ABI_ERRORES_PAGOS = Object.freeze([
+  {
+    "type": "error",
+    "name": "DestinatarioInvalido",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "FondosInsuficientes",
+    "inputs": [
+      {
+        "name": "reservaId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "disponible",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "pedido",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "HuespedIncorrecto",
+    "inputs": [
+      {
+        "name": "reservaId",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "esperado",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "recibido",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "ListasInvalidas",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "MontoInvalido",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OwnableInvalidOwner",
+    "inputs": [
+      {
+        "name": "owner",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "OwnableUnauthorizedAccount",
+    "inputs": [
+      {
+        "name": "account",
+        "type": "address",
+        "internalType": "address"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "ReentrancyGuardReentrantCall",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "RenunciaNoPermitida",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ReservaDevuelta",
+    "inputs": [
+      {
+        "name": "reservaId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "SaldoYaPagado",
+    "inputs": [
+      {
+        "name": "reservaId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "SenaYaPagada",
+    "inputs": [
+      {
+        "name": "reservaId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "SinSena",
+    "inputs": [
+      {
+        "name": "reservaId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "error",
+    "name": "TransferenciaFallida",
+    "inputs": [
+      {
+        "name": "destinatario",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "monto",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ]
+  }
+]);
+export const ABI_PAGOS = Object.freeze([...ABI_ERRORES_PAGOS, ...['pagarSena', 'pagarSaldo'].map(name => ({
   type: 'function', name, stateMutability: 'payable', inputs: [{ name: 'reservaId', type: 'uint256' }], outputs: [],
-})));
+}))]);
 
 // Conserva código y causa para distinguir errores terminales de una espera pendiente.
 function fallo(codigo, message, opciones = {}) {

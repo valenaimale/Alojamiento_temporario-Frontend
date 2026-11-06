@@ -383,7 +383,10 @@ function mostrarEstadia(estadia) {
     document.getElementById('precio-total').textContent = formatearPrecio(estadia.precio_total);
     document.getElementById('texto-sena').textContent = `Seña al reservar (${Number(estado.alojamiento.porcentaje_sena).toLocaleString('es-AR')} %)`;
     document.getElementById('sena').textContent = formatearPrecio(estadia.sena);
-    saldo.textContent = `El resto se paga ${estado.alojamiento.politica.dias_cobro_saldo} días antes del ingreso.`;
+    document.getElementById('aclaracion-pago').textContent = Number(estadia.sena) === 0
+        ? 'La reserva se confirma sin seña. Después podés pagar el saldo desde Mis reservas.'
+        : 'Al reservar vas a la pantalla de pago. Completá la seña dentro del plazo indicado para confirmar tus fechas.';
+    saldo.textContent = PagosModelo.avisoSaldo({fecha_cobro: estadia.fecha_cobro, ingreso: estado.ingreso, retencion_menos_de_15: estado.alojamiento.politica.retencion_menos_de_15});
     detalle.hidden = false;
     saldo.hidden = false;
     mostrarParaReservar();

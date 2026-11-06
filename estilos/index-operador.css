@@ -91,3 +91,6 @@ main {
 #error-movimiento { color: var(--color-danger); }
 #error-movimiento:empty, #mensaje-ok:empty { display: none; }
 @media (max-width: 600px) { .dialogo-movimiento { padding: 20px; } .acciones-movimiento .boton { flex: 1; } }
+
+/* Enlace seleccionable para que el huésped pague desde su propia sesión. */
+.enlace-pago-huesped { width: 100%; margin-block: .5rem; }

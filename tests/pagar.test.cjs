@@ -264,3 +264,11 @@ test('seña vencida ofrece volver al alojamiento, sin enlazar otra reserva ni of
   assert.equal(p.get('boton-pagar').disabled,true);
   assert.equal(cotizaciones(p).length,0);
 });
+
+
+test('pagar seña informa también plazo del saldo y política aceptada', async () => {
+ const p=pagina({reservas:[reserva({saldo:'100000.00',fecha_cobro:'2099-02-05',ingreso:'2099-02-10',retencion_menos_de_15:'70.00'})]});
+ await p.cargarPaginaPago();
+ assert.equal(p.get('politica-saldo-pago').hidden,false);
+ assert.match(p.get('politica-saldo-pago').textContent,/8 feb 2099 inclusive.*70 % de la seña/);
+});

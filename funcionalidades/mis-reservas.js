@@ -69,6 +69,12 @@ function mostrarPagoDeReserva(reserva, cuerpo, datos) {
   if (typeof reserva.saldo === "string" && /^\d+(?:\.\d{1,2})?$/.test(reserva.saldo)) {
     agregarDato(datos, "Saldo pendiente", formatearPrecio(reserva.saldo));
   }
+  if (['pendiente', 'confirmada'].includes(reserva.estado) && reserva.saldo !== '0.00') {
+    const aviso = document.createElement('p');
+    aviso.className = 'ayuda plazo-pago-reserva';
+    aviso.textContent = PagosModelo.avisoSaldo(reserva);
+    resumen.append(aviso);
+  }
   cuerpo.append(resumen);
 }
 

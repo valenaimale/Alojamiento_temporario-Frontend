@@ -48,6 +48,20 @@ function pendientesAgenda() {
   for (const e of lista) {
     const item = elementoAgenda('li', `${e.tipo === 'ingreso' ? 'Ingreso' : 'Egreso'} · ${e.alojamiento} · ${fechaMovimiento.format(new Date(e.ocurrido_en))}`);
     if (e.error) item.append(elementoAgenda('p', e.error, 'ayuda'));
+    if (e.codigo === 'SALDO_PENDIENTE' && /^[1-9]\d*$/.test(String(e.reserva_id))) {
+      item.append(elementoAgenda('p', 'El ingreso todavía no está registrado. El huésped debe pagar desde su cuenta. Después, usá Reintentar envío.', 'ayuda'));
+      const enlace = new URL(`../reservas/pagar.html?reserva_id=${e.reserva_id}&tipo=saldo`, window.location.href).href;
+      const campo = elementoAgenda('input', ''); campo.type = 'url'; campo.readOnly = true; campo.value = enlace;
+      campo.setAttribute('aria-label', 'Enlace de pago para el huésped'); campo.className = 'enlace-pago-huesped';
+      campo.addEventListener('click', () => campo.select());
+      const copiar = elementoAgenda('button', 'Copiar enlace de pago', 'boton boton-secundario'); copiar.type = 'button';
+      copiar.addEventListener('click', async () => {
+        try { await navigator.clipboard.writeText(enlace); copiar.textContent = 'Enlace copiado'; }
+        catch { campo.focus(); campo.select(); copiar.textContent = 'Seleccioná y copiá el enlace'; }
+      });
+      item.append(campo, copiar);
+    }
+
     $agenda('lista-pendientes').append(item);
   }
 }
@@ -80,12 +94,12 @@ async function enviarPendientes(manual = false) {
     if (!actual || actual.id !== usuarioAgenda.id || actual.rol !== 'operador') throw new Error('Volvé a iniciar sesión con la misma cuenta para enviar tus movimientos.');
     for (const e of almacenAgenda.leer().pendientes) {
       if (e.error && !manual) continue;
-      const {alojamiento, error, ...datos} = e;
+      const {alojamiento, error, codigo, ...datos} = e;
       const respuesta = await fetch(URL_BACK + '/operador/estadias/registrar', {method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify(datos)});
       const resultado = await respuesta.json();
       if (respuesta.ok) { almacenAgenda.quitar(e.evento_id); avisoAgenda(`${resultado.ok}.`); }
       else if (respuesta.status >= 500 || respuesta.status === 401) throw new Error(resultado.error || 'No pudimos enviar el movimiento. Reintentá en unos minutos.');
-      else { almacenAgenda.error(e.evento_id, resultado.error || 'Revisá este movimiento con el responsable de la unidad.'); avisoAgenda('Hay un movimiento que requiere revisión. Sus datos siguen guardados.', true); }
+      else { almacenAgenda.error(e.evento_id, resultado.error || 'Revisá este movimiento con el responsable de la unidad.', resultado.codigo); avisoAgenda('Hay un movimiento que requiere revisión. Sus datos siguen guardados.', true); }
     }
     await cargarAgenda();
   } catch (error) {

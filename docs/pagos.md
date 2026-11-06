@@ -1,6 +1,6 @@
 # Front de pagos
 
-Implementación del Rol 3, adaptada el 06/11/2026 a la guía de Fede (`docs/pagos-front.md`) y al backend integrado en `origin/main` (`63bb2d3`; pagos incorporados antes en `8781fd7`). HTML, CSS y JavaScript nativos. Para pagos reales se importa viem **2.38.5** desde `https://esm.sh/viem@2.38.5?bundle`.
+Implementación del Rol 3, adaptada el 06/11/2026 a la guía de Fede (`docs/pagos-front.md`) y al backend integrado en `origin/main` (`838b7ae`; billetera de cobro integrada). HTML, CSS y JavaScript nativos. Para pagos reales se importa viem **2.38.5** desde `https://esm.sh/viem@2.38.5?bundle`.
 
 ## Estado de integración
 
@@ -99,7 +99,7 @@ Tras `POST /reservas/crear`, una reserva pendiente abre `pagar.html?reserva_id={
 
 **Simulada:** el botón dice **Pagar (simulado)**. Genera un hash mediante `crypto.getRandomValues`, sin cargar viem ni acceder a MetaMask. Evita los sufijos reservados por el verificador de prueba (`dead`: rechazo; `0000`: pendiente permanente). El identificador no enlaza a BaseScan porque no existe una transacción blockchain.
 
-**Real:** conecta MetaMask, verifica Base Sepolia, cuenta, contrato y saldo; simula y ejecuta `writeContract` sobre `pago.contrato`, con `pago.funcion` y `value: BigInt(monto_wei)`. ABI mínimo: `pagarSena(uint256)` o `pagarSaldo(uint256)`, payable. No contiene claves privadas ni contratos ficticios de reemplazo.
+**Real:** conecta MetaMask, verifica Base Sepolia, cuenta, contrato y saldo; simula y ejecuta `writeContract` sobre `pago.contrato`, con `pago.funcion` y `value: BigInt(monto_wei)`. ABI: `pagarSena(uint256)` o `pagarSaldo(uint256)`, payable, y los 14 errores oficiales de `Contratos/abi/PasarelaPago.json` (commit `c2d90d9`). No contiene claves privadas ni contratos ficticios de reemplazo.
 
 El hash se guarda en **sessionStorage**, separado por usuario, reserva y tipo. Una recarga permite retomar la confirmación con el mismo hash; no solicita otra firma. Este almacenamiento corresponde a la pestaña y no constituye un registro permanente o compartido entre dispositivos.
 
@@ -121,3 +121,25 @@ Tests de Node: pesos ↔ wei, permisos, fechas, reserva con seña cero, simulaci
 Recorridos de navegador con respuestas locales: pago simulado sin extensión, 202 repetido con el mismo hash, 402 con hash nuevo, 409 bloqueado, recuperación tras recarga, saldo y fecha vencida, escritorio y móvil de 390 px. Incluyen vista previa y rechazo de cancelación, devolución pendiente/confirmada, saldo vencido pagable y pausa de 2 minutos con recuperación del mismo hash. Son respuestas locales basadas en el contrato del backend integrado; no acreditan una operación real de punta a punta ni el estado del despliegue en Railway.
 
 Verificación del 06/11: 111/111 tests de Node (incluidos los 11 de liquidaciones integrados por Agus) y recorrido de navegador en escritorio (1440 px) y móvil (390 px). Evidencias y comparación con el frontend previo en el documento de cambios de Justi. Los pendientes externos siguen siendo contrato/verificador/firmador reales y validación conjunta en Base Sepolia.
+
+
+## Decisiones 23 y 25 y ABI oficial
+
+Actualización del 06/11/2026 sobre frontend main `7573a19` y backend main `838b7ae`.
+
+- Detalle de alojamiento, Mis reservas y pago de seña/saldo explican el plazo máximo: el menor entre fecha de cobro + 3 días calendario y día de ingreso, inclusive. Explican la cancelación y retención sobre la seña aceptada; no bloquean pagos por su cuenta si el servidor todavía los autoriza.
+- La extensión de backend en `feature/rol3-ingreso-saldo` agrega `estadia.fecha_cobro` a `/alojamiento` y `retencion_menos_de_15` a `/reservas/mias`. Este último valor sale de la reserva, no de la política actual de la unidad. Sin esos campos, el front explica la regla sin inventar fechas ni porcentajes.
+- `POST /operador/estadias/registrar` devuelve 409 con `codigo: SALDO_PENDIENTE` y “Falta pagar el saldo” cuando hay deuda; un saldo legacy desconocido devuelve `SALDO_NO_INFORMADO`. Los reintentos ya registrados siguen siendo idempotentes. No revela importes al operador.
+- La agenda conserva el movimiento rechazado, muestra el bloqueo y permite copiar un enlace de pago para el huésped. El huésped abre su sesión y paga con su billetera; luego el operador reintenta el mismo evento. No se suplanta la sesión del huésped ni se intenta usar sus endpoints con rol operador.
+- Se incorporaron todos los errores del ABI oficial y mensajes para cuenta incorrecta, seña/saldo ya pagados, ausencia de seña, reserva devuelta y demás reversiones. Se conserva la protección ante envío incierto.
+- La dirección del contrato sigue llegando únicamente en `pago.contrato`. El despliegue comunicado por Rol 1 no activa pagos reales por sí solo.
+- Billetera de cobro: se incorporó y revisó el trabajo del equipo ya mergeado en PR #18; Justi agregó bloqueo de guardados duplicados y recuperación del botón. Los campos de registro, perfil y backoffice son aportes del equipo.
+
+### Dependencias abiertas
+
+1. Rol 2: implementar el proceso de cancelación automática de la decisión #23. Este cambio muestra el aviso; no implementa ese proceso.
+2. Rol 2: activar verificador/firmador reales y ejecutar validación conjunta en Base Sepolia.
+3. Roles 1 y 2: resolver reservas con seña 0 %. En `PasarelaPago.sol` `pagarSaldo` revierte `SinSena` si no hubo `pagarSena`, mientras `pagarSena` rechaza valor cero. El front mantiene la reserva sin cobro de seña y muestra un mensaje de soporte si el contrato rechaza el saldo; no inventa un cobro mínimo.
+4. Integrar primero el backend de `feature/rol3-ingreso-saldo` para habilitar bloqueo de ingreso y datos exactos de la política en producción.
+
+Validación de esta actualización: 117 tests Node; Chrome con API local en 1440, 390 y 320 px, antes/después, enlace correcto, reintento tras pago y un único POST al guardar billetera. Los casos de viem usan dobles; no se enviaron fondos.

@@ -156,6 +156,9 @@ function mostrarCotizacionPago() {
   elementoPago('monto-eth').textContent = `${PagosModelo.formatearEth(pago.monto_wei)} ETH de prueba`;
   elementoPago('cambio-pago').textContent = `Conversión de prueba: 1 ETH = ${formatearPrecio(pago.pesos_por_eth)}.${pago.simulado ? ' No se transfieren fondos.' : ' El costo de la red se suma en MetaMask.'}`;
   mostrarModalidadPago(pago);
+  const aviso = elementoPago('politica-saldo-pago');
+  aviso.hidden = estadoDelPago.reserva.saldo === '0.00';
+  aviso.textContent = PagosModelo.avisoSaldo(estadoDelPago.reserva);
   const plazo = pago.tipo === 'sena' ? pago.vence_en : pago.fecha_cobro ?? estadoDelPago.reserva.fecha_cobro;
   const soloFecha = /^\d{4}-\d{2}-\d{2}$/.test(plazo || '');
   const fecha = plazo && new Date(soloFecha ? `${plazo}T12:00:00-03:00` : plazo);

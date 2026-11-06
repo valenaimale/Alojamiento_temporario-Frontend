@@ -189,3 +189,28 @@ test('una caída del CDN permite reintentar su carga', async () => {
   assert.equal(await billetera.conectar(), cuenta);
   assert.equal(cargas, 2);
 });
+
+
+test('ABI incluye los 14 errores oficiales y conserva sus argumentos', async () => {
+  const {ABI_PAGOS, ABI_ERRORES_PAGOS} = await modulo;
+  assert.equal(ABI_ERRORES_PAGOS.length, 14);
+  const firmas = ABI_ERRORES_PAGOS.map(e => `${e.name}(${e.inputs.map(p => p.type).join(',')})`).sort();
+  assert.deepEqual(firmas, [
+    'DestinatarioInvalido()', 'FondosInsuficientes(uint256,uint256,uint256)',
+    'HuespedIncorrecto(uint256,address,address)', 'ListasInvalidas()', 'MontoInvalido()',
+    'OwnableInvalidOwner(address)', 'OwnableUnauthorizedAccount(address)',
+    'ReentrancyGuardReentrantCall()', 'RenunciaNoPermitida()', 'ReservaDevuelta(uint256)',
+    'SaldoYaPagado(uint256)', 'SenaYaPagada(uint256)', 'SinSena(uint256)',
+    'TransferenciaFallida(address,uint256)',
+  ].sort());
+  const e = await entorno(); await e.billetera.conectar();
+  e.publico.simulateContract = async ({abi}) => {
+    assert.equal(abi, ABI_PAGOS);
+    throw {cause:{data:{errorName:'HuespedIncorrecto'}}};
+  };
+  await assert.rejects(e.billetera.enviarPago(cotizacion()), error => {
+    assert.match(require('../funcionalidades/pagos-modelo.js').mensajeErrorPago(error), /misma cuenta/);
+    return !error.envioIncierto;
+  });
+  assert.equal(e.llamadas.some(c => c[0] === 'write'), false);
+});

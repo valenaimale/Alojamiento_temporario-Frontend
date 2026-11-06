@@ -4,11 +4,11 @@ const fs=require('node:fs'), vm=require('node:vm'), path=require('node:path');
 const M=require('../funcionalidades/estadias-modelo.js');
 async function pagina(){
  const nodos=new Map(), datos=new Map();
- const nodo=()=>({textContent:'',hidden:false,disabled:false,addEventListener(){},append(){},replaceChildren(){}});
+ const nodo=()=>({textContent:'',hidden:false,disabled:false,addEventListener(){},append(){},replaceChildren(){},setAttribute(){}});
  const estado={sesion:null,respuesta:null,envios:[]};
- const c=vm.createContext({Intl,Date,Map,URLSearchParams,location:{},console,EstadiasModelo:M,
+ const c=vm.createContext({Intl,Date,Map,URL,URLSearchParams,location:{},console,EstadiasModelo:M,
   document:{getElementById:id=>{if(!nodos.has(id))nodos.set(id,nodo());return nodos.get(id)},createElement:nodo},
-  window:{addEventListener(){}},obtenerSesion:async()=>estado.sesion,
+  window:{addEventListener(){},location:{href:"https://ejemplo.test/vistas/operador/agenda.html"}},obtenerSesion:async()=>estado.sesion,
   localStorage:{getItem:k=>datos.get(k)||null,setItem:(k,v)=>datos.set(k,v)},
   URL_BACK:'http://localhost',fetch:async(url,opts)=>{estado.envios.push(JSON.parse(opts.body)); if(estado.respuesta instanceof Error)throw estado.respuesta;return estado.respuesta},
  });
@@ -42,4 +42,18 @@ test('409 queda para revisión y no entra en bucle automático',async()=>{
 test('dos intentos simultáneos usan un solo envío',async()=>{
  const p=await pagina();p.estado.respuesta={ok:true,json:async()=>({ok:'Ingreso registrado'})};
  await Promise.all([p.enviarPendientes(),p.enviarPendientes()]);assert.equal(p.estado.envios.length,1);
+});
+
+
+test('saldo pendiente conserva evento, exige pago del huésped y permite reintento manual', async () => {
+ const p=await pagina();
+ p.estado.respuesta={ok:false,status:409,json:async()=>({error:'Falta pagar el saldo',codigo:'SALDO_PENDIENTE'})};
+ await p.enviarPendientes();
+ assert.equal(p.almacenAgenda.leer().pendientes[0].codigo,'SALDO_PENDIENTE');
+ await p.enviarPendientes();assert.equal(p.estado.envios.length,1);
+ p.estado.respuesta={ok:true,json:async()=>({ok:'Ingreso registrado'})};
+ await p.enviarPendientes(true);
+ assert.deepEqual(p.estado.envios[0],p.estado.envios[1]);
+ assert.equal('codigo' in p.estado.envios[1],false);
+ assert.equal(p.almacenAgenda.leer().pendientes.length,0);
 });

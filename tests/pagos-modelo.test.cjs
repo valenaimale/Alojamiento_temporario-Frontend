@@ -129,3 +129,26 @@ test('vista previa ajena, mal formada o sin importes impide confirmar',()=>{
     assert.throws(()=>modelo.normalizarCancelacion(cancelacion(cambio),42));
   }
 });
+
+
+test('plazo de saldo suma tres días calendario y nunca supera el ingreso', () => {
+  for (const [cobro, ingreso, esperado] of [
+    ['2026-11-05','2026-11-10','2026-11-08'],
+    ['2026-11-05','2026-11-06','2026-11-06'],
+    ['2026-12-30','2027-01-10','2027-01-02'],
+    ['2028-02-27','2028-03-10','2028-03-01'],
+    ['2026-11-05','2026-11-05','2026-11-05'],
+  ]) assert.equal(modelo.plazoSaldo({fecha_cobro:cobro,ingreso}), esperado);
+  for (const fecha_cobro of [null,'2026-02-30','basura','2026-12-20'])
+    assert.equal(modelo.plazoSaldo({fecha_cobro,ingreso:'2026-11-10'}), null);
+  assert.match(modelo.avisoSaldo({fecha_cobro:'2026-11-05',ingreso:'2026-11-10',retencion_menos_de_15:'70.00'}), /8 nov 2026 inclusive.*70 % de la seña/);
+  assert.doesNotMatch(modelo.avisoSaldo({retencion_menos_de_15:null}), /0 %|null|Invalid/);
+});
+
+test('errores decodificados del contrato indican acción sin perder protección ante envío incierto', () => {
+  assert.match(modelo.mensajeErrorPago({cause:{data:{errorName:'HuespedIncorrecto'}}}), /misma cuenta/);
+  assert.match(modelo.mensajeErrorPago({cause:{data:{errorName:'SaldoYaPagado'}}}), /no vuelvas a pagar/);
+  assert.match(modelo.mensajeErrorPago({data:{errorName:'SinSena'}}), /Primero.*seña/);
+  assert.match(modelo.mensajeErrorPago({envioIncierto:true,cause:{data:{errorName:'SaldoYaPagado'}}}), /pudo haber enviado/);
+  assert.doesNotMatch(modelo.mensajeErrorPago({data:{errorName:'<script>privado</script>'}}), /privado/);
+});

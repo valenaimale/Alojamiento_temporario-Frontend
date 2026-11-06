@@ -21,7 +21,7 @@ function pagina() {
   const contexto = vm.createContext({
     document: { getElementById: get, querySelector: () => null, createElement: tag => ({tag,href:'',textContent:''}) },
     window, history: { replaceState: (_, __, url) => { window.location.search = url; } },
-    URLSearchParams, Intl, Date, Map, console: {error(){}},
+    PagosModelo: require('../funcionalidades/pagos-modelo.js'), URLSearchParams, Intl, Date, Map, console: {error(){}},
     MENSAJE_SIN_CONEXION: 'Sin conexión', formatearPrecio: String, formatearFecha: String,
     pedirAlBack: (ruta, opciones) => new Promise((resolve, reject) => pedidos.push({ruta, opciones, resolve, reject})),
   });
@@ -191,4 +191,12 @@ test('reserva confirmada sin seña va a Mis reservas sin abrir un pago',async()=
   p.pedidos[1].resolve({respuesta:{ok:true,status:201},resultado:{reserva:{id:42,estado:'confirmada',importe_sena:'0.00'}}});
   await guardar;
   assert.equal(p.window.location.href,'../reservas/mis-reservas.html?confirmada=1');
+});
+
+
+test('antes de reservar informa fecha límite y retención sobre la seña', () => {
+  const p = pagina(); p.estado.alojamiento.politica.retencion_menos_de_15 = '70.00';
+  p.mostrarEstadia({disponible:true,noches:7,precio_total:'1000.00',sena:'200.00',fecha_cobro:'2027-02-05'});
+  assert.match(p.get('aclaracion-saldo').textContent, /8 feb 2027 inclusive/);
+  assert.match(p.get('aclaracion-saldo').textContent, /70 % de la seña/);
 });

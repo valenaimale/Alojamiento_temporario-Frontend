@@ -36,7 +36,7 @@ const EstadiasModelo = (() => {
         d.pendientes.push(evento); delete d.borradores[`${evento.reserva_id}.${evento.tipo}`];
       }),
       quitar: id => cambiar(d => { d.pendientes = d.pendientes.filter(e => e.evento_id !== id); }),
-      error: (id, mensaje) => cambiar(d => { const e = d.pendientes.find(e => e.evento_id === id); if (e) e.error = mensaje; }),
+      error: (id, mensaje, codigo = null) => cambiar(d => { const e = d.pendientes.find(e => e.evento_id === id); if (e) { e.error = mensaje; if (codigo) e.codigo = codigo; else delete e.codigo; } }),
     };
   }
   return {dia, movimientos, almacen};

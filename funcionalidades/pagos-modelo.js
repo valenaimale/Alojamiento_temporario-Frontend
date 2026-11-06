@@ -100,6 +100,27 @@ const PagosModelo = (() => {
     return Number.isFinite(instante) && instante < ahora;
   }
 
+  // Fechas de calendario: sumar días en UTC evita depender de la zona del dispositivo.
+  function fechaCalendario(valor) {
+    if (typeof valor !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(valor)) return null;
+    const fecha = new Date(`${valor}T00:00:00Z`);
+    return Number.isFinite(fecha.getTime()) && fecha.toISOString().slice(0, 10) === valor ? fecha : null;
+  }
+  function plazoSaldo(reserva) {
+    const cobro = fechaCalendario(reserva.fecha_cobro), ingreso = fechaCalendario(reserva.ingreso);
+    if (!cobro || !ingreso || cobro > ingreso) return null;
+    cobro.setUTCDate(cobro.getUTCDate() + 3);
+    return new Date(Math.min(cobro.getTime(), ingreso.getTime())).toISOString().slice(0, 10);
+  }
+  function avisoSaldo(reserva) {
+    const limite = plazoSaldo(reserva);
+    const porcentaje = reserva.retencion_menos_de_15;
+    const valido = /^(?:\d{1,3})(?:\.\d{1,2})?$/.test(String(porcentaje ?? '')) && Number(porcentaje) <= 100;
+    const retencion = valido ? `el ${Number(porcentaje).toLocaleString('es-AR')} % de la seña` : 'la retención sobre la seña prevista para menos de 15 días';
+    const fecha = limite && new Intl.DateTimeFormat('es-AR', {dateStyle:'medium', timeZone:'UTC'}).format(fechaCalendario(limite));
+    return `${fecha ? `Pagá el saldo hasta el ${fecha} inclusive` : 'El plazo máximo para pagar el saldo es 3 días después de la fecha de cobro o el día del ingreso, lo que ocurra antes'}. Si no pagás en ese plazo, la reserva se cancela y se aplica ${retencion}. Para ingresar, el saldo debe estar pagado.`;
+  }
+
   // Busca causas anidadas de viem/MetaMask sin depender de sus clases externas.
   function causas(error) {
     const resultado = [];
@@ -117,6 +138,24 @@ const PagosModelo = (() => {
     if (lista.some(e => e.envioIncierto)) return 'MetaMask pudo haber enviado el pago, pero no recibimos su identificador. Revisá la actividad de tu billetera antes de volver a pagar.';
     if (tiene(4001, /UserRejected/i)) return 'Rechazaste la solicitud en MetaMask. Podés volver a intentar cuando quieras.';
     if (tiene(-32002)) return 'Hay una solicitud pendiente en MetaMask. Abrí la billetera para responderla.';
+    const erroresContrato = {
+      HuespedIncorrecto: 'Usá la misma cuenta de MetaMask con la que pagaste la seña.',
+      SenaYaPagada: 'La seña ya está pagada en el contrato. Revisá su confirmación en Mis reservas; no vuelvas a pagar.',
+      SaldoYaPagado: 'El saldo ya está pagado en el contrato. Revisá su confirmación en Mis reservas; no vuelvas a pagar.',
+      SinSena: 'Primero debe confirmarse la seña en el contrato. Si tu reserva no exige seña, contactá a la plataforma para resolver el pago del saldo.',
+      ReservaDevuelta: 'Esta reserva ya tiene una devolución en el contrato y no admite nuevos pagos. Revisá Mis reservas.',
+      MontoInvalido: 'El contrato rechazó el importe. Volvé a cargar la cotización antes de pagar.',
+      FondosInsuficientes: 'El contrato no tiene fondos suficientes para esta operación. Contactá a la plataforma.',
+      DestinatarioInvalido: 'La billetera destinataria no es válida. Contactá a la plataforma.',
+      TransferenciaFallida: 'No se pudo transferir a la billetera destinataria. Contactá a la plataforma.',
+      ListasInvalidas: 'Los datos de la operación no son válidos. Contactá a la plataforma.',
+      OwnableInvalidOwner: 'La configuración del contrato no es válida. Contactá a la plataforma.',
+      OwnableUnauthorizedAccount: 'Esta cuenta no está autorizada para esa operación del contrato.',
+      ReentrancyGuardReentrantCall: 'El contrato bloqueó la operación. Actualizá la reserva antes de reintentar.',
+      RenunciaNoPermitida: 'El contrato no permite esa operación. Contactá a la plataforma.',
+    };
+    const nombre = lista.map(e => e.data?.errorName).find(n => Object.hasOwn(erroresContrato, n));
+    if (nombre) return erroresContrato[nombre];
     if (tiene('SIN_BILLETERA')) return 'Necesitás MetaMask para pagar. Instalalo o abrí esta página desde su navegador.';
     if (tiene('CDN_NO_DISPONIBLE')) return 'No pudimos cargar la conexión con MetaMask. Revisá internet y volvé a intentar.';
     if (tiene('SIN_SALDO', /InsufficientFunds|insufficient funds/i)) return 'No tenés suficiente ETH de prueba en Base Sepolia. Necesitás cubrir el pago y la comisión de la red.';
@@ -186,6 +225,6 @@ const PagosModelo = (() => {
     return {...datos, pagado: {...datos.pagado}, devolucion_wei: BigInt(datos.devolucion_wei), explicacion};
   }
 
-  return { RED, identificador, normalizarCancelacion, normalizarCotizacion, pesosAWei, weiAPesos, formatearEth, mensajeErrorPago, estadoPagoReserva, vencimiento, saldoVencido };
+  return { RED, plazoSaldo, avisoSaldo, identificador, normalizarCancelacion, normalizarCotizacion, pesosAWei, weiAPesos, formatearEth, mensajeErrorPago, estadoPagoReserva, vencimiento, saldoVencido };
 })();
 if (typeof module !== 'undefined') module.exports = PagosModelo;

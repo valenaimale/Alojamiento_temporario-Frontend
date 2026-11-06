@@ -79,19 +79,23 @@ async function cargarDatosFiscales() {
 // Muestra la billetera de cobro. Los que se registraron antes de que se pidiera la tienen en null: se les avisa que la carguen.
 function mostrarBilletera(billetera) {
     document.getElementById('billetera-direccion').textContent = billetera ?? 'Sin cargar';
-    document.getElementById('aviso-sin-billetera').hidden = billetera !== null;
+    document.getElementById('aviso-sin-billetera').hidden = billetera != null;
     document.getElementById('seccion-billetera').hidden = false;
 }
 
 // Guarda la billetera nueva en el back (POST /datos-fiscales/billetera) y muestra cómo quedó.
 async function guardarBilletera(evento) {
     evento.preventDefault();   // la manejamos nosotros, sin recargar la página
+    const botonGuardar = evento.target.querySelector('button[type=submit]');
+    if (botonGuardar.disabled) return;
     const mensaje = document.getElementById('mensaje-billetera');
     mensaje.textContent = '';
     const datos = Object.fromEntries(new FormData(evento.target));   // {billetera}
 
     let respuesta;
     let resultado;
+    botonGuardar.disabled = true;
+    botonGuardar.textContent = 'Guardando…';
     try {
         respuesta = await fetch(URL_BACK + '/datos-fiscales/billetera', {
             method: 'POST',
@@ -104,6 +108,9 @@ async function guardarBilletera(evento) {
         console.error('No se pudo conectar con el back:', error);
         mensaje.textContent = MENSAJE_SIN_CONEXION;
         return;
+    } finally {
+        botonGuardar.disabled = false;
+        botonGuardar.textContent = 'Guardar billetera';
     }
     if (!respuesta.ok) {
         mensaje.textContent = resultado.error;
