@@ -116,3 +116,27 @@ main {
 [hidden] {
     display: none !important;
 }
+
+/* El estado del cobro y su siguiente acción quedan visibles sin abrir el detalle. */
+.pagina-reservas .pago-reserva {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 16px 0;
+    border-top: 1px solid var(--color-border);
+}
+
+.pagina-reservas .estado-pago-reserva {
+    font-weight: 600;
+}
+
+.pagina-reservas .pago-reserva .boton {
+    min-height: 46px;
+    max-width: 100%;
+    white-space: normal;
+}
+
+.pagina-reservas .plazo-pago-reserva {
+    overflow-wrap: anywhere;
+}

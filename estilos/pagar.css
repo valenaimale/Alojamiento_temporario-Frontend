@@ -1,0 +1,42 @@
+/* Resumen y seguimiento del pago; estilos limitados a esta pantalla. */
+.pagina-pago main { max-width: 1080px; }
+.pagina-pago .mensaje-error { color: var(--color-danger); }
+.pago-volver { display: inline-flex; align-items: center; min-height: 44px; margin-bottom: 16px; }
+.pagina-pago .subtitulo { margin-bottom: 32px; }
+.pago-columnas { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 56px; align-items: start; }
+.pago-etiqueta { display: block; color: var(--color-text-muted); font-size: .85rem; margin-bottom: 8px; }
+.pago-resumen h2 { font-size: 1.5rem; overflow-wrap: anywhere; }
+.pago-fechas { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 32px 0 16px; }
+.pago-fechas dt { color: var(--color-text-muted); font-size: .85rem; }
+.pago-fechas dd { margin: 4px 0 0; font-weight: 600; }
+.pago-importes { margin: 24px 0; padding-top: 24px; border-top: 1px solid var(--color-border); }
+.pago-importes > div { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+.pago-importes dd { margin: 0; font-weight: 600; text-align: right; }
+.pago-prueba { color: var(--color-text-muted); font-size: .9rem; margin-top: 32px; }
+.pago-prueba strong { color: var(--color-text); }
+.pago-panel { border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 32px; }
+.pago-panel h2 { font-size: 1rem; margin-bottom: 12px; }
+.pago-monto { font-size: clamp(1.6rem, 3vw, 2.1rem); font-weight: 650; letter-spacing: -.04em; margin-bottom: 0; overflow-wrap: anywhere; }
+.pago-eth { margin: 4px 0 8px; font-weight: 600; overflow-wrap: anywhere; }
+.pago-pasos { list-style: none; padding: 0; margin: 28px 0; display: grid; gap: 24px; }
+.pago-pasos li { display: flex; align-items: flex-start; gap: 12px; }
+.pago-paso-numero { display: grid; place-items: center; width: 28px; height: 28px; flex-shrink: 0; border: 1px solid var(--color-border); border-radius: 50%; font-size: .8rem; font-weight: 600; }
+.pago-pasos strong { font-size: .9rem; }
+.pago-pasos p { font-size: .85rem; color: var(--color-text-muted); margin: 4px 0 0; }
+.pago-pasos [aria-current="step"] .pago-paso-numero { background: var(--color-primary); color: white; border-color: var(--color-primary); }
+.pago-pasos .paso-completo .pago-paso-numero { color: var(--color-primary-dark); background: var(--color-primary-light); }
+.pago-panel .boton { width: 100%; }
+.pago-recuperar { margin-top: 24px; gap: 16px; }
+.pago-recuperar input { font-size: .85rem; }
+.pago-estado { font-weight: 600; font-size: .9rem; }
+.pago-transaccion { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--color-border); font-size: .85rem; overflow-wrap: anywhere; }
+.pago-transaccion summary { cursor: pointer; min-height: 44px; padding: 12px 0; }
+.pago-transaccion code { display: block; overflow-wrap: anywhere; }
+#billetera-pago { overflow-wrap: anywhere; }
+#aviso-pago:not(:empty), #error-pago:not(:empty) { margin-bottom: 24px; }
+#recargar-pago, #sesion-pago { margin-bottom: 24px; }
+@media (max-width: 760px) {
+  .pago-columnas { grid-template-columns: 1fr; gap: 24px; }
+  .pago-panel { padding: 24px; }
+  .pago-prueba { margin-top: 24px; }
+}
