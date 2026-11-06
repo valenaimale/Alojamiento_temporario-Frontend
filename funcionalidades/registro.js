@@ -19,7 +19,7 @@ form.addEventListener('submit', async (evento) => { // "escucha" el form: cada v
         return;
     }
     // los datos fiscales solo se mandan si cobra IVA (huésped y operador no tienen esos campos;
-    // propietario y administrador además mandan siempre su cuenta bancaria: cbu, alias y titular_cuenta)
+    // propietario y administrador además mandan siempre su cuenta bancaria: cbu, alias y titular_cuenta, y su billetera)
     if (datos.cobra_iva !== '1') {
         delete datos.cuit;
         delete datos.razon_social;

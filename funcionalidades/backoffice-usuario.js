@@ -83,6 +83,7 @@ function mostrarUsuario(usuario) {
         document.getElementById('dato-cbu').textContent = usuario.datos_fiscales.cbu;
         document.getElementById('dato-alias').textContent = usuario.datos_fiscales.alias ?? '—';
         document.getElementById('dato-titular-cuenta').textContent = usuario.datos_fiscales.titular_cuenta;
+        document.getElementById('dato-billetera').textContent = usuario.datos_fiscales.billetera ?? 'Sin cargar';   // null: se registró antes de la billetera
         seccionFiscal.hidden = false;
     } else {
         seccionFiscal.hidden = true;
