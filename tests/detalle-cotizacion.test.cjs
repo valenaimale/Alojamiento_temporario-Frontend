@@ -182,3 +182,13 @@ test('editar viajeros invalida inmediatamente valores vacíos, fraccionarios o f
   assert.equal(p.get('form-reservar').hidden,false);
   assert.equal(p.get('precio-total').textContent,'900');
 });
+
+test('reserva confirmada sin seña va a Mis reservas sin abrir un pago',async()=>{
+  const p=pagina();
+  const cotizar=p.calcularEstadia();p.pedidos[0].resolve(disponible(700));await cotizar;
+  p.get('form-reservar').elements.acepta_politica.checked=true;
+  const guardar=p.reservar({preventDefault(){},target:p.get('form-reservar')});
+  p.pedidos[1].resolve({respuesta:{ok:true,status:201},resultado:{reserva:{id:42,estado:'confirmada',importe_sena:'0.00'}}});
+  await guardar;
+  assert.equal(p.window.location.href,'../reservas/mis-reservas.html?confirmada=1');
+});

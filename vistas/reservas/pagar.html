@@ -51,7 +51,7 @@
             <div><dt>Seña de la reserva</dt><dd id="sena-reserva"></dd></div>
           </dl>
           <p id="plazo-pago" class="ayuda" hidden></p>
-          <p class="pago-prueba"><strong>Pago de prueba</strong><br />Usamos ETH de prueba en Base Sepolia. Tu billetera necesita ETH de esa red para el pago y el costo de la transacción.</p>
+          <p class="pago-prueba"><strong id="modalidad-pago">Modalidad de pago</strong><br /><span id="ayuda-modalidad">Estamos consultando cómo pagar esta reserva.</span></p>
         </section>
 
         <section class="pago-panel" aria-labelledby="concepto-pago">
@@ -62,8 +62,8 @@
             <p id="cambio-pago" class="ayuda"></p>
           </div>
           <ol class="pago-pasos" aria-label="Pasos del pago">
-            <li id="paso-firma"><span class="pago-paso-numero" aria-hidden="true">1</span><div><strong>Confirmá en MetaMask</strong><p>Conectá tu billetera y autorizá el importe.</p></div></li>
-            <li id="paso-red"><span class="pago-paso-numero" aria-hidden="true">2</span><div><strong>Esperá la confirmación</strong><p>Seguimos tu transacción en Base Sepolia.</p></div></li>
+            <li id="paso-firma"><span class="pago-paso-numero" aria-hidden="true">1</span><div><strong id="titulo-paso-firma">Iniciá el pago</strong><p id="ayuda-paso-firma">Revisá el importe para continuar.</p></div></li>
+            <li id="paso-red"><span class="pago-paso-numero" aria-hidden="true">2</span><div><strong>Esperá la confirmación</strong><p id="ayuda-paso-red">Verificamos el resultado del pago.</p></div></li>
             <li id="paso-registro"><span class="pago-paso-numero" aria-hidden="true">3</span><div><strong>Registramos tu pago</strong><p>Actualizamos el estado de tu reserva.</p></div></li>
           </ol>
           <p id="estado-pago" class="pago-estado" role="status" aria-live="polite"></p>

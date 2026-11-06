@@ -9,13 +9,13 @@ const HASH = `0x${'a'.repeat(64)}`;
 const HASH_NUEVO = `0x${'b'.repeat(64)}`;
 const CUENTA = `0x${'1'.repeat(40)}`;
 const CLAVE = 'haylugar:pago:7:42:sena';
-const cotizacion = (cambios = {}) => ({ pago: {
+const cotizacion = (cambios = {}) => ({
   reserva_id: 42, tipo: 'sena', monto_pesos: '100000.00',
   monto_wei: '1000000000000000', pesos_por_eth: '100000000',
-  red: 84532, contrato_direccion: `0x${'2'.repeat(40)}`, ...cambios,
-} });
+  red: 31337, pago: {contrato:null,funcion:'pagarSena',simulado:true}, ...cambios,
+});
 const reserva = (cambios = {}) => ({
-  id:42,estado:'pendiente',ingreso:'2099-02-10',egreso:'2099-02-17',noches:7,personas:2,
+  id:42,estado:'pendiente',puede_pagar:true,ingreso:'2099-02-10',egreso:'2099-02-17',noches:7,personas:2,
   importe_total:'500000.00',importe_sena:'100000.00',
   alojamiento:{nombre:'Casa del río',localidad:'Tigre',provincia:'Buenos Aires'},...cambios,
 });
@@ -37,14 +37,16 @@ function pagina(opciones = {}) {
   const solicitudes = [];
   const llamadas = {conectar:0,enviar:0,esperar:[]};
   const configuracion = {
-    reservas:[reserva()],cotizacion:cotizacion(),confirmacion:{pago:{estado:'confirmado'}},
+    reservas:[reserva()],cotizacion:cotizacion(),confirmacion:{ok:'Pagaste la seña',reserva:{id:42,estado:'confirmada'},pago:{tx_hash:HASH,red:31337}},
     ...opciones,
   };
-  const window = {location:{search:opciones.search || '?reserva_id=42&tipo=sena',href:''}};
+  const eventos={}; const timers=new Map(); let timerId=0;
+  const window = {addEventListener:(nombre,fn)=>eventos[nombre]=fn,location:{search:opciones.search || '?reserva_id=42&tipo=sena',href:''}};
   const contexto = vm.createContext({
     document:{getElementById:get,body:{hidden:true}},window,URLSearchParams,Intl,Date,
-    PagosModelo,encodeURIComponent,navigator:{locks:opciones.locks},
-    localStorage:{getItem:clave=>datos.get(clave) ?? null,setItem:(clave,valor)=>{
+    PagosModelo,encodeURIComponent,crypto:require('node:crypto').webcrypto,
+    setTimeout:(fn,ms)=>{timers.set(++timerId,{fn,ms});return timerId;},clearTimeout:id=>timers.delete(id),navigator:{locks:opciones.locks},
+    sessionStorage:{getItem:clave=>datos.get(clave) ?? null,setItem:(clave,valor)=>{
       if(configuracion.fallarGuardado?.(clave,valor))throw new Error('QuotaExceededError');
       datos.set(clave,valor);
     },removeItem:clave=>datos.delete(clave)},
@@ -74,270 +76,158 @@ function pagina(opciones = {}) {
       return configuracion.esperar ? configuracion.esperar(hash,ajustes) : {status:'success',transactionHash:hash};
     },
   };
-  return {...api,get,datos,solicitudes,llamadas,configuracion,window,contexto};
+  return {...api,get,datos,solicitudes,llamadas,configuracion,window,contexto,timers,eventos,
+    async avanzar(){const [id,{fn,ms}]=timers.entries().next().value;timers.delete(id);assert.equal(ms,3500);await fn();}
+  };
 }
 
 function diferida(){let resolve;const promise=new Promise(r=>{resolve=r;});return{promise,resolve};}
 const confirmaciones = p => p.solicitudes.filter(s=>s.ruta==='/pagos/confirmar');
 const cotizaciones = p => p.solicitudes.filter(s=>/^\/pagos\/(sena|saldo)\?/.test(s.ruta));
 
-test('solo confirma éxito luego de que el backend registra el pago',async()=>{
-  const respuestaBack=diferida(),solicitudBack=diferida();
-  const p=pagina({pedir:async ruta=>{
-    if(ruta==='/pagos/confirmar'){solicitudBack.resolve();return respuestaBack.promise;}
-  }});
-  await p.cargarPaginaPago();
-  const pagar=p.pagarReserva();
-  await solicitudBack.promise;
-  assert.equal(p.estadoDelPago.completo,false);
-  assert.match(p.get('estado-pago').textContent,/Registrando/);
-  respuestaBack.resolve(respuesta({pago:{estado:'confirmado'}}));
-  await pagar;
-  assert.equal(p.estadoDelPago.completo,true);
-  assert.equal(p.get('boton-pagar').hidden,true);
-  assert.equal(p.llamadas.enviar,1);
-  assert.equal(JSON.parse(confirmaciones(p)[0].envio.body).tx_hash,HASH);
-});
 
-test('doble clic mientras MetaMask responde produce un solo envío',async()=>{
-  const envio=diferida(),inicio=diferida();
-  const p=pagina({enviar:()=>{inicio.resolve();return envio.promise;}});
-  await p.cargarPaginaPago();
-  const primero=p.pagarReserva();
-  await inicio.promise;
-  await p.pagarReserva();
-  assert.equal(p.llamadas.enviar,1);
-  assert.equal(p.get('boton-pagar').disabled,true);
-  envio.resolve(HASH);await primero;
-  await p.pagarReserva();
-  assert.equal(p.llamadas.enviar,1);
-});
+const real = () => cotizacion({red:84532,pago:{contrato:CUENTA,funcion:'pagarSena',simulado:false}});
 
-test('fallo del backend conserva hash y reintenta registro sin firmar ni pagar otra vez',async()=>{
-  let intento=0;
-  const p=pagina({pedir:ruta=>ruta==='/pagos/confirmar' && ++intento===1 ? respuesta({error:'Servicio ocupado'},503):undefined});
-  await p.cargarPaginaPago();await p.pagarReserva();
-  assert.equal(p.estadoDelPago.completo,false);
-  assert.equal(JSON.parse(p.datos.get(CLAVE)).hash,HASH);
-  assert.equal(p.get('boton-pagar').textContent,'Retomar confirmación');
-  await p.pagarReserva();
-  assert.equal(p.estadoDelPago.completo,true);
-  assert.equal(p.llamadas.enviar,1);
-  assert.equal(p.llamadas.conectar,1);
-  assert.equal(confirmaciones(p).length,2);
-});
-
-test('recargar después de un envío recupera el hash persistido sin nueva cotización ni firma',async()=>{
-  const almacenamiento=new Map([[CLAVE,JSON.stringify({hash:HASH,red:84532})]]);
-  const p=pagina({almacenamiento});
-  await p.cargarPaginaPago();
-  assert.equal(p.estadoDelPago.pendiente.hash,HASH);
-  assert.equal(cotizaciones(p).length,0);
-  await p.pagarReserva();
-  assert.equal(p.llamadas.enviar,0);
-  assert.equal(p.llamadas.conectar,0);
-  assert.equal(p.estadoDelPago.completo,true);
-});
-
-test('timeout conserva transacción y repetir acción consulta el mismo hash sin cobrar',async()=>{
-  const p=pagina({esperar:async()=>{throw Object.assign(new Error('timeout'),{codigo:'ESPERA_AGOTADA'});}});
-  await p.cargarPaginaPago();await p.pagarReserva();await p.pagarReserva();
-  assert.equal(p.llamadas.enviar,1);
-  assert.deepEqual(p.llamadas.esperar,[HASH,HASH]);
-  assert.equal(confirmaciones(p).length,0);
-  assert.equal(p.estadoDelPago.completo,false);
-  assert.equal(JSON.parse(p.datos.get(CLAVE)).hash,HASH);
-  assert.match(p.get('error-pago').textContent,/sin volver a pagar/);
-});
-
-test('202 o respuesta pendiente nunca se presentan como pago completo',async()=>{
-  const p=pagina({pedir:ruta=>ruta==='/pagos/confirmar' ? respuesta({pago:{estado:'pendiente'}},202):undefined});
-  await p.cargarPaginaPago();await p.pagarReserva();
-  assert.equal(p.estadoDelPago.completo,false);
-  assert.equal(p.get('boton-pagar').textContent,'Retomar confirmación');
-  assert.equal(JSON.parse(p.datos.get(CLAVE)).hash,HASH);
-  assert.match(p.get('error-pago').textContent,/pendiente de verificación/);
-});
-
-test('cambio de cotización exige revisar importe antes de abrir MetaMask',async()=>{
+test('simulado registra sin MetaMask, red ni consulta RPC y envía siempre tipo',async()=>{
   const p=pagina();await p.cargarPaginaPago();
-  p.configuracion.cotizacion=cotizacion({monto_pesos:'200000.00',monto_wei:'2000000000000000'});
+  assert.equal(p.get('boton-pagar').textContent,'Pagar (simulado)');
+  assert.match(p.get('ayuda-modalidad').textContent,/sin mover dinero/);
   await p.pagarReserva();
-  assert.equal(p.llamadas.conectar,0);
-  assert.equal(p.llamadas.enviar,0);
+  assert.equal(p.estadoDelPago.completo,true);
+  assert.equal(p.llamadas.conectar,0);assert.equal(p.llamadas.enviar,0);assert.equal(p.llamadas.esperar.length,0);
+  const body=JSON.parse(confirmaciones(p)[0].envio.body);
+  assert.equal(body.tipo,'sena');assert.equal(body.reserva_id,'42');
+  assert.match(body.tx_hash,/^0x[0-9a-f]{60}0001$/);
+  assert.equal(p.get('enlace-transaccion').hidden,true);
+  assert.equal(p.datos.has(CLAVE),false);
+});
+
+test('pago real entrega contrato, función y wei exacto a billetera',async()=>{
+  let enviada;
+  const p=pagina({cotizacion:real(),enviar:pago=>{enviada=pago;return HASH;}});
+  await p.cargarPaginaPago();await p.pagarReserva();
+  assert.equal(enviada.contrato,CUENTA);assert.equal(enviada.funcion,'pagarSena');
+  assert.equal(enviada.monto_wei,1000000000000000n);
+  assert.equal(p.llamadas.enviar,1);assert.equal(p.llamadas.conectar,1);
+  assert.equal(p.estadoDelPago.completo,true);
+});
+
+test('doble clic no genera dos pagos ni dos confirmaciones',async()=>{
+  const inicio=diferida(),fin=diferida();
+  const p=pagina({pedir:ruta=>{if(ruta==='/pagos/confirmar'){inicio.resolve();return fin.promise;}}});
+  await p.cargarPaginaPago();const primero=p.pagarReserva();await inicio.promise;
+  await p.pagarReserva();assert.equal(confirmaciones(p).length,1);
+  assert.equal(p.get('boton-pagar').disabled,true);
+  fin.resolve(respuesta({ok:'Pago registrado'}));await primero;
+  assert.equal(p.estadoDelPago.completo,true);
+});
+
+test('202 consulta cada 3500 ms con mismo hash y tipo hasta recibir 200',async()=>{
+  let intento=0;
+  const p=pagina({pedir:ruta=>ruta==='/pagos/confirmar'?respuesta(++intento<3?{pendiente:true}:{ok:'Listo'},intento<3?202:200):undefined});
+  await p.cargarPaginaPago();await p.pagarReserva();
+  assert.equal(p.estadoDelPago.completo,false);assert.equal(p.get('boton-pagar').disabled,true);
+  const hash=JSON.parse(p.datos.get(CLAVE)).hash;
+  await p.pagarReserva();assert.equal(intento,1);
+  await p.avanzar();assert.equal(intento,2);assert.equal(p.timers.size,1);
+  await p.avanzar();assert.equal(p.estadoDelPago.completo,true);assert.equal(p.timers.size,0);
+  assert.deepEqual(confirmaciones(p).map(x=>JSON.parse(x.envio.body).tx_hash),[hash,hash,hash]);
+  assert.ok(confirmaciones(p).every(x=>JSON.parse(x.envio.body).tipo==='sena'));
+});
+
+test('402 limpia intento fallido y Pagar de nuevo genera otro hash',async()=>{
+  let intento=0;
+  const p=pagina({pedir:ruta=>ruta==='/pagos/confirmar'&&++intento===1?respuesta({error:'Pago rechazado'},402):undefined});
+  await p.cargarPaginaPago();await p.pagarReserva();
+  assert.equal(p.get('boton-pagar').textContent,'Pagar de nuevo');assert.match(p.get('error-pago').textContent,/Pago rechazado/);
+  assert.equal(p.datos.has(CLAVE),false);assert.equal(p.timers.size,0);
+  await p.pagarReserva();
+  assert.equal(p.estadoDelPago.completo,true);
+  assert.notEqual(JSON.parse(confirmaciones(p)[0].envio.body).tx_hash,JSON.parse(confirmaciones(p)[1].envio.body).tx_hash);
+  const vencida=pagina({pedir:ruta=>ruta==='/pagos/confirmar'?respuesta({error:'Pago rechazado'},402):undefined});
+  await vencida.cargarPaginaPago();await vencida.pagarReserva();
+  vencida.configuracion.reservas=[reserva({estado:'expirada',puede_pagar:false})];
+  await vencida.cargarPaginaPago();
+  assert.equal(vencida.get('boton-pagar').disabled,true);
+});
+
+test('409 conserva hash, muestra conflicto y no ofrece otro cobro',async()=>{
+  const p=pagina({pedir:ruta=>ruta==='/pagos/confirmar'?respuesta({error:'La reserva ya venció'},409):undefined});
+  await p.cargarPaginaPago();await p.pagarReserva();await p.pagarReserva();
+  assert.equal(confirmaciones(p).length,1);assert.equal(p.timers.size,0);
+  assert.match(p.get('error-pago').textContent,/ya venció/);assert.equal(p.get('boton-pagar').hidden,true);
+  assert.ok(p.datos.get(CLAVE));assert.equal(p.estadoDelPago.completo,false);
+});
+
+test('recarga recupera sessionStorage y confirma sin cotizar ni generar pago',async()=>{
+  const almacenamiento=new Map([[CLAVE,JSON.stringify({hash:HASH,red:31337,simulado:true})]]);
+  const p=pagina({almacenamiento});await p.cargarPaginaPago();await p.pagarReserva();
+  assert.equal(cotizaciones(p).length,0);assert.equal(p.llamadas.conectar,0);
+  assert.equal(JSON.parse(confirmaciones(p)[0].envio.body).tx_hash,HASH);assert.equal(p.estadoDelPago.completo,true);
+});
+
+test('fallo de red después de enviar conserva hash para reintentar confirmación',async()=>{
+  let intento=0;
+  const p=pagina({cotizacion:real(),pedir:ruta=>{if(ruta==='/pagos/confirmar'&&++intento===1)throw Error('offline');}});
+  await p.cargarPaginaPago();await p.pagarReserva();
+  assert.equal(p.get('boton-pagar').textContent,'Retomar confirmación');
+  await p.pagarReserva();assert.equal(p.llamadas.enviar,1);assert.equal(p.estadoDelPago.completo,true);
+});
+
+test('cambio de monto o modalidad exige revisar antes de enviar',async()=>{
+  const p=pagina();await p.cargarPaginaPago();p.configuracion.cotizacion=real();
+  await p.pagarReserva();assert.equal(p.llamadas.enviar,0);assert.equal(confirmaciones(p).length,0);
   assert.match(p.get('error-pago').textContent,/datos del pago cambiaron/);
-  assert.equal(p.get('monto-pesos').textContent,'200000.00');
-  await p.pagarReserva();
-  assert.equal(p.llamadas.enviar,1);
-  assert.equal(p.estadoDelPago.completo,true);
+  await p.pagarReserva();assert.equal(p.llamadas.enviar,1);
 });
 
-test('enlace inválido no consulta reservas ni habilita pago',async()=>{
-  for(const search of ['?reserva_id=0','?reserva_id=abc','?reserva_id=42&tipo=devolucion',`?reserva_id=${'9'.repeat(79)}`]){
-    const p=pagina({search});await p.cargarPaginaPago();
-    assert.equal(p.solicitudes.length,0,search);
-    assert.equal(p.get('boton-pagar').disabled,true);
-    assert.match(p.get('error-pago').textContent,/enlace de pago no es válido/);
+test('saldo usa endpoint y tipo saldo; fecha sin hora conserva día argentino',async()=>{
+  const p=pagina({search:'?reserva_id=42&tipo=saldo',reservas:[reserva({estado:'confirmada',saldo:'100000.00',puede_pagar_saldo:true,fecha_cobro:'2099-02-05'})],cotizacion:cotizacion({tipo:'saldo',pago:{simulado:true,contrato:null,funcion:'pagarSaldo'}})});
+  await p.cargarPaginaPago();assert.match(p.get('plazo-pago').textContent,/5 feb/);
+  await p.pagarReserva();assert.equal(JSON.parse(confirmaciones(p)[0].envio.body).tipo,'saldo');
+  assert.equal(cotizaciones(p)[0].ruta,'/pagos/saldo?reserva_id=42');
+});
+
+test('permisos falsos, reservas ajenas, terminales o saldo vencido no cotizan',async()=>{
+  for(const cambios of [{id:43},{puede_pagar:false},{estado:'expirada'},{estado:'cancelada'},{estado:'confirmada',saldo:'50.00',puede_pagar_saldo:true,fecha_cobro:'2020-01-01'}]){
+    const p=pagina({reservas:[reserva(cambios)]});await p.cargarPaginaPago();
+    assert.equal(cotizaciones(p).length,0);assert.equal(p.get('boton-pagar').disabled,true);
   }
 });
 
-test('reserva ajena y reserva terminal no piden cotización ni habilitan cobro',async()=>{
-  for(const reservas of [[reserva({id:43})],[reserva({estado:'cancelada'})],[reserva({estado:'finalizada'})]]){
-    const p=pagina({reservas});await p.cargarPaginaPago();
-    assert.equal(cotizaciones(p).length,0);
-    assert.equal(p.get('boton-pagar').disabled,true);
-    assert.equal(p.llamadas.enviar,0);
+test('401 conserva transacción y ofrece volver al pago tras iniciar sesión',async()=>{
+  const p=pagina({pedir:ruta=>ruta==='/pagos/confirmar'?respuesta({error:'Tu sesión venció'},401):undefined});
+  await p.cargarPaginaPago();await p.pagarReserva();
+  assert.ok(p.datos.get(CLAVE));assert.equal(p.get('sesion-pago').hidden,false);assert.equal(p.timers.size,0);
+  assert.match(decodeURIComponent(p.get('sesion-pago').href),/reserva_id=42&tipo=sena/);
+});
+
+test('API ausente o enlace inválido nunca habilitan pago',async()=>{
+  const p=pagina({pedir:ruta=>ruta.startsWith('/pagos/sena?')?respuesta({error:'No existe'},404):undefined});
+  await p.cargarPaginaPago();assert.equal(p.get('boton-pagar').disabled,true);
+  for(const search of ['?reserva_id=0','?reserva_id=abc','?reserva_id=42&tipo=devolucion']){
+    const q=pagina({search});await q.cargarPaginaPago();assert.equal(q.solicitudes.length,0);
   }
 });
 
-test('404 del endpoint muestra indisponibilidad y deja cobro deshabilitado',async()=>{
-  const p=pagina({pedir:ruta=>ruta.startsWith('/pagos/sena?') ? respuesta({error:'No existe'},404):undefined});
-  await p.cargarPaginaPago();
-  assert.equal(p.get('boton-pagar').disabled,true);
-  assert.equal(p.estadoDelPago.cotizacion,null);
-  assert.match(p.get('error-pago').textContent,/todavía no está disponible/);
-  assert.equal(p.get('recargar-pago').hidden,false);
-});
-
-test('pago pendiente informado por el servidor se recupera desde otro dispositivo',async()=>{
-  const p=pagina({reservas:[reserva({pagos:[{tipo:'sena',estado:'pendiente',tx_hash:HASH}]})]});
-  await p.cargarPaginaPago();
-  assert.equal(p.estadoDelPago.pendiente.hash,HASH);
-  assert.equal(cotizaciones(p).length,0);
-  await p.pagarReserva();
-  assert.equal(p.llamadas.enviar,0);
-  assert.equal(p.estadoDelPago.completo,true);
-});
-
-test('acelerar transacción guarda y confirma el hash reemplazado',async()=>{
-  const p=pagina({confirmacion:{pago:{estado:'pendiente'}},esperar:async(hash,{onReplaced})=>{
-    onReplaced({reason:'repriced',transaction:{hash:HASH_NUEVO}});
-    return{status:'success',transactionHash:HASH_NUEVO};
-  }});
+test('envío real incierto persiste y permite recuperar hash sin firmar otra vez',async()=>{
+  const p=pagina({cotizacion:real(),enviar:()=>{throw Object.assign(Error('RPC perdido'),{envioIncierto:true});}});
   await p.cargarPaginaPago();await p.pagarReserva();
-  assert.equal(JSON.parse(p.datos.get(CLAVE)).hash,HASH_NUEVO);
-  assert.equal(JSON.parse(confirmaciones(p)[0].envio.body).tx_hash,HASH_NUEVO);
-  assert.equal(p.llamadas.enviar,1);
-  p.configuracion.confirmacion={pago:{estado:'confirmado'}};
-  await p.pagarReserva();
-  assert.equal(p.estadoDelPago.completo,true);
-  assert.equal(p.datos.has(CLAVE),false);
+  assert.equal(JSON.parse(p.datos.get(CLAVE)).estado,'envio_incierto');assert.equal(p.get('boton-pagar').hidden,true);
+  const q=pagina({almacenamiento:p.datos});await q.cargarPaginaPago();
+  q.get('hash-recuperar').value=HASH;await q.recuperarTransaccionPago({preventDefault(){}});
+  assert.equal(q.llamadas.enviar,0);assert.equal(q.llamadas.conectar,0);assert.equal(q.estadoDelPago.completo,true);
 });
 
-test('revertido definitivo permite recargar datos sin afirmar pago',async()=>{
-  const p=pagina({esperar:async()=>{throw Object.assign(new Error('revertido'),{codigo:'TRANSACCION_FALLIDA',definitivo:true});}});
+test('almacenamiento falla después de enviar: hash queda visible y no se repite cobro',async()=>{
+  const p=pagina({cotizacion:real(),fallarGuardado:clave=>clave===CLAVE});
   await p.cargarPaginaPago();await p.pagarReserva();
-  assert.equal(p.estadoDelPago.completo,false);
-  assert.equal(p.estadoDelPago.pendiente,null);
-  assert.equal(p.estadoDelPago.cotizacion,null);
-  assert.equal(p.datos.has(CLAVE),false);
-  assert.equal(p.get('boton-pagar').disabled,true);
-  assert.equal(p.get('recargar-pago').hidden,false);
+  assert.equal(p.get('hash-pago').textContent,HASH);assert.equal(p.llamadas.enviar,1);
+  await p.pagarReserva();assert.equal(p.llamadas.enviar,1);assert.equal(p.estadoDelPago.completo,true);
 });
 
-test('bloqueo de otra pestaña impide una segunda firma',async()=>{
-  const p=pagina({locks:{request:async(clave,opciones,callback)=>callback(null)}});
-  await p.cargarPaginaPago();await p.pagarReserva();
-  assert.equal(p.llamadas.enviar,0);
-  assert.equal(p.llamadas.conectar,0);
-  assert.match(p.get('error-pago').textContent,/otra pestaña/);
-});
-
-test('fallo de almacenamiento después del envío conserva hash en memoria y permite confirmar sin otro cobro',async()=>{
-  const p=pagina({fallarGuardado:clave=>clave===CLAVE});
-  await p.cargarPaginaPago();await p.pagarReserva();
-  assert.equal(p.estadoDelPago.pendiente.hash,HASH);
-  assert.equal(p.datos.has(CLAVE),false);
-  assert.equal(p.get('hash-pago').textContent,HASH);
-  assert.equal(p.get('transaccion-pago').hidden,false);
-  assert.match(p.get('error-pago').textContent,/Copialo antes de cerrar/);
-  assert.equal(p.get('boton-pagar').textContent,'Retomar confirmación');
-  await p.pagarReserva();
-  assert.equal(p.llamadas.enviar,1);
-  assert.equal(p.estadoDelPago.completo,true);
-  assert.equal(confirmaciones(p).length,1);
-});
-
-test('sesión vencida al registrar conserva transacción y enlace para volver al mismo pago',async()=>{
-  const p=pagina({pedir:ruta=>ruta==='/pagos/confirmar' ? respuesta({error:'Tu sesión venció'},401):undefined});
-  await p.cargarPaginaPago();await p.pagarReserva();
-  assert.equal(p.estadoDelPago.completo,false);
-  assert.equal(JSON.parse(p.datos.get(CLAVE)).hash,HASH);
-  assert.equal(p.get('sesion-pago').hidden,false);
-  assert.match(decodeURIComponent(p.get('sesion-pago').href),/volver=\.\.\/reservas\/pagar\.html\?reserva_id=42&tipo=sena/);
-  assert.match(p.get('error-pago').textContent,/sesión venció/);
-  p.configuracion.pedir=undefined;
-  await p.pagarReserva();
-  assert.equal(p.llamadas.enviar,1);
-  assert.equal(p.estadoDelPago.completo,true);
-});
-
-test('envío incierto persiste bloqueo y oculta pagar incluso después de recargar',async()=>{
-  const almacenamiento=new Map();
-  const p=pagina({almacenamiento,enviar:async()=>{
-    throw Object.assign(new Error('Respuesta perdida de MetaMask'),{codigo:'ENVIO_INCIERTO',envioIncierto:true});
-  }});
-  await p.cargarPaginaPago();await p.pagarReserva();
-  assert.deepEqual(JSON.parse(almacenamiento.get(CLAVE)),{estado:'envio_incierto',red:84532});
-  assert.equal(p.get('boton-pagar').hidden,true);
-  assert.equal(p.get('recuperar-transaccion').hidden,false);
-  assert.equal(p.llamadas.enviar,1);
-  assert.equal(confirmaciones(p).length,0);
-  await p.pagarReserva();
-  assert.equal(p.llamadas.enviar,1);
-
-  const recargada=pagina({almacenamiento});
-  await recargada.cargarPaginaPago();
-  assert.equal(recargada.estadoDelPago.pendiente.estado,'envio_incierto');
-  assert.equal(recargada.get('boton-pagar').hidden,true);
-  assert.equal(recargada.get('recuperar-transaccion').hidden,false);
-  assert.equal(cotizaciones(recargada).length,0);
-  await recargada.pagarReserva();
-  assert.equal(recargada.llamadas.enviar,0);
-  assert.equal(recargada.llamadas.conectar,0);
-  assert.equal(recargada.llamadas.esperar.length,0);
-  assert.equal(confirmaciones(recargada).length,0);
-});
-
-test('recuperar hash manual consulta red y registra pago sin enviar otra transacción',async()=>{
-  const almacenamiento=new Map([[CLAVE,JSON.stringify({estado:'envio_incierto',red:84532})]]);
-  const p=pagina({almacenamiento});
-  await p.cargarPaginaPago();
-  p.get('hash-recuperar').value='incompleto';
-  await p.recuperarTransaccionPago({preventDefault(){}});
-  assert.equal(p.estadoDelPago.pendiente.estado,'envio_incierto');
-  assert.equal(p.llamadas.esperar.length,0);
-  assert.match(p.get('error-pago').textContent,/identificador completo/);
-
-  p.get('hash-recuperar').value=` ${HASH} `;
-  await p.recuperarTransaccionPago({preventDefault(){}});
-  assert.deepEqual(p.llamadas.esperar,[HASH]);
-  assert.equal(p.llamadas.enviar,0);
-  assert.equal(p.llamadas.conectar,0);
-  assert.equal(cotizaciones(p).length,0);
-  assert.equal(confirmaciones(p).length,1);
-  assert.deepEqual(JSON.parse(confirmaciones(p)[0].envio.body),{reserva_id:'42',tx_hash:HASH});
-  assert.equal(p.estadoDelPago.completo,true);
-  assert.equal(p.get('recuperar-transaccion').hidden,true);
-  assert.equal(p.get('boton-pagar').hidden,true);
-  assert.equal(almacenamiento.has(CLAVE),false);
-});
-
-test('hash pendiente del backend reemplaza envío incierto al recargar y permite confirmar',async()=>{
-  const almacenamiento=new Map([[CLAVE,JSON.stringify({estado:'envio_incierto',red:84532})]]);
-  const p=pagina({almacenamiento,reservas:[reserva({pagos:[{tipo:'sena',estado:'pendiente',tx_hash:HASH_NUEVO}]})]});
-  await p.cargarPaginaPago();
-  assert.deepEqual(JSON.parse(almacenamiento.get(CLAVE)),{hash:HASH_NUEVO,red:84532});
-  assert.equal(p.estadoDelPago.pendiente.hash,HASH_NUEVO);
-  assert.equal(p.get('recuperar-transaccion').hidden,true);
-  assert.equal(p.get('boton-pagar').hidden,false);
-  assert.equal(p.get('boton-pagar').textContent,'Retomar confirmación');
-  assert.equal(cotizaciones(p).length,0);
-  await p.pagarReserva();
-  assert.deepEqual(p.llamadas.esperar,[HASH_NUEVO]);
-  assert.equal(p.llamadas.enviar,0);
-  assert.equal(p.llamadas.conectar,0);
-  assert.equal(JSON.parse(confirmaciones(p)[0].envio.body).tx_hash,HASH_NUEVO);
-  assert.equal(p.estadoDelPago.completo,true);
-  assert.equal(almacenamiento.has(CLAVE),false);
+test('salir de página detiene reintentos automáticos conservando hash',async()=>{
+  const p=pagina({pedir:ruta=>ruta==='/pagos/confirmar'?respuesta({pendiente:true},202):undefined});
+  await p.cargarPaginaPago();await p.pagarReserva();p.eventos.pagehide();
+  assert.equal(p.timers.size,0);assert.ok(p.datos.get(CLAVE));
 });

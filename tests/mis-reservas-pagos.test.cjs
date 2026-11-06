@@ -40,7 +40,7 @@ function pagina() {
 const reserva = cambios => ({
   id: 42, estado: 'pendiente', ingreso: '2099-02-10', egreso: '2099-02-17',
   noches: 7, personas: 2, importe_total: '500000.00', importe_sena: '100000.00',
-  puede_cancelar: true,
+  puede_cancelar: true, puede_pagar:true,
   alojamiento: { id: 3, nombre: 'Casa del río', localidad: 'Tigre', provincia: 'Buenos Aires' },
   ...cambios,
 });
@@ -62,7 +62,7 @@ test('pendiente conserva estado y presenta seña fuera del detalle plegado', () 
 });
 
 test('confirmada con saldo explícito ofrece saldo y muestra importe del servidor', () => {
-  const tarjeta = pagina().tarjetaDeReserva(reserva({estado:'confirmada', monto_faltante:'400000.00'}));
+  const tarjeta = pagina().tarjetaDeReserva(reserva({estado:'confirmada', puede_pagar_saldo:true, saldo:'400000.00'}));
   assert.equal(cobros(tarjeta)[0].href, 'pagar.html?reserva_id=42&tipo=saldo');
   assert.match(textos(tarjeta), /Saldo pendiente \$ 400000.00/);
 });
@@ -77,15 +77,15 @@ test('confirmada sin información de cobro no inventa pago ni habilita envío', 
 test('terminales, plazo agotado y saldo cero no ofrecen otro pago', () => {
   for (const cambios of [
     {estado:'cancelada'}, {estado:'finalizada'}, {estado:'expirada'}, {estado:'vencida'},
-    {bloqueo_expira_en:'2020-01-01T12:00:00Z'},
-    {estado:'confirmada',monto_faltante:'0.00'},
+    {vence_en:'2020-01-01T12:00:00Z'},
+    {estado:'confirmada',saldo:'0.00'},
   ]) assert.equal(cobros(pagina().tarjetaDeReserva(reserva(cambios))).length, 0, JSON.stringify(cambios));
 });
 
 test('muestra plazos válidos sin exponer valores inválidos ni enlaces manipulados', () => {
   const p = pagina();
   const tarjeta = p.tarjetaDeReserva(reserva({
-    bloqueo_expira_en:'2099-02-01T18:00:00Z',fecha_cobro:'2099-02-05',
+    vence_en:'2099-02-01T18:00:00Z',fecha_cobro:'2099-02-05',
   }));
   assert.match(textos(tarjeta), /Plazo para la seña:/);
   assert.match(textos(tarjeta), /Vencimiento del saldo:/);
@@ -100,7 +100,7 @@ test('cancelar nunca afirma que no hubo pagos cuando el cobro puede estar en pro
   const p = pagina();
   await p.cancelarReserva(reserva());
   assert.doesNotMatch(p.confirmacion().detalle, /no pagaste nada|nada que devolver/);
-  assert.match(p.confirmacion().detalle, /política de cancelación/);
+  assert.match(p.confirmacion().detalle, /devolución.*todavía no está disponible/);
 });
 
 test('reserva pendiente_pago permanece en próximas', () => {
@@ -110,4 +110,12 @@ test('reserva pendiente_pago permanece en próximas', () => {
   p.mostrarReservas();
   assert.equal(p.get('cantidad-proximas').textContent, 1);
   assert.equal(p.get('lista-reservas').children.length, 1);
+});
+
+test('rechaza permiso de seña y muestra saldo vencido sin botón',()=>{
+  const p=pagina();
+  assert.equal(cobros(p.tarjetaDeReserva(reserva({puede_pagar:false}))).length,0);
+  const vencida=p.tarjetaDeReserva(reserva({estado:'confirmada',saldo:'400.00',fecha_cobro:'2020-01-01',puede_pagar_saldo:true}));
+  assert.equal(cobros(vencida).length,0);
+  assert.match(textos(vencida),/Saldo vencido/);
 });

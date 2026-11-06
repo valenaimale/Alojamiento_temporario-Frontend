@@ -8,7 +8,7 @@ const cuenta = '0x1111111111111111111111111111111111111111';
 const contrato = '0x2222222222222222222222222222222222222222';
 const hash = '0x' + 'a'.repeat(64);
 const hashNuevo = '0x' + 'b'.repeat(64);
-const cotizacion = () => ({ reserva_id: '12', tipo: 'sena', monto_wei: '1000000000000000', red: 84532, contrato_direccion: contrato });
+const cotizacion = () => ({ reserva_id: '12', tipo: 'sena', funcion:'pagarSena', simulado:false, monto_wei: '1000000000000000', red: 84532, contrato: contrato });
 
 // Simula viem en su límite público y registra lo que realmente se pediría firmar.
 async function entorno() {
@@ -61,7 +61,7 @@ test('rechazar permiso o red no dispara transacciones', async () => {
 test('pagar seña y saldo simula ABI fijo con monto e ID BigInt', async () => {
   const e = await entorno(); await e.billetera.conectar();
   for (const [tipo, funcion] of [['sena', 'pagarSena'], ['saldo', 'pagarSaldo']]) {
-    assert.equal(await e.billetera.enviarPago({ ...cotizacion(), tipo }), hash);
+    assert.equal(await e.billetera.enviarPago({ ...cotizacion(), tipo, funcion }), hash);
     const request = e.llamadas.at(-1)[1];
     assert.equal(request.functionName, funcion);
     assert.equal(request.value, 1000000000000000n);
@@ -110,7 +110,7 @@ test('rechaza red, tipo y vencimiento inválidos antes de firmar', async () => {
   const e = await entorno(); await e.billetera.conectar();
   await assert.rejects(e.billetera.enviarPago({ ...cotizacion(), red: 1 }), { codigo: 'DATOS_INVALIDOS' });
   await assert.rejects(e.billetera.enviarPago({ ...cotizacion(), tipo: 'liquidacion' }), { codigo: 'DATOS_INVALIDOS' });
-  await assert.rejects(e.billetera.enviarPago({ ...cotizacion(), bloqueo_expira_en: '2020-01-01T00:00:00Z' }), { codigo: 'RESERVA_VENCIDA' });
+  await assert.rejects(e.billetera.enviarPago({ ...cotizacion(), vence_en: '2020-01-01T00:00:00Z' }), { codigo: 'RESERVA_VENCIDA' });
   assert.equal(e.llamadas.length, 0);
 });
 
@@ -130,7 +130,7 @@ test('vencimiento durante simulación impide abrir la firma', async () => {
   Date.now = () => ahora;
   try {
     e.publico.simulateContract = async request => { ahora += 60000; return { request }; };
-    await assert.rejects(e.billetera.enviarPago({ ...cotizacion(), bloqueo_expira_en: '2030-01-01T00:00:30Z' }), { codigo: 'RESERVA_VENCIDA' });
+    await assert.rejects(e.billetera.enviarPago({ ...cotizacion(), vence_en: '2030-01-01T00:00:30Z' }), { codigo: 'RESERVA_VENCIDA' });
     assert.equal(e.llamadas.some(c => c[0] === 'write'), false);
   } finally { Date.now = original; }
 });

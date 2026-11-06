@@ -56,7 +56,7 @@ function mostrarPagoDeReserva(reserva, cuerpo, datos) {
     resumen.append(enlace);
   }
   for (const [etiqueta, valor] of [
-    ["Plazo para la seña", reserva.bloqueo_expira_en],
+    ["Plazo para la seña", reserva.vence_en],
     ["Vencimiento del saldo", reserva.fecha_cobro],
   ]) {
     const fecha = fechaDePagoVisible(valor);
@@ -66,8 +66,8 @@ function mostrarPagoDeReserva(reserva, cuerpo, datos) {
     plazo.textContent = `${etiqueta}: ${fecha}`;
     resumen.append(plazo);
   }
-  if (typeof reserva.monto_faltante === "string" && /^\d+(?:\.\d{1,2})?$/.test(reserva.monto_faltante)) {
-    agregarDato(datos, "Saldo pendiente", formatearPrecio(reserva.monto_faltante));
+  if (typeof reserva.saldo === "string" && /^\d+(?:\.\d{1,2})?$/.test(reserva.saldo)) {
+    agregarDato(datos, "Saldo pendiente", formatearPrecio(reserva.saldo));
   }
   cuerpo.append(resumen);
 }
@@ -249,7 +249,7 @@ async function cancelarReserva(reserva) {
   if (cancelandoReserva) return;
   const confirmo = await confirmar({
     titulo: `¿Cancelar tu reserva en ${reserva.alojamiento.nombre}?`,
-    detalle: `Del ${formatearFecha(reserva.ingreso)} al ${formatearFecha(reserva.egreso)}. Las fechas quedan libres para otros huéspedes. Si realizaste un pago, la devolución corresponde según la política de cancelación que aceptaste.`,
+    detalle: `Del ${formatearFecha(reserva.ingreso)} al ${formatearFecha(reserva.egreso)}. Las fechas quedan libres para otros huéspedes. Si enviaste un pago, revisá primero su confirmación. La devolución de reservas confirmadas todavía no está disponible.`,
     textoConfirmar: "Cancelar reserva",
     textoCancelar: "Volver",
   });
@@ -284,6 +284,10 @@ async function cancelarReserva(reserva) {
 
 // Arma la página: el aviso si recién reservó, y la lista de reservas
 async function cargarPagina() {
+  if (new URLSearchParams(window.location.search).get("confirmada") === "1") {
+    document.getElementById("mensaje-ok").textContent = "Tu reserva está confirmada. Este alojamiento no requiere seña; consultá el saldo en la reserva.";
+    history.replaceState(null, "", window.location.pathname);
+  }
   if (new URLSearchParams(window.location.search).get("nueva") === "1") {
     document.getElementById("mensaje-ok").textContent =
       "Tu reserva quedó pendiente de pago. Abrí el pago de la seña para continuar.";

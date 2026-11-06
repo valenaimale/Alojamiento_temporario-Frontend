@@ -19,7 +19,7 @@ const PagosModelo = (() => {
     return { numero: BigInt(entero + fraccion), escala: 10n ** BigInt(fraccion.length) };
   }
 
-  // Redondea hacia arriba al wei más cercano para no pagar menos de lo cotizado.
+  // Convierte a wei enteros con el mismo truncamiento que el backend.
   function pesosAWei(monto, tasa) {
     const pesos = decimal(monto);
     const cambio = decimal(tasa);
@@ -28,7 +28,8 @@ const PagosModelo = (() => {
     }
     const numerador = pesos.numero * cambio.escala * 10n ** 18n;
     const denominador = pesos.escala * cambio.numero;
-    const wei = (numerador + denominador - 1n) / denominador;
+    // Coincide con bcdiv(..., 0) del backend: trunca fracciones de wei.
+    const wei = numerador / denominador;
     if (wei > MAX_UINT256) throw errorDePago('DATOS_INVALIDOS', 'El importe supera el límite admitido.');
     return wei;
   }
@@ -52,23 +53,25 @@ const PagosModelo = (() => {
   function normalizarCotizacion(payload, { reservaId, tipo }) {
     const pago = payload?.pago;
     const id = identificador(reservaId);
-    if (!pago || !id || identificador(pago.reserva_id) !== id || !['sena', 'saldo'].includes(tipo) || pago.tipo !== tipo) {
+    if (!pago || !id || identificador(payload.reserva_id) !== id || !['sena', 'saldo'].includes(tipo) || payload.tipo !== tipo) {
       throw errorDePago('DATOS_INVALIDOS', 'Los datos del pago no corresponden a esta reserva. Volvé a cargar.');
     }
-    if (pago.red !== RED) throw errorDePago('RED_INCORRECTA', 'Este pago debe realizarse en Base Sepolia.');
-    if (!DIRECCION.test(pago.contrato_direccion ?? '') || /^0x0{40}$/i.test(pago.contrato_direccion)) {
+    const simulado = pago.simulado === true;
+    if (typeof pago.simulado !== 'boolean' || payload.red !== (simulado ? 31337 : RED)) throw errorDePago('RED_INCORRECTA', 'La modalidad del pago no coincide con la red informada. Volvé a cargar.');
+    if (pago.funcion !== (tipo === 'sena' ? 'pagarSena' : 'pagarSaldo')) throw errorDePago('DATOS_INVALIDOS', 'La función de pago no corresponde a este importe.');
+    if (!simulado && (!DIRECCION.test(pago.contrato ?? '') || /^0x0{40}$/i.test(pago.contrato))) {
       throw errorDePago('DATOS_INVALIDOS', 'El contrato de pago todavía no está configurado. Intentá más tarde.');
     }
-    if (typeof pago.monto_wei !== 'string' || !/^[1-9]\d{0,77}$/.test(pago.monto_wei) || BigInt(pago.monto_wei) !== pesosAWei(pago.monto_pesos, pago.pesos_por_eth)) {
+    if (typeof payload.monto_wei !== 'string' || !/^[1-9]\d{0,77}$/.test(payload.monto_wei) || BigInt(payload.monto_wei) !== pesosAWei(payload.monto_pesos, payload.pesos_por_eth)) {
       throw errorDePago('DATOS_INVALIDOS', 'El importe en ETH no coincide con la cotización. Volvé a cargar el pago.');
     }
-    if (Number.isNaN(vencimiento(pago.bloqueo_expira_en))) {
+    if (Number.isNaN(vencimiento(payload.vence_en))) {
       throw errorDePago('DATOS_INVALIDOS', 'No pudimos validar el vencimiento del pago. Volvé a cargar.');
     }
     return Object.freeze({
-      reserva_id: id, tipo, monto_pesos: pago.monto_pesos, monto_wei: pago.monto_wei,
-      pesos_por_eth: pago.pesos_por_eth, red: RED, contrato_direccion: pago.contrato_direccion,
-      bloqueo_expira_en: pago.bloqueo_expira_en ?? null,
+      reserva_id: id, tipo, monto_pesos: payload.monto_pesos, monto_wei: BigInt(payload.monto_wei),
+      pesos_por_eth: payload.pesos_por_eth, red: payload.red, contrato: pago.contrato,
+      funcion: pago.funcion, simulado, vence_en: payload.vence_en ?? null,
     });
   }
 
@@ -78,6 +81,22 @@ const PagosModelo = (() => {
     const texto = String(wei).padStart(19, '0');
     const fraccion = texto.slice(-18).replace(/0+$/, '');
     return texto.slice(0, -18) + (fraccion ? '.' + fraccion : '');
+  }
+
+  // Convierte a centavos sin punto flotante; la presentación monetaria conserva dos decimales.
+  function weiAPesos(wei, tasa) {
+    if (!/^(0|[1-9]\d*)$/.test(String(wei))) throw errorDePago('DATOS_INVALIDOS', 'Importe en wei inválido.');
+    const cambio = decimal(tasa);
+    const centavos = BigInt(wei) * cambio.numero * 100n / (10n ** 18n * cambio.escala);
+    return `${centavos / 100n}.${String(centavos % 100n).padStart(2, '0')}`;
+  }
+
+  // Una fecha de cobro sin hora vence al finalizar ese día en Argentina.
+  function saldoVencido(fecha, ahora = Date.now()) {
+    if (typeof fecha !== 'string') return false;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return Date.parse(`${fecha}T23:59:59.999-03:00`) < ahora;
+    const instante = vencimiento(fecha);
+    return Number.isFinite(instante) && instante < ahora;
   }
 
   // Busca causas anidadas de viem/MetaMask sin depender de sus clases externas.
@@ -123,22 +142,24 @@ const PagosModelo = (() => {
     const enProceso = pagos.find(p => ['sena', 'saldo'].includes(p.tipo) && p.estado === 'pendiente' && HASH.test(p.tx_hash ?? ''));
     if (enProceso) return estado('Pago en proceso de confirmación', enProceso.tipo, 'Revisar pago');
     if (reserva.estado === 'pendiente' || reserva.estado === 'pendiente_pago') {
-      const expira = vencimiento(reserva.bloqueo_expira_en);
+      const expira = vencimiento(reserva.vence_en);
       if (Number.isNaN(expira)) return estado('Consultá el vencimiento de tu reserva', null, null, 'estado-no-publicada');
       if (expira !== null && expira <= ahora) return estado('Plazo para pagar vencido', null, null, 'estado-no-publicada');
       if (confirmado('sena')) return estado('Seña pagada; actualizando reserva', null, null, 'estado-publicada');
-      return estado('Seña pendiente', 'sena', 'Pagar la seña');
+      return reserva.puede_pagar === true ? estado('Seña pendiente', 'sena', 'Pagar la seña') : estado('Seña no habilitada para pagar');
     }
     if (confirmado('saldo')) return estado('Pago completo', null, null, 'estado-publicada');
-    if (reserva.monto_faltante != null) {
+    if (reserva.saldo != null) {
       try {
-        const faltante = decimal(String(reserva.monto_faltante));
-        return faltante.numero > 0n ? estado('Saldo pendiente', 'saldo', 'Pagar el saldo') : estado('Pago completo', null, null, 'estado-publicada');
+        const faltante = decimal(reserva.saldo);
+        if (faltante.numero === 0n) return estado('Pago completo', null, null, 'estado-publicada');
+        if (saldoVencido(reserva.fecha_cobro, ahora)) return estado('Saldo vencido', null, null, 'estado-no-publicada');
+        return reserva.puede_pagar_saldo === true ? estado('Saldo pendiente', 'saldo', 'Pagar el saldo') : estado('Saldo pendiente; pago no habilitado');
       } catch { return estado('Estado de pago no informado', null, null, 'estado-no-publicada'); }
     }
     return confirmado('sena') ? estado('Seña pagada', null, null, 'estado-publicada') : estado('Estado de pago no informado', null, null, 'estado-no-publicada');
   }
 
-  return { RED, identificador, normalizarCotizacion, pesosAWei, formatearEth, mensajeErrorPago, estadoPagoReserva, vencimiento };
+  return { RED, identificador, normalizarCotizacion, pesosAWei, weiAPesos, formatearEth, mensajeErrorPago, estadoPagoReserva, vencimiento, saldoVencido };
 })();
 if (typeof module !== 'undefined') module.exports = PagosModelo;

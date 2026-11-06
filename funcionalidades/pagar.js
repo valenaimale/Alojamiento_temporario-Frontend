@@ -1,7 +1,7 @@
 // Coordina la cotización, la firma y el registro del pago sin repetir transferencias.
 const estadoDelPago = {
   reservaId: null, tipo: null, usuario: null, reserva: null,
-  cotizacion: null, billetera: null, pendiente: null, ocupado: false, completo: false,
+  cotizacion: null, billetera: null, pendiente: null, ocupado: false, completo: false, espera: false, temporizador: null, conflicto: false, fallido: false,
 };
 
 // Centraliza el acceso a los elementos de esta pantalla.
@@ -25,30 +25,30 @@ function clavePagoPendiente() {
 
 // Recupera exclusivamente un hash válido; el servidor siempre verifica su pertenencia.
 function leerPagoPendiente() {
-  const valor = localStorage.getItem(clavePagoPendiente());
+  const valor = sessionStorage.getItem(clavePagoPendiente());
   if (!valor) return null;
   let pendiente;
   try { pendiente = JSON.parse(valor); }
   catch { throw errorPantallaPago('No pudimos leer el pago guardado. Revisá tu transacción en MetaMask antes de volver a pagar.'); }
-  if (pendiente?.estado === 'envio_incierto' && pendiente.red === 84532) return pendiente;
-  if (!/^0x[0-9a-fA-F]{64}$/.test(pendiente?.hash) || pendiente?.red !== 84532) {
+  if (pendiente?.estado === 'envio_incierto' && pendiente.red === 84532 && pendiente.simulado === false) return pendiente;
+  if (!/^0x[0-9a-fA-F]{64}$/.test(pendiente?.hash) || !((pendiente?.red === 84532 && pendiente.simulado === false) || (pendiente?.red === 31337 && pendiente.simulado === true))) {
     throw errorPantallaPago('El identificador guardado no es válido. Revisá tu transacción en MetaMask antes de volver a pagar.');
   }
   return pendiente;
 }
 
 // Guarda antes de esperar la red para poder recuperar el pago tras una interrupción.
-function guardarPagoPendiente(hash) {
-  estadoDelPago.pendiente = { hash, red: 84532 };
+function guardarPagoPendiente(hash, datos = estadoDelPago.pendiente || estadoDelPago.cotizacion) {
+  estadoDelPago.pendiente = { hash, red: datos.red, simulado: datos.simulado };
   mostrarTransaccionPago();
-  try { localStorage.setItem(clavePagoPendiente(), JSON.stringify(estadoDelPago.pendiente)); }
+  try { sessionStorage.setItem(clavePagoPendiente(), JSON.stringify(estadoDelPago.pendiente)); }
   catch { throw errorPantallaPago('No pudimos guardar el identificador en este dispositivo. Copialo antes de cerrar esta página.'); }
 }
 
 // Comprueba la persistencia antes de pedir una firma.
 function comprobarAlmacenamientoPago() {
   const clave = `${clavePagoPendiente()}:comprobacion`;
-  try { localStorage.setItem(clave, '1'); localStorage.removeItem(clave); }
+  try { sessionStorage.setItem(clave, '1'); sessionStorage.removeItem(clave); }
   catch { throw errorPantallaPago('Habilitá el almacenamiento de este sitio para recuperar la confirmación si se interrumpe el pago.'); }
 }
 
@@ -58,6 +58,7 @@ function mostrarTransaccionPago() {
   elementoPago('transaccion-pago').hidden = !hash;
   if (!hash) return;
   elementoPago('hash-pago').textContent = hash;
+  elementoPago('enlace-transaccion').hidden = estadoDelPago.pendiente.simulado;
   elementoPago('enlace-transaccion').href = `https://sepolia.basescan.org/tx/${hash}`;
 }
 
@@ -76,18 +77,20 @@ function mostrarPasoPago(paso, texto) {
 function actualizarBotonPago() {
   const boton = elementoPago('boton-pagar');
   const incierto = estadoDelPago.pendiente?.estado === 'envio_incierto';
-  boton.hidden = estadoDelPago.completo || incierto;
+  boton.hidden = estadoDelPago.completo || incierto || estadoDelPago.conflicto;
   elementoPago('recuperar-transaccion').hidden = !incierto;
   elementoPago('hash-recuperar').disabled = estadoDelPago.ocupado;
   elementoPago('boton-recuperar').disabled = estadoDelPago.ocupado;
-  boton.disabled = estadoDelPago.ocupado || (!estadoDelPago.pendiente && !estadoDelPago.cotizacion);
-  boton.textContent = estadoDelPago.ocupado ? 'Procesando…'
+  boton.disabled = estadoDelPago.ocupado || estadoDelPago.espera || (!estadoDelPago.pendiente && !estadoDelPago.cotizacion && !estadoDelPago.fallido);
+  boton.textContent = estadoDelPago.ocupado || estadoDelPago.espera ? 'Confirmando pago…'
     : estadoDelPago.pendiente ? 'Retomar confirmación'
+    : estadoDelPago.fallido ? 'Pagar de nuevo'
+    : estadoDelPago.cotizacion?.simulado ? 'Pagar (simulado)'
     : estadoDelPago.tipo === 'saldo' ? 'Pagar el saldo' : 'Pagar la seña';
 }
 
 // Traduce los errores HTTP y conserva el hash si la sesión vence.
-async function consultarPago(ruta, opciones) {
+async function consultarPago(ruta, opciones, devolverRespuesta = false) {
   let respuesta, resultado;
   try { ({ respuesta, resultado } = await pedirAlBack(ruta, opciones)); }
   catch { throw errorPantallaPago('No pudimos conectar con el servicio de pagos. Revisá la conexión y volvé a intentar.'); }
@@ -100,9 +103,9 @@ async function consultarPago(ruta, opciones) {
     const mensaje = respuesta.status === 404 || respuesta.status === 503
       ? 'El pago todavía no está disponible para esta reserva. Volvé a intentarlo más tarde desde Mis reservas.'
       : resultado?.error || 'No pudimos consultar el pago. Volvé a intentar.';
-    throw errorPantallaPago(mensaje);
+    throw Object.assign(errorPantallaPago(mensaje), { status: respuesta.status });
   }
-  return resultado;
+  return devolverRespuesta ? { respuesta, resultado } : resultado;
 }
 
 // Valida una cotización nueva; el navegador no decide cuánto cobrar.
@@ -139,8 +142,9 @@ function mostrarCotizacionPago() {
   elementoPago('concepto-pago').textContent = pago.tipo === 'saldo' ? 'Saldo a pagar' : 'Seña a pagar';
   elementoPago('monto-pesos').textContent = formatearPrecio(pago.monto_pesos);
   elementoPago('monto-eth').textContent = `${PagosModelo.formatearEth(pago.monto_wei)} ETH de prueba`;
-  elementoPago('cambio-pago').textContent = `Conversión de prueba: 1 ETH = ${formatearPrecio(pago.pesos_por_eth)}. El costo de la red se suma en MetaMask.`;
-  const plazo = pago.bloqueo_expira_en || estadoDelPago.reserva.fecha_cobro;
+  elementoPago('cambio-pago').textContent = `Conversión de prueba: 1 ETH = ${formatearPrecio(pago.pesos_por_eth)}.${pago.simulado ? ' No se transfieren fondos.' : ' El costo de la red se suma en MetaMask.'}`;
+  mostrarModalidadPago(pago);
+  const plazo = pago.tipo === 'sena' ? pago.vence_en : estadoDelPago.reserva.fecha_cobro;
   const soloFecha = /^\d{4}-\d{2}-\d{2}$/.test(plazo || '');
   const fecha = plazo && new Date(soloFecha ? `${plazo}T12:00:00-03:00` : plazo);
   elementoPago('plazo-pago').hidden = !fecha || Number.isNaN(fecha.getTime());
@@ -161,37 +165,64 @@ async function obtenerBilleteraPago() {
   return estadoDelPago.billetera;
 }
 
-// Espera la red y solicita al servidor verificar el evento, monto y reserva.
+// Adapta las instrucciones a la modalidad explícita del backend.
+function mostrarModalidadPago(pago) {
+  const simulado = pago.simulado;
+  elementoPago('modalidad-pago').textContent = simulado ? 'Pago simulado' : 'Pago en Base Sepolia';
+  elementoPago('ayuda-modalidad').textContent = simulado
+    ? 'Esta prueba registra el pago de tu reserva sin mover dinero ni conectar una billetera.'
+    : 'Usamos ETH de prueba en Base Sepolia. Necesitás cubrir el importe y el costo de la transacción.';
+  elementoPago('titulo-paso-firma').textContent = simulado ? 'Iniciá el pago simulado' : 'Confirmá en MetaMask';
+  elementoPago('ayuda-paso-firma').textContent = simulado ? 'No necesitás MetaMask ni cambiar de red.' : 'Conectá tu billetera y autorizá el importe.';
+  elementoPago('ayuda-paso-red').textContent = simulado ? 'Consultamos el resultado de la simulación.' : 'Verificamos tu transacción en Base Sepolia.';
+}
+
+// Genera un identificador único aceptado por el verificador de prueba.
+function crearHashSimulado() {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  const hash = Array.from(bytes, valor => valor.toString(16).padStart(2, '0')).join('');
+  // El verificador reserva dead para fallos y 0000 para pendiente permanente.
+  return `0x${hash.slice(0, -4)}0001`;
+}
+
+// Detiene la consulta programada al salir o ante una respuesta terminal.
+function detenerConsultaPago() {
+  if (estadoDelPago.temporizador !== null) clearTimeout(estadoDelPago.temporizador);
+  estadoDelPago.temporizador = null;
+  estadoDelPago.espera = false;
+}
+
+// El backend es la autoridad de confirmación tanto en simulación como en blockchain.
 async function confirmarPagoEnviado() {
-  const billetera = await obtenerBilleteraPago();
-  mostrarPasoPago(1, 'Esperando la confirmación de la red…');
-  const recibo = await billetera.esperarPago(estadoDelPago.pendiente.hash, {
-    onReplaced(reemplazo) {
-      if (reemplazo.reason === 'repriced') guardarPagoPendiente(reemplazo.transaction.hash);
-    },
-  });
-  if (recibo.transactionHash !== estadoDelPago.pendiente.hash) guardarPagoPendiente(recibo.transactionHash);
-  mostrarPasoPago(2, 'La red confirmó la transacción. Registrando el pago…');
-  const resultado = await consultarPago('/pagos/confirmar', {
+  mostrarPasoPago(2, 'Registrando y verificando el pago…');
+  const { respuesta, resultado } = await consultarPago('/pagos/confirmar', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ reserva_id: estadoDelPago.reservaId, tx_hash: estadoDelPago.pendiente.hash }),
-  });
-  if (resultado?.pago?.estado !== 'confirmado') {
-    throw errorPantallaPago('La transacción sigue pendiente de verificación. Retomá la confirmación en unos instantes; no hace falta volver a pagar.');
+    body: JSON.stringify({ reserva_id: estadoDelPago.reservaId, tipo: estadoDelPago.tipo, tx_hash: estadoDelPago.pendiente.hash }),
+  }, true);
+  if (respuesta.status === 202) {
+    mostrarPasoPago(1, 'Pago pendiente. Volvemos a consultar en unos segundos; no hace falta pagar otra vez.');
+    estadoDelPago.espera = true;
+    estadoDelPago.temporizador = setTimeout(() => {
+      estadoDelPago.espera = false;
+      estadoDelPago.temporizador = null;
+      return pagarReserva();
+    }, 3500);
+    return;
   }
+  if (respuesta.status !== 200) throw errorPantallaPago('No pudimos verificar el resultado. Retomá la confirmación.');
   estadoDelPago.completo = true;
-  // Un fallo al limpiar el dispositivo no convierte un pago confirmado en un error.
-  try { localStorage.removeItem(clavePagoPendiente()); } catch { /* El servidor conserva el pago. */ }
+  detenerConsultaPago();
+  try { sessionStorage.removeItem(clavePagoPendiente()); } catch { /* El backend ya registró el pago. */ }
   mostrarPasoPago(3, estadoDelPago.tipo === 'sena' ? 'Seña registrada. Tu reserva está confirmada.' : 'Saldo registrado. Tu pago está completo.');
-  elementoPago('aviso-pago').textContent = 'Pago confirmado y registrado correctamente.';
-  elementoPago('ayuda-transaccion').textContent = 'Podés consultar el comprobante de la transacción en BaseScan.';
+  elementoPago('aviso-pago').textContent = estadoDelPago.pendiente.simulado ? 'Pago simulado registrado correctamente. No se transfirieron fondos.' : 'Pago confirmado y registrado correctamente.';
+  elementoPago('ayuda-transaccion').textContent = estadoDelPago.pendiente.simulado ? 'Este identificador corresponde a la simulación; no existe una transacción en blockchain.' : 'Podés consultar el comprobante de la transacción en BaseScan.';
   elementoPago('volver-confirmado').hidden = false;
   elementoPago('volver-confirmado').focus();
 }
 
 // Compara importes y destino para que cualquier cambio se revise antes de la firma.
 function mismaCotizacionPago(anterior, nueva) {
-  return ['monto_wei', 'monto_pesos', 'pesos_por_eth', 'contrato_direccion', 'red', 'tipo', 'reserva_id']
+  return ['monto_wei', 'monto_pesos', 'pesos_por_eth', 'contrato', 'funcion', 'simulado', 'red', 'tipo', 'reserva_id']
     .every(campo => anterior?.[campo] === nueva[campo]);
 }
 
@@ -211,12 +242,21 @@ async function ejecutarPago() {
     if (!mismaCotizacionPago(anterior, nueva)) {
       throw errorPantallaPago('Los datos del pago cambiaron. Revisá el importe actualizado y volvé a confirmar.');
     }
-    const billetera = await obtenerBilleteraPago();
-    mostrarPasoPago(0, 'Conectá tu billetera y confirmá el pago en MetaMask.');
-    const cuenta = await billetera.conectar();
-    elementoPago('billetera-pago').textContent = `Billetera: ${cuenta.slice(0, 6)}…${cuenta.slice(-4)}`;
-    const hash = await billetera.enviarPago(nueva);
-    guardarPagoPendiente(hash);
+    const expira = PagosModelo.vencimiento(nueva.vence_en);
+    if (expira !== null && expira <= Date.now()) throw Object.assign(errorPantallaPago('Venció el plazo para pagar. Volvé a Mis reservas.'), {status: 409});
+    let hash;
+    if (nueva.simulado) {
+      mostrarPasoPago(0, 'Iniciando el pago simulado…');
+      hash = crearHashSimulado();
+    } else {
+      const billetera = await obtenerBilleteraPago();
+      mostrarPasoPago(0, 'Conectá tu billetera y confirmá el pago en MetaMask.');
+      const cuenta = await billetera.conectar();
+      elementoPago('billetera-pago').textContent = `Billetera: ${cuenta.slice(0, 6)}…${cuenta.slice(-4)}`;
+      hash = await billetera.enviarPago(nueva);
+    }
+    estadoDelPago.fallido = false;
+    guardarPagoPendiente(hash, nueva);
   }
   mostrarTransaccionPago();
   await confirmarPagoEnviado();
@@ -224,7 +264,7 @@ async function ejecutarPago() {
 
 // Bloquea dobles clics y coordina pestañas cuando Web Locks está disponible.
 async function pagarReserva() {
-  if (estadoDelPago.ocupado || estadoDelPago.completo) return;
+  if (estadoDelPago.ocupado || estadoDelPago.completo || estadoDelPago.espera || estadoDelPago.conflicto) return;
   estadoDelPago.ocupado = true;
   elementoPago('error-pago').textContent = '';
   elementoPago('aviso-pago').textContent = '';
@@ -238,20 +278,27 @@ async function pagarReserva() {
     } else await ejecutarPago();
   } catch (error) {
     if (error.envioIncierto) {
-      estadoDelPago.pendiente = { estado: 'envio_incierto', red: 84532 };
-      try { localStorage.setItem(clavePagoPendiente(), JSON.stringify(estadoDelPago.pendiente)); }
+      estadoDelPago.pendiente = { estado: 'envio_incierto', red: 84532, simulado: false };
+      try { sessionStorage.setItem(clavePagoPendiente(), JSON.stringify(estadoDelPago.pendiente)); }
       catch { elementoPago('aviso-pago').textContent = 'Mantené esta página abierta mientras revisás la actividad en MetaMask.'; }
       mostrarPasoPago(1, 'El envío necesita revisión en MetaMask.');
     }
-    if (error.definitivo && ['TRANSACCION_FALLIDA', 'TRANSACCION_CANCELADA'].includes(error.codigo)) {
-      try { localStorage.removeItem(clavePagoPendiente()); } catch { /* No habilitar otro pago sin volver a cargar. */ }
+    detenerConsultaPago();
+    if (error.status === 402 || (error.definitivo && ['TRANSACCION_FALLIDA', 'TRANSACCION_CANCELADA'].includes(error.codigo))) {
+      try { sessionStorage.removeItem(clavePagoPendiente()); } catch { /* Reconciliar al volver a cargar si no puede borrarse. */ }
       estadoDelPago.pendiente = null;
-      estadoDelPago.cotizacion = null;
+      estadoDelPago.fallido = true;
+      mostrarTransaccionPago();
+      mostrarPasoPago(0, 'El pago fue rechazado. Podés iniciar otro intento.');
+    }
+    if (error.status === 409) {
+      estadoDelPago.conflicto = true;
       elementoPago('recargar-pago').hidden = false;
+      mostrarPasoPago(1, 'Revisá el estado actualizado de tu reserva antes de continuar.');
     }
     const mensaje = error.mensajeUsuario || PagosModelo.mensajeErrorPago(error);
     elementoPago('error-pago').textContent = mensaje;
-    if (estadoDelPago.pendiente?.hash) elementoPago('estado-pago').textContent = 'Transacción guardada. Podés retomar la confirmación sin volver a pagar.';
+    if (estadoDelPago.pendiente?.hash && !estadoDelPago.conflicto) elementoPago('estado-pago').textContent = 'Transacción guardada. Podés retomar la confirmación sin volver a pagar.';
     elementoPago('error-pago').focus();
     if (!estadoDelPago.pendiente && !estadoDelPago.cotizacion) elementoPago('recargar-pago').hidden = false;
   } finally {
@@ -281,6 +328,9 @@ async function recuperarTransaccionPago(evento) {
 // Autoriza al huésped y carga el resumen antes de ofrecer cualquier pago.
 async function cargarPaginaPago() {
   if (estadoDelPago.ocupado) return;
+  detenerConsultaPago();
+  estadoDelPago.conflicto = false;
+  estadoDelPago.fallido = false;
   estadoDelPago.ocupado = true;
   estadoDelPago.cotizacion = null;
   elementoPago('cotizacion-pago').hidden = true;
@@ -307,8 +357,9 @@ async function cargarPaginaPago() {
     mostrarResumenPago();
     estadoDelPago.pendiente = leerPagoPendiente();
     const pagoServidor = estadoDelPago.reserva.pagos?.find(pago => pago.tipo === tipo && ['pendiente', 'confirmado'].includes(pago.estado) && /^0x[0-9a-fA-F]{64}$/.test(pago.tx_hash || ''));
-    if ((!estadoDelPago.pendiente || estadoDelPago.pendiente.estado === 'envio_incierto') && pagoServidor) guardarPagoPendiente(pagoServidor.tx_hash);
+    if ((!estadoDelPago.pendiente || estadoDelPago.pendiente.estado === 'envio_incierto') && pagoServidor && [31337, 84532].includes(pagoServidor.red)) guardarPagoPendiente(pagoServidor.tx_hash, {red: pagoServidor.red, simulado: pagoServidor.red === 31337});
     if (estadoDelPago.pendiente) {
+      mostrarModalidadPago(estadoDelPago.pendiente);
       mostrarTransaccionPago();
       mostrarPasoPago(1, estadoDelPago.pendiente.hash ? 'Encontramos una transacción enviada. Retomá su confirmación.' : 'Revisá Actividad en MetaMask para recuperar tu pago.');
     } else {
@@ -316,7 +367,7 @@ async function cargarPaginaPago() {
       if (siguiente.tipo !== tipo) throw errorPantallaPago(`${siguiente.texto}. Revisá el estado actualizado en Mis reservas.`);
       estadoDelPago.cotizacion = await consultarCotizacionPago();
       mostrarCotizacionPago();
-      mostrarPasoPago(0, 'Todo listo para pagar con tu billetera.');
+      mostrarPasoPago(0, estadoDelPago.cotizacion.simulado ? 'Todo listo para probar el pago simulado.' : 'Todo listo para pagar con tu billetera.');
     }
   } catch (error) {
     document.body.hidden = false;
@@ -329,6 +380,7 @@ async function cargarPaginaPago() {
   }
 }
 
+window.addEventListener('pagehide', detenerConsultaPago);
 elementoPago('boton-pagar').addEventListener('click', pagarReserva);
 elementoPago('recargar-pago').addEventListener('click', cargarPaginaPago);
 elementoPago('recuperar-transaccion').addEventListener('submit', recuperarTransaccionPago);

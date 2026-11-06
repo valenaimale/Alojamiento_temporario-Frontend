@@ -94,19 +94,19 @@ export function crearBilletera({ proveedor, cargarViem = importarViem } = {}) {
     if (enviando) throw fallo('ENVIO_EN_CURSO', 'Ya hay un pago esperando respuesta de MetaMask.');
     enviando = true;
     try {
-      if (cotizacion?.red !== BASE_SEPOLIA.id || !['sena', 'saldo'].includes(cotizacion?.tipo)) throw fallo('DATOS_INVALIDOS', 'La cotización del pago es inválida.');
+      if (cotizacion?.red !== BASE_SEPOLIA.id || cotizacion.simulado !== false || !['sena', 'saldo'].includes(cotizacion?.tipo) || cotizacion.funcion !== (cotizacion.tipo === 'sena' ? 'pagarSena' : 'pagarSaldo')) throw fallo('DATOS_INVALIDOS', 'La cotización del pago es inválida.');
       const { publico } = await obtenerClientes();
       await verificarConexion();
-      const expira = cotizacion.bloqueo_expira_en == null ? null : Date.parse(cotizacion.bloqueo_expira_en);
+      const expira = cotizacion.vence_en == null ? null : Date.parse(cotizacion.vence_en);
       if (expira !== null && (!Number.isFinite(expira) || expira <= Date.now())) throw fallo('RESERVA_VENCIDA', 'El plazo para pagar venció. Volvé a Mis reservas.');
       const value = BigInt(cotizacion.monto_wei);
       if (value <= 0n) throw fallo('DATOS_INVALIDOS', 'El importe del pago es inválido.');
-      const codigo = await publico.getBytecode({ address: cotizacion.contrato_direccion });
+      const codigo = await publico.getBytecode({ address: cotizacion.contrato });
       if (!codigo || codigo === '0x') throw fallo('CONTRATO_NO_DISPONIBLE', 'No existe un contrato en la dirección configurada.');
       if (await publico.getBalance({ address: cuenta }) < value) throw fallo('SIN_SALDO', 'Saldo de ETH insuficiente.');
       const { request } = await publico.simulateContract({
-        account: cuenta, address: cotizacion.contrato_direccion, abi: ABI_PAGOS,
-        functionName: cotizacion.tipo === 'sena' ? 'pagarSena' : 'pagarSaldo',
+        account: cuenta, address: cotizacion.contrato, abi: ABI_PAGOS,
+        functionName: cotizacion.funcion,
         args: [BigInt(cotizacion.reserva_id)], value,
       });
       await verificarConexion();
