@@ -140,3 +140,6 @@ main {
 .pagina-reservas .plazo-pago-reserva {
     overflow-wrap: anywhere;
 }
+
+#hash-devolucion { display: block; overflow-wrap: anywhere; margin: 12px 0; }
+#consultando-cancelacion:empty { display: none; }

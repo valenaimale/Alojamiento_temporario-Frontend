@@ -150,6 +150,7 @@ function tarjetaDeReserva(reserva) {
   if (reserva.puede_cancelar) {
     const boton = document.createElement("button");
     boton.type = "button";
+    boton.setAttribute("data-cancelar-reserva", "");
     boton.className = "boton-texto accion-peligro";
     boton.textContent = "Cancelar reserva";
     boton.setAttribute(
@@ -243,43 +244,71 @@ async function cargarReservas() {
   }
 }
 
-// Cancela una reserva pendiente, después de confirmarlo. Muestra el resultado, actualiza la lista
-// y lleva el foco al título (el botón tocado desaparece)
+// Consulta la devolución antes de pedir consentimiento y conserva los mensajes del servidor.
 async function cancelarReserva(reserva) {
   if (cancelandoReserva) return;
-  const confirmo = await confirmar({
-    titulo: `¿Cancelar tu reserva en ${reserva.alojamiento.nombre}?`,
-    detalle: `Del ${formatearFecha(reserva.ingreso)} al ${formatearFecha(reserva.egreso)}. Las fechas quedan libres para otros huéspedes. Si enviaste un pago, revisá primero su confirmación. La devolución de reservas confirmadas todavía no está disponible.`,
-    textoConfirmar: "Cancelar reserva",
-    textoCancelar: "Volver",
-  });
-  if (!confirmo) {
-    return;
-  }
+  cancelandoReserva = true;
+  const botones = document.querySelectorAll("[data-cancelar-reserva]");
+  botones.forEach(boton => { boton.disabled = true; });
   const mensajeOk = document.getElementById("mensaje-ok");
   const mensajeError = document.getElementById("mensaje-error");
+  const aviso = document.getElementById("consultando-cancelacion");
   mensajeOk.textContent = "";
   mensajeError.textContent = "";
-
-  cancelandoReserva = true;
+  aviso.textContent = "Consultando las condiciones de cancelación…";
+  document.getElementById("comprobante-devolucion").hidden = true;
+  let confirmado = false;
   try {
+    const previa = await pedirAlBack(`/reservas/cancelacion?reserva_id=${encodeURIComponent(reserva.id)}`);
+    if (!previa.respuesta.ok) {
+      mensajeError.textContent = previa.resultado.error || "No pudimos consultar la cancelación.";
+      return;
+    }
+    const cuenta = PagosModelo.normalizarCancelacion(previa.resultado, reserva.id);
+    aviso.textContent = "";
+    confirmado = await confirmar({
+      titulo: `¿Cancelar tu reserva en ${reserva.alojamiento.nombre}?`,
+      detalle: `Del ${formatearFecha(reserva.ingreso)} al ${formatearFecha(reserva.egreso)}. ${cuenta.explicacion}`,
+      datos: cuenta.estado === "confirmada" ? [
+        ["Seña pagada", formatearPrecio(cuenta.pagado.sena)],
+        ["Saldo pagado", formatearPrecio(cuenta.pagado.saldo)],
+        [`Retención (${formatearPorcentaje(cuenta.porcentaje_retencion)} de la seña)`, formatearPrecio(cuenta.retencion)],
+        ["Devolución total", formatearPrecio(cuenta.devolucion)],
+      ] : [],
+      textoConfirmar: "Cancelar reserva",
+      textoCancelar: "Conservar reserva",
+    });
+    if (!confirmado) return;
+    aviso.textContent = "Cancelando tu reserva…";
     const { respuesta, resultado } = await pedirAlBack("/reservas/cancelar", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ reserva_id: reserva.id }),
     });
-    if (respuesta.ok) {
-      mensajeOk.textContent = resultado.ok;
-      await cargarReservas();
-    } else {
-      mensajeError.textContent = resultado.error;
+    if (!respuesta.ok) {
+      mensajeError.textContent = resultado.error || "No pudimos cancelar la reserva.";
+      return;
     }
+    mensajeOk.textContent = resultado.ok;
+    const devolucion = resultado.devolucion;
+    if (/^0x[0-9a-fA-F]{64}$/.test(devolucion?.tx_hash || "")) {
+      document.getElementById("comprobante-devolucion").hidden = false;
+      document.getElementById("hash-devolucion").textContent = devolucion.tx_hash;
+      const enlace = document.getElementById("enlace-devolucion");
+      // El backend actual no informa la red de la devolución: no enlazar hashes simulados a BaseScan.
+      enlace.hidden = !(devolucion.red === 84532 && devolucion.simulado === false);
+      if (!enlace.hidden) enlace.href = `https://sepolia.basescan.org/tx/${devolucion.tx_hash}`;
+    }
+    try { await cargarReservas(); }
+    catch { mensajeError.textContent = "La cancelación quedó registrada. No pudimos actualizar la lista; volvé a cargar tus reservas."; }
   } catch (error) {
-    console.error("No se pudo conectar con el back:", error);
-    mensajeError.textContent = MENSAJE_SIN_CONEXION;
+    mensajeError.textContent = error.codigo === "DATOS_INVALIDOS" ? error.message
+      : confirmado ? "No pudimos comprobar el resultado de la cancelación. Actualizá tus reservas antes de volver a intentar." : MENSAJE_SIN_CONEXION;
+  } finally {
+    cancelandoReserva = false;
+    aviso.textContent = "";
+    botones.forEach(boton => { boton.disabled = false; });
+    if (confirmado || mensajeError.textContent) document.getElementById("titulo").focus();
   }
-  cancelandoReserva = false;
-  document.getElementById("titulo").focus();
 }
 
 // Arma la página: el aviso si recién reservó, y la lista de reservas

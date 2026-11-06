@@ -72,6 +72,7 @@ const PagosModelo = (() => {
       reserva_id: id, tipo, monto_pesos: payload.monto_pesos, monto_wei: BigInt(payload.monto_wei),
       pesos_por_eth: payload.pesos_por_eth, red: payload.red, contrato: pago.contrato,
       funcion: pago.funcion, simulado, vence_en: payload.vence_en ?? null,
+      fecha_cobro: payload.fecha_cobro ?? null, vencido: payload.vencido === true,
     });
   }
 
@@ -153,13 +154,38 @@ const PagosModelo = (() => {
       try {
         const faltante = decimal(reserva.saldo);
         if (faltante.numero === 0n) return estado('Pago completo', null, null, 'estado-publicada');
-        if (saldoVencido(reserva.fecha_cobro, ahora)) return estado('Saldo vencido', null, null, 'estado-no-publicada');
+        if (saldoVencido(reserva.fecha_cobro, ahora)) return reserva.puede_pagar_saldo === true
+          ? estado('Saldo vencido: pagalo antes de ingresar', 'saldo', 'Pagar el saldo')
+          : estado('Saldo vencido; pago no habilitado', null, null, 'estado-no-publicada');
         return reserva.puede_pagar_saldo === true ? estado('Saldo pendiente', 'saldo', 'Pagar el saldo') : estado('Saldo pendiente; pago no habilitado');
       } catch { return estado('Estado de pago no informado', null, null, 'estado-no-publicada'); }
     }
     return confirmado('sena') ? estado('Seña pagada', null, null, 'estado-publicada') : estado('Estado de pago no informado', null, null, 'estado-no-publicada');
   }
 
-  return { RED, identificador, normalizarCotizacion, pesosAWei, weiAPesos, formatearEth, mensajeErrorPago, estadoPagoReserva, vencimiento, saldoVencido };
+  // La cuenta y el tramo pertenecen al backend; el front valida y presenta su vista previa.
+  function normalizarCancelacion(datos, reservaId) {
+    const tramos = {mas_de_30: 'más de 30 días', de_15_a_30: 'entre 15 y 30 días', menos_de_15: 'menos de 15 días'};
+    if (!identificador(reservaId) || identificador(datos?.reserva_id) !== identificador(reservaId) ||
+        !['pendiente', 'confirmada'].includes(datos?.estado) || !tramos[datos?.tramo] ||
+        !Number.isSafeInteger(datos?.dias_hasta_cobro)) {
+      throw errorDePago('DATOS_INVALIDOS', 'No pudimos validar la cancelación. Actualizá tus reservas antes de continuar.');
+    }
+    for (const monto of [datos.pagado?.sena, datos.pagado?.saldo, datos.retencion, datos.devolucion]) decimal(monto);
+    const porcentaje = decimal(datos.porcentaje_retencion);
+    if (porcentaje.numero > 100n * porcentaje.escala || typeof datos.devolucion_wei !== 'string' ||
+        !/^(0|[1-9]\d{0,77})$/.test(datos.devolucion_wei) || BigInt(datos.devolucion_wei) > MAX_UINT256) {
+      throw errorDePago('DATOS_INVALIDOS', 'La devolución informada no es válida. Volvé a consultar antes de cancelar.');
+    }
+    const dias = datos.dias_hasta_cobro;
+    const plazo = dias < 0 ? 'La fecha de cobro del saldo ya pasó.' : dias === 0 ? 'El cobro del saldo vence hoy.'
+      : `Falta${dias === 1 ? '' : 'n'} ${dias} día${dias === 1 ? '' : 's'} para el cobro del saldo.`;
+    const explicacion = datos.estado === 'pendiente'
+      ? 'Las fechas quedarán libres. Si enviaste un pago, revisá primero su confirmación.'
+      : `${plazo} Se aplica el tramo de ${tramos[datos.tramo]} de la política que aceptaste. La retención se calcula sobre la seña.${decimal(datos.pagado.saldo).numero > 0n ? ' El saldo pagado se devuelve entero.' : ''} ${decimal(datos.devolucion).numero > 0n ? 'La devolución corresponde a la billetera con la que pagaste.' : 'Según la política, no corresponde devolución.'}`;
+    return {...datos, pagado: {...datos.pagado}, devolucion_wei: BigInt(datos.devolucion_wei), explicacion};
+  }
+
+  return { RED, identificador, normalizarCancelacion, normalizarCotizacion, pesosAWei, weiAPesos, formatearEth, mensajeErrorPago, estadoPagoReserva, vencimiento, saldoVencido };
 })();
 if (typeof module !== 'undefined') module.exports = PagosModelo;

@@ -1,11 +1,22 @@
 // Coordina la cotización, la firma y el registro del pago sin repetir transferencias.
 const estadoDelPago = {
   reservaId: null, tipo: null, usuario: null, reserva: null,
-  cotizacion: null, billetera: null, pendiente: null, ocupado: false, completo: false, espera: false, temporizador: null, conflicto: false, fallido: false,
+  cotizacion: null, billetera: null, pendiente: null, ocupado: false, completo: false, espera: false, temporizador: null, inicioConsulta: null, consultaAgotada: false, saliendo: false, conflicto: false, fallido: false,
 };
 
 // Centraliza el acceso a los elementos de esta pantalla.
 function elementoPago(id) { return document.getElementById(id); }
+
+// Permite elegir fechas nuevamente cuando venció la seña, sin reutilizar la reserva.
+function mostrarRegresoAlAlojamiento() {
+  const reserva = estadoDelPago.reserva;
+  const expira = PagosModelo.vencimiento(reserva?.vence_en);
+  const vencida = reserva?.estado === 'expirada' || (reserva?.estado === 'pendiente' && expira !== null && expira <= Date.now());
+  const id = PagosModelo.identificador(reserva?.alojamiento?.id);
+  const enlace = elementoPago('volver-alojamiento');
+  enlace.hidden = !(estadoDelPago.tipo === 'sena' && vencida && id);
+  if (!enlace.hidden) enlace.href = `../alojamientos/detalle.html?id=${id}`;
+}
 
 // Identifica mensajes de la aplicación para distinguirlos de errores técnicos de la billetera.
 function errorPantallaPago(mensaje) {
@@ -83,6 +94,7 @@ function actualizarBotonPago() {
   elementoPago('boton-recuperar').disabled = estadoDelPago.ocupado;
   boton.disabled = estadoDelPago.ocupado || estadoDelPago.espera || (!estadoDelPago.pendiente && !estadoDelPago.cotizacion && !estadoDelPago.fallido);
   boton.textContent = estadoDelPago.ocupado || estadoDelPago.espera ? 'Confirmando pago…'
+    : estadoDelPago.consultaAgotada ? 'Volver a verificar'
     : estadoDelPago.pendiente ? 'Retomar confirmación'
     : estadoDelPago.fallido ? 'Pagar de nuevo'
     : estadoDelPago.cotizacion?.simulado ? 'Pagar (simulado)'
@@ -100,9 +112,9 @@ async function consultarPago(ruta, opciones, devolverRespuesta = false) {
       enlace.href = enlaceSesionPago();
       enlace.hidden = false;
     }
-    const mensaje = respuesta.status === 404 || respuesta.status === 503
+    const mensaje = resultado?.error || (respuesta.status === 404 || respuesta.status === 503
       ? 'El pago todavía no está disponible para esta reserva. Volvé a intentarlo más tarde desde Mis reservas.'
-      : resultado?.error || 'No pudimos consultar el pago. Volvé a intentar.';
+      : 'No pudimos consultar el pago. Volvé a intentar.');
     throw Object.assign(errorPantallaPago(mensaje), { status: respuesta.status });
   }
   return devolverRespuesta ? { respuesta, resultado } : resultado;
@@ -144,7 +156,7 @@ function mostrarCotizacionPago() {
   elementoPago('monto-eth').textContent = `${PagosModelo.formatearEth(pago.monto_wei)} ETH de prueba`;
   elementoPago('cambio-pago').textContent = `Conversión de prueba: 1 ETH = ${formatearPrecio(pago.pesos_por_eth)}.${pago.simulado ? ' No se transfieren fondos.' : ' El costo de la red se suma en MetaMask.'}`;
   mostrarModalidadPago(pago);
-  const plazo = pago.tipo === 'sena' ? pago.vence_en : estadoDelPago.reserva.fecha_cobro;
+  const plazo = pago.tipo === 'sena' ? pago.vence_en : pago.fecha_cobro ?? estadoDelPago.reserva.fecha_cobro;
   const soloFecha = /^\d{4}-\d{2}-\d{2}$/.test(plazo || '');
   const fecha = plazo && new Date(soloFecha ? `${plazo}T12:00:00-03:00` : plazo);
   elementoPago('plazo-pago').hidden = !fecha || Number.isNaN(fecha.getTime());
@@ -152,7 +164,8 @@ function mostrarCotizacionPago() {
     const formato = { dateStyle: 'medium', timeZone: 'America/Argentina/Buenos_Aires', hourCycle: 'h23' };
     if (!soloFecha) formato.timeStyle = 'short';
     const texto = new Intl.DateTimeFormat('es-AR', formato).format(fecha);
-    elementoPago('plazo-pago').textContent = `${pago.tipo === 'sena' ? 'Pagá la seña antes del' : 'Vencimiento del saldo:'} ${texto}${soloFecha ? '.' : ' (hora argentina).'}`;
+    const vencido = pago.tipo === 'saldo' && (pago.vencido || PagosModelo.saldoVencido(plazo));
+    elementoPago('plazo-pago').textContent = vencido ? `Saldo vencido desde el ${texto}: pagalo antes de ingresar.` : `${pago.tipo === 'sena' ? 'Pagá la seña antes del' : 'Vencimiento del saldo:'} ${texto}${soloFecha ? '.' : ' (hora argentina).'}`;
   }
 }
 
@@ -192,6 +205,14 @@ function detenerConsultaPago() {
   estadoDelPago.espera = false;
 }
 
+// La pausa conserva el hash; una acción explícita inicia otro período de consulta, nunca otro pago.
+function pausarVerificacionPago() {
+  detenerConsultaPago();
+  estadoDelPago.consultaAgotada = true;
+  elementoPago('aviso-pago').textContent = 'Pasaron 2 minutos. Guardamos el identificador: podés volver a verificar sin pagar otra vez.';
+  actualizarBotonPago();
+}
+
 // El backend es la autoridad de confirmación tanto en simulación como en blockchain.
 async function confirmarPagoEnviado() {
   mostrarPasoPago(2, 'Registrando y verificando el pago…');
@@ -200,13 +221,19 @@ async function confirmarPagoEnviado() {
     body: JSON.stringify({ reserva_id: estadoDelPago.reservaId, tipo: estadoDelPago.tipo, tx_hash: estadoDelPago.pendiente.hash }),
   }, true);
   if (respuesta.status === 202) {
-    mostrarPasoPago(1, 'Pago pendiente. Volvemos a consultar en unos segundos; no hace falta pagar otra vez.');
+    const mensaje = resultado?.mensaje || 'La transacción todavía no se confirmó.';
+    mostrarPasoPago(1, mensaje);
+    const restante = 120000 - (Date.now() - estadoDelPago.inicioConsulta);
+    if (restante <= 0) { pausarVerificacionPago(); return; }
+    if (estadoDelPago.saliendo) return;
     estadoDelPago.espera = true;
+    elementoPago('aviso-pago').textContent = 'Consultamos automáticamente durante un máximo de 2 minutos. No hace falta pagar otra vez.';
     estadoDelPago.temporizador = setTimeout(() => {
       estadoDelPago.espera = false;
       estadoDelPago.temporizador = null;
+      if (Date.now() - estadoDelPago.inicioConsulta >= 120000) { pausarVerificacionPago(); return; }
       return pagarReserva();
-    }, 3500);
+    }, Math.min(3500, restante));
     return;
   }
   if (respuesta.status !== 200) throw errorPantallaPago('No pudimos verificar el resultado. Retomá la confirmación.');
@@ -214,7 +241,7 @@ async function confirmarPagoEnviado() {
   detenerConsultaPago();
   try { sessionStorage.removeItem(clavePagoPendiente()); } catch { /* El backend ya registró el pago. */ }
   mostrarPasoPago(3, estadoDelPago.tipo === 'sena' ? 'Seña registrada. Tu reserva está confirmada.' : 'Saldo registrado. Tu pago está completo.');
-  elementoPago('aviso-pago').textContent = estadoDelPago.pendiente.simulado ? 'Pago simulado registrado correctamente. No se transfirieron fondos.' : 'Pago confirmado y registrado correctamente.';
+  elementoPago('aviso-pago').textContent = resultado?.ok || 'Pago registrado correctamente.';
   elementoPago('ayuda-transaccion').textContent = estadoDelPago.pendiente.simulado ? 'Este identificador corresponde a la simulación; no existe una transacción en blockchain.' : 'Podés consultar el comprobante de la transacción en BaseScan.';
   elementoPago('volver-confirmado').hidden = false;
   elementoPago('volver-confirmado').focus();
@@ -256,6 +283,7 @@ async function ejecutarPago() {
       hash = await billetera.enviarPago(nueva);
     }
     estadoDelPago.fallido = false;
+    estadoDelPago.inicioConsulta = Date.now();
     guardarPagoPendiente(hash, nueva);
   }
   mostrarTransaccionPago();
@@ -265,6 +293,8 @@ async function ejecutarPago() {
 // Bloquea dobles clics y coordina pestañas cuando Web Locks está disponible.
 async function pagarReserva() {
   if (estadoDelPago.ocupado || estadoDelPago.completo || estadoDelPago.espera || estadoDelPago.conflicto) return;
+  if (estadoDelPago.inicioConsulta === null || estadoDelPago.consultaAgotada) estadoDelPago.inicioConsulta = Date.now();
+  estadoDelPago.consultaAgotada = false;
   estadoDelPago.ocupado = true;
   elementoPago('error-pago').textContent = '';
   elementoPago('aviso-pago').textContent = '';
@@ -293,6 +323,7 @@ async function pagarReserva() {
     }
     if (error.status === 409) {
       estadoDelPago.conflicto = true;
+      mostrarRegresoAlAlojamiento();
       elementoPago('recargar-pago').hidden = false;
       mostrarPasoPago(1, 'Revisá el estado actualizado de tu reserva antes de continuar.');
     }
@@ -330,12 +361,16 @@ async function cargarPaginaPago() {
   if (estadoDelPago.ocupado) return;
   detenerConsultaPago();
   estadoDelPago.conflicto = false;
+  estadoDelPago.consultaAgotada = false;
+  estadoDelPago.inicioConsulta = null;
+  estadoDelPago.saliendo = false;
   estadoDelPago.fallido = false;
   estadoDelPago.ocupado = true;
   estadoDelPago.cotizacion = null;
   elementoPago('cotizacion-pago').hidden = true;
   elementoPago('error-pago').textContent = '';
   elementoPago('recargar-pago').hidden = true;
+  elementoPago('volver-alojamiento').hidden = true;
   elementoPago('cargando-pago').hidden = false;
   actualizarBotonPago();
   try {
@@ -371,6 +406,7 @@ async function cargarPaginaPago() {
     }
   } catch (error) {
     document.body.hidden = false;
+    mostrarRegresoAlAlojamiento();
     elementoPago('error-pago').textContent = error.mensajeUsuario || PagosModelo.mensajeErrorPago(error);
     elementoPago('recargar-pago').hidden = false;
   } finally {
@@ -380,7 +416,8 @@ async function cargarPaginaPago() {
   }
 }
 
-window.addEventListener('pagehide', detenerConsultaPago);
+window.addEventListener('pagehide', () => { estadoDelPago.saliendo = true; detenerConsultaPago(); });
+window.addEventListener('pageshow', () => { estadoDelPago.saliendo = false; actualizarBotonPago(); });
 elementoPago('boton-pagar').addEventListener('click', pagarReserva);
 elementoPago('recargar-pago').addEventListener('click', cargarPaginaPago);
 elementoPago('recuperar-transaccion').addEventListener('submit', recuperarTransaccionPago);
