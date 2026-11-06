@@ -7,9 +7,16 @@ const ENLACES_HUESPED = [
 const MENU = {
     huesped: ENLACES_HUESPED,
     // el propietario ve lo mismo que el huésped y además "Mis alojamientos"
-    propietario: [...ENLACES_HUESPED, { texto: 'Mis alojamientos', url: '../homes/index-propietario.html' }],
+    propietario: [
+        ...ENLACES_HUESPED,
+        { texto: 'Mis alojamientos', url: '../homes/index-propietario.html' },
+        { texto: 'Liquidaciones', url: '../liquidaciones/mis-liquidaciones.html' },
+    ],
     operador: [{ texto: 'Agenda', url: '../homes/index-operador.html' }],
-    administrador: [{ texto: 'Alojamientos a cargo', url: '../homes/index-administrador.html' }],
+    administrador: [
+        { texto: 'Alojamientos a cargo', url: '../homes/index-administrador.html' },
+        { texto: 'Mis comisiones', url: '../liquidaciones/comisiones.html' },
+    ],
     backoffice: [{ texto: 'Usuarios', url: '../homes/index-backoffice.html' }],   // la página la crea la Tarea 2
 };
 
@@ -23,7 +30,9 @@ function armarMenu(rol) {
         const ruta = window.location.pathname;
         const enAlojamiento = ruta.includes('/unidades/') && enlace.url.includes(rol === 'administrador' ? 'index-administrador' : 'index-propietario');
         const explorando = ruta.includes('/alojamientos/') && enlace.url.includes('index-huesped');
-        if (a.pathname === ruta || enAlojamiento || explorando) {
+        // el comprobante de una liquidación marca la sección del rol que lo abre (cada rol tiene una sola)
+        const liquidando = ruta.includes('/liquidaciones/') && enlace.url.includes('/liquidaciones/');
+        if (a.pathname === ruta || enAlojamiento || explorando || liquidando) {
             a.setAttribute('aria-current', 'page');
         }
         const item = document.createElement('li');

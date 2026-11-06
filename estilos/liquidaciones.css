@@ -1,0 +1,273 @@
+/* Liquidaciones del propietario, comisiones del administrador y el comprobante sin valor fiscal.
+   Usa los fundamentos de style.css (.tarjeta, .estado, .boton, .tabla-scroll) y solo agrega
+   lo propio de estas pantallas. */
+
+main {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 32px 20px 64px;
+}
+
+/* ---------- El resumen de arriba: cuánto hay en cada estado ---------- */
+
+.resumen-liquidaciones {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+  margin: 24px 0 32px;
+  padding: 0;
+}
+/* Cada estado va en su propio <div> dentro del <dl> (HTML lo permite), así dt y dd forman una tarjeta */
+.resumen-liquidaciones > div {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+}
+.resumen-liquidaciones dt {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.resumen-liquidaciones dd {
+  margin: 4px 0 0;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+.resumen-liquidaciones dd .ayuda {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 400;
+}
+
+/* ---------- Las tarjetas del propietario ---------- */
+
+.liquidaciones {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 16px;
+}
+.tarjeta-liquidacion {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  display: grid;
+  gap: 16px;
+}
+.tarjeta-liquidacion h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+.tarjeta-liquidacion header {
+  align-items: flex-start;
+}
+.tarjeta-liquidacion header p {
+  margin: 4px 0 0;
+}
+
+.detalle-liquidacion {
+  display: grid;
+  gap: 8px;
+}
+.linea-detalle {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 0.92rem;
+}
+/* El total se separa con una línea y se ve más fuerte: es el número que el propietario busca */
+.linea-total {
+  border-top: 1px solid var(--color-border);
+  padding-top: 10px;
+  margin-top: 4px;
+  font-size: 1.02rem;
+}
+.linea-total strong {
+  font-size: 1.15rem;
+  color: var(--color-primary-dark);
+}
+
+.acciones-liquidacion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.acciones-liquidacion p {
+  margin: 0;
+}
+
+/* ---------- Los estados ---------- */
+
+.estado-pendiente {
+  color: #175cd3;
+  background: var(--color-purple-light);
+}
+.estado-pagada {
+  color: var(--color-primary-dark);
+  background: var(--color-primary-light);
+}
+.estado-retenida {
+  color: var(--color-danger);
+  background: var(--color-danger-light);
+}
+
+/* El motivo de una liquidación retenida (RN-16): tiene que leerse, no quedar como letra chica */
+.aviso-retenida {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid var(--color-danger);
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+  font-size: 0.9rem;
+}
+
+/* ---------- La tabla de comisiones ---------- */
+
+.localidad,
+#filas-comisiones .ayuda {
+  display: block;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+}
+
+/* ---------- El comprobante ---------- */
+
+.encabezado-comprobante {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.comprobante {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 32px;
+  display: grid;
+  gap: 28px;
+}
+.comprobante > header {
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 20px;
+}
+.marca-comprobante {
+  margin: 0;
+  font-weight: 700;
+  color: var(--color-primary);
+  letter-spacing: 0.02em;
+}
+.comprobante h1 {
+  margin: 6px 0 4px;
+  font-size: 1.4rem;
+}
+.comprobante h2 {
+  margin: 0 0 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.comprobante section {
+  margin: 0;
+}
+
+/* Término y valor en dos columnas; en pantallas chicas, uno abajo del otro */
+.datos-comprobante {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 8px 20px;
+  margin: 0;
+}
+.datos-comprobante dt {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.datos-comprobante dd {
+  margin: 0;
+  font-size: 0.9rem;
+}
+@media (max-width: 560px) {
+  .datos-comprobante {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+  .datos-comprobante dd {
+    margin-bottom: 10px;
+  }
+}
+
+.tabla-comprobante {
+  width: 100%;
+  border-collapse: collapse;
+}
+.tabla-comprobante th,
+.tabla-comprobante td {
+  padding: 12px 0;
+}
+.tabla-comprobante thead th:last-child,
+.tabla-comprobante .importe {
+  text-align: right;
+}
+.tabla-comprobante th[scope="row"] {
+  font-weight: 400;
+}
+.tabla-comprobante .importe {
+  font-variant-numeric: tabular-nums; /* los importes quedan alineados dígito a dígito */
+  white-space: nowrap;
+}
+/* La última fila es el número que cierra el comprobante */
+.tabla-comprobante .fila-total th,
+.tabla-comprobante .fila-total td {
+  border-top: 2px solid var(--color-text);
+  border-bottom: 0;
+  font-weight: 700;
+  font-size: 1.05rem;
+  padding-top: 14px;
+}
+
+.sin-valor-fiscal {
+  margin: 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border);
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+/* ---------- Impreso ---------- */
+
+@media print {
+  /* El menú, los botones y los avisos de carga no se imprimen: la hoja es el comprobante */
+  .no-imprimir,
+  #cargando,
+  #mensaje-error {
+    display: none !important;
+  }
+  main {
+    padding: 0;
+    max-width: none;
+  }
+  .comprobante {
+    border: 0;
+    padding: 0;
+    gap: 22px;
+  }
+  /* Que no se corte una sección a la mitad entre dos hojas */
+  .comprobante section,
+  .tabla-comprobante tr {
+    break-inside: avoid;
+  }
+}

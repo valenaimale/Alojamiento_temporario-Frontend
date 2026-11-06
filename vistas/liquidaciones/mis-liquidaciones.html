@@ -1,0 +1,78 @@
+<!doctype html>
+<!-- Las liquidaciones del propietario (RF-13): una por estadía, con lo que se cobró, las comisiones y lo que le
+     queda. Los tres estados: pendiente, retenida por deuda y pagada. De cada una se puede abrir el comprobante. -->
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mis liquidaciones</title>
+    <meta
+      name="description"
+      content="Lo que te queda de cada estadía: importe cobrado, comisiones y comprobante"
+    />
+    <link rel="stylesheet" href="../../estilos/style.css" />
+    <link rel="stylesheet" href="../../estilos/liquidaciones.css" />
+    <script src="../../funcionalidades/sesion.js" defer></script>
+    <script src="../../funcionalidades/menu.js" defer></script>
+    <script src="../../funcionalidades/proteger-pagina.js" defer></script>
+    <script src="../../funcionalidades/unidades-comun.js" defer></script>
+    <script src="../../funcionalidades/liquidaciones-modelo.js" defer></script>
+    <script src="../../funcionalidades/mis-liquidaciones.js" defer></script>
+    <link rel="stylesheet" href="../../estilos/haylugar.css" />
+    <link rel="icon" href="../../imagenes/marca.svg" type="image/svg+xml" />
+    <script src="../../funcionalidades/interfaz.js" defer></script>
+  </head>
+  <body class="pagina-liquidaciones" data-rol="propietario" hidden>
+    <header class="site-header">
+      <a
+        class="marca"
+        href="../homes/index-sin-sesion.html"
+        aria-label="HayLugar, inicio"
+        ><svg viewBox="0 0 32 36" fill="none" aria-hidden="true">
+          <path
+            d="M5 31V13L16 5l11 8v18H5Z"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M12 31V19h8v12M20 24h.5"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+          /></svg
+        ><span>HayLugar</span></a
+      >
+      <nav id="menu" aria-label="Principal"></nav>
+      <a href="../perfil/perfil.html" class="enlace-perfil">Mi perfil</a>
+    </header>
+    <main>
+      <h1 id="titulo" tabindex="-1">Mis liquidaciones</h1>
+      <p class="subtitulo">
+        Lo que te queda de cada estadía, con el detalle de las comisiones.
+      </p>
+
+      <p id="mensaje-error" role="alert"></p>
+      <p id="cargando" aria-live="polite">Cargando tus liquidaciones…</p>
+
+      <dl class="resumen-liquidaciones" id="resumen-liquidaciones" hidden></dl>
+
+      <section id="sin-liquidaciones" class="estado-vacio" hidden>
+        <h2>Todavía no hay liquidaciones</h2>
+        <p>
+          Cada vez que un huésped ingrese a una de tus unidades, acá vas a ver
+          cuánto te queda de esa estadía y el comprobante para tu contador.
+        </p>
+        <a class="boton boton-primario" href="../homes/index-propietario.html"
+          >Ver mis alojamientos</a
+        >
+      </section>
+
+      <button id="reintentar" class="boton" type="button" hidden>
+        Volver a cargar
+      </button>
+
+      <ul class="liquidaciones" id="lista-liquidaciones" aria-labelledby="titulo"></ul>
+    </main>
+  </body>
+</html>
