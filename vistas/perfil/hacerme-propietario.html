@@ -59,6 +59,15 @@
                         <input type="text" name="titular_cuenta" maxlength="150" autocomplete="off" required>
                     </label>
                 </fieldset>
+                <fieldset aria-describedby="ayuda-billetera-cobro">
+                    <legend>Billetera de cobro</legend>
+                    <p class="ayuda" id="ayuda-billetera-cobro">Las reservas se pagan con ETH de prueba en la red Base Sepolia. Lo que se te liquida llega a esta billetera.</p>
+                    <label>Dirección de tu billetera
+                        <input type="text" name="billetera" autocomplete="off" spellcheck="false" required
+                               pattern="\s*0[xX][0-9a-fA-F]{40}\s*" placeholder="0x…" aria-describedby="ayuda-billetera">
+                    </label>
+                    <p class="ayuda" id="ayuda-billetera">Empieza con 0x y tiene 40 caracteres más. En MetaMask, tocá el nombre de tu cuenta para copiarla. Es tu dirección pública: nunca pongas tu clave privada ni tu frase secreta.</p>
+                </fieldset>
                 <button type="submit" class="boton boton-primario">Quiero ser propietario</button>
             </form>
             <p id="mensaje-error" role="alert"></p>

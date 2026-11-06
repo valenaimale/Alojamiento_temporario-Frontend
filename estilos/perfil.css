@@ -45,3 +45,8 @@ dd {
 [hidden] {
     display: none;
 }
+
+/* La dirección de la billetera (0x + 40 caracteres) no tiene espacios: se corta donde haga falta en pantallas chicas */
+#billetera-direccion {
+    overflow-wrap: anywhere;
+}
