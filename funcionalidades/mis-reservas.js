@@ -6,10 +6,12 @@
 // El estado de la reserva como se le muestra al huésped, y la clase de su badge
 const ESTADOS_DE_RESERVA = {
   pendiente: { texto: "Pendiente de pago", clase: "estado-pendiente" },
+  pendiente_pago: { texto: "Pendiente de pago", clase: "estado-pendiente" },
   confirmada: { texto: "Confirmada", clase: "estado-publicada" },
   finalizada: { texto: "Finalizada", clase: "estado-no-publicada" },
   cancelada: { texto: "Cancelada", clase: "estado-no-publicada" },
   expirada: { texto: "Vencida sin pagar", clase: "estado-no-publicada" },
+  vencida: { texto: "Vencida", clase: "estado-no-publicada" },
 };
 
 // Agrega a la lista <dl> un dato: <dt>nombre</dt><dd>valor</dd>
@@ -19,6 +21,55 @@ function agregarDato(lista, nombre, valor) {
   const definicion = document.createElement("dd");
   definicion.textContent = valor;
   lista.append(termino, definicion);
+}
+
+// Muestra los plazos informados por el servidor en horario argentino.
+function fechaDePagoVisible(valor) {
+  if (typeof valor !== "string" || !valor.trim()) return "";
+  const soloFecha = /^\d{4}-\d{2}-\d{2}$/.test(valor);
+  const instante = soloFecha ? Date.parse(`${valor}T12:00:00-03:00`) : PagosModelo.vencimiento(valor);
+  if (!Number.isFinite(instante)) return "";
+  const fecha = new Date(instante);
+  if (!Number.isFinite(fecha.getTime())) return "";
+  return new Intl.DateTimeFormat("es-AR", {
+    timeZone: "America/Argentina/Buenos_Aires",
+    day: "numeric", month: "short", year: "numeric",
+    ...(soloFecha ? {} : { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }),
+  }).format(fecha);
+}
+
+// Mantiene el estado del cobro separado del estado de la reserva.
+function mostrarPagoDeReserva(reserva, cuerpo, datos) {
+  const pago = PagosModelo.estadoPagoReserva(reserva);
+  const resumen = document.createElement("div");
+  resumen.className = "pago-reserva";
+  const estado = document.createElement("p");
+  estado.className = "estado-pago-reserva";
+  estado.textContent = `Pago: ${pago.texto}`;
+  resumen.append(estado);
+  if (pago.tipo && /^[1-9]\d*$/.test(String(reserva.id))) {
+    const enlace = document.createElement("a");
+    enlace.href = `pagar.html?reserva_id=${encodeURIComponent(reserva.id)}&tipo=${pago.tipo}`;
+    enlace.className = "boton boton-primario";
+    enlace.textContent = pago.accion;
+    enlace.setAttribute("aria-label", `${pago.accion} de la reserva en ${reserva.alojamiento.nombre}`);
+    resumen.append(enlace);
+  }
+  for (const [etiqueta, valor] of [
+    ["Plazo para la seña", reserva.vence_en],
+    ["Vencimiento del saldo", reserva.fecha_cobro],
+  ]) {
+    const fecha = fechaDePagoVisible(valor);
+    if (!fecha) continue;
+    const plazo = document.createElement("p");
+    plazo.className = "ayuda plazo-pago-reserva";
+    plazo.textContent = `${etiqueta}: ${fecha}`;
+    resumen.append(plazo);
+  }
+  if (typeof reserva.saldo === "string" && /^\d+(?:\.\d{1,2})?$/.test(reserva.saldo)) {
+    agregarDato(datos, "Saldo pendiente", formatearPrecio(reserva.saldo));
+  }
+  cuerpo.append(resumen);
 }
 
 // La tarjeta de una reserva: foto, alojamiento (con enlace al detalle), estado, fechas e importes.
@@ -97,10 +148,6 @@ function tarjetaDeReserva(reserva) {
   agregarDato(datos, "Seña", formatearPrecio(reserva.importe_sena));
   detalles.append(datos);
   if (reserva.puede_cancelar) {
-    const aclaracion = document.createElement("p");
-    aclaracion.className = "ayuda";
-    aclaracion.textContent =
-      "Tus fechas están guardadas. El pago de la seña todavía no está habilitado.";
     const boton = document.createElement("button");
     boton.type = "button";
     boton.className = "boton-texto accion-peligro";
@@ -110,13 +157,15 @@ function tarjetaDeReserva(reserva) {
       `Cancelar reserva en ${alojamiento.nombre}`,
     );
     boton.addEventListener("click", () => cancelarReserva(reserva));
-    detalles.append(aclaracion, boton);
+    detalles.append(boton);
   }
   const huespedes = document.createElement('a');
   huespedes.textContent = 'Datos de huéspedes';
   huespedes.href = `libro-huespedes.html?reserva_id=${reserva.id}`;
   huespedes.className = 'boton boton-secundario';
-  cuerpo.append(badge, titulo, lugar, fechas, personas, total, huespedes, detalles);
+  cuerpo.append(badge, titulo, lugar, fechas, personas, total);
+  mostrarPagoDeReserva(reserva, cuerpo, datos);
+  cuerpo.append(huespedes, detalles);
   tarjeta.append(cuerpo);
   item.append(tarjeta);
   return item;
@@ -136,7 +185,7 @@ function mostrarReservas() {
     .map((tipo) => partes.find((p) => p.type === tipo).value)
     .join("-");
   const proxima = (r) =>
-    ["pendiente", "confirmada"].includes(r.estado) && r.egreso >= hoy;
+    ["pendiente", "pendiente_pago", "confirmada"].includes(r.estado) && r.egreso >= hoy;
   const proximas = reservasActuales
     .filter(proxima)
     .sort((a, b) => a.ingreso.localeCompare(b.ingreso));
@@ -200,7 +249,7 @@ async function cancelarReserva(reserva) {
   if (cancelandoReserva) return;
   const confirmo = await confirmar({
     titulo: `¿Cancelar tu reserva en ${reserva.alojamiento.nombre}?`,
-    detalle: `Del ${formatearFecha(reserva.ingreso)} al ${formatearFecha(reserva.egreso)}. Las fechas quedan libres para otros huéspedes. Como todavía no pagaste nada, no hay nada que devolver.`,
+    detalle: `Del ${formatearFecha(reserva.ingreso)} al ${formatearFecha(reserva.egreso)}. Las fechas quedan libres para otros huéspedes. Si enviaste un pago, revisá primero su confirmación. La devolución de reservas confirmadas todavía no está disponible.`,
     textoConfirmar: "Cancelar reserva",
     textoCancelar: "Volver",
   });
@@ -235,9 +284,13 @@ async function cancelarReserva(reserva) {
 
 // Arma la página: el aviso si recién reservó, y la lista de reservas
 async function cargarPagina() {
+  if (new URLSearchParams(window.location.search).get("confirmada") === "1") {
+    document.getElementById("mensaje-ok").textContent = "Tu reserva está confirmada. Este alojamiento no requiere seña; consultá el saldo en la reserva.";
+    history.replaceState(null, "", window.location.pathname);
+  }
   if (new URLSearchParams(window.location.search).get("nueva") === "1") {
     document.getElementById("mensaje-ok").textContent =
-      "¡Listo, reservaste! Tu reserva quedó pendiente de pago y ya te guarda las fechas.";
+      "Tu reserva quedó pendiente de pago. Abrí el pago de la seña para continuar.";
     history.replaceState(null, "", window.location.pathname); // al recargar, el aviso no vuelve a aparecer
   }
   try {

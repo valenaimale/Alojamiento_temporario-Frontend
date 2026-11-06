@@ -1,0 +1,89 @@
+<!doctype html>
+<!-- Pago de seña o saldo del huésped, con seguimiento de la confirmación. -->
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pagar mi reserva</title>
+    <meta name="description" content="Revisá tu reserva y pagá la seña o el saldo con tu billetera." />
+    <link rel="stylesheet" href="../../estilos/style.css" />
+    <link rel="stylesheet" href="../../estilos/haylugar.css" />
+    <link rel="stylesheet" href="../../estilos/pagar.css" />
+    <link rel="icon" href="../../imagenes/marca.svg" type="image/svg+xml" />
+    <script src="../../funcionalidades/sesion.js" defer></script>
+    <script src="../../funcionalidades/menu.js" defer></script>
+    <script src="../../funcionalidades/unidades-comun.js" defer></script>
+    <script src="../../funcionalidades/pagos-modelo.js" defer></script>
+    <script src="../../funcionalidades/pagar.js" defer></script>
+    <script src="../../funcionalidades/interfaz.js" defer></script>
+  </head>
+  <body class="pagina-pago" hidden>
+    <header class="site-header">
+      <a class="marca" href="../homes/index-sin-sesion.html" aria-label="HayLugar, inicio">
+        <svg viewBox="0 0 32 36" fill="none" aria-hidden="true"><path d="M5 31V13L16 5l11 8v18H5Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" /><path d="M12 31V19h8v12M20 24h.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" /></svg>
+        <span>HayLugar</span>
+      </a>
+      <nav id="menu" aria-label="Principal"></nav>
+      <a href="../perfil/perfil.html" class="enlace-perfil">Mi perfil</a>
+    </header>
+    <main>
+      <a class="pago-volver" href="mis-reservas.html">← Mis reservas</a>
+      <h1 id="titulo-pago" tabindex="-1">Pagar mi reserva</h1>
+      <p class="subtitulo">Revisá el importe y seguí la confirmación de tu pago.</p>
+      <p id="cargando-pago" role="status">Cargando tu reserva…</p>
+      <p id="error-pago" class="mensaje-error" role="alert" tabindex="-1"></p>
+      <p id="aviso-pago" role="status"></p>
+      <button id="recargar-pago" class="boton" type="button" hidden>Volver a cargar</button>
+      <a id="sesion-pago" class="boton" hidden>Iniciar sesión para continuar</a>
+
+      <div id="contenido-pago" class="pago-columnas" hidden>
+        <section class="pago-resumen" aria-labelledby="nombre-alojamiento">
+          <span class="pago-etiqueta" id="numero-reserva"></span>
+          <h2 id="nombre-alojamiento"></h2>
+          <p id="lugar-reserva" class="ayuda"></p>
+          <dl class="pago-fechas">
+            <div><dt>Ingreso</dt><dd id="ingreso-reserva"></dd></div>
+            <div><dt>Egreso</dt><dd id="egreso-reserva"></dd></div>
+          </dl>
+          <p id="personas-reserva" class="ayuda"></p>
+          <dl class="pago-importes">
+            <div><dt>Total de la estadía</dt><dd id="total-reserva"></dd></div>
+            <div><dt>Seña de la reserva</dt><dd id="sena-reserva"></dd></div>
+          </dl>
+          <p id="plazo-pago" class="ayuda" hidden></p>
+          <p class="pago-prueba"><strong id="modalidad-pago">Modalidad de pago</strong><br /><span id="ayuda-modalidad">Estamos consultando cómo pagar esta reserva.</span></p>
+        </section>
+
+        <section class="pago-panel" aria-labelledby="concepto-pago">
+          <div id="cotizacion-pago" hidden>
+            <h2 id="concepto-pago">Importe a pagar</h2>
+            <p id="monto-pesos" class="pago-monto"></p>
+            <p id="monto-eth" class="pago-eth"></p>
+            <p id="cambio-pago" class="ayuda"></p>
+          </div>
+          <ol class="pago-pasos" aria-label="Pasos del pago">
+            <li id="paso-firma"><span class="pago-paso-numero" aria-hidden="true">1</span><div><strong id="titulo-paso-firma">Iniciá el pago</strong><p id="ayuda-paso-firma">Revisá el importe para continuar.</p></div></li>
+            <li id="paso-red"><span class="pago-paso-numero" aria-hidden="true">2</span><div><strong>Esperá la confirmación</strong><p id="ayuda-paso-red">Verificamos el resultado del pago.</p></div></li>
+            <li id="paso-registro"><span class="pago-paso-numero" aria-hidden="true">3</span><div><strong>Registramos tu pago</strong><p>Actualizamos el estado de tu reserva.</p></div></li>
+          </ol>
+          <p id="estado-pago" class="pago-estado" role="status" aria-live="polite"></p>
+          <p id="billetera-pago" class="ayuda"></p>
+          <button id="boton-pagar" class="boton boton-primario" type="button" disabled>Pagar la seña</button>
+          <form id="recuperar-transaccion" class="pago-recuperar" hidden>
+            <p class="ayuda" id="ayuda-recuperar">Revisá Actividad en MetaMask. Si aparece el pago, copiá su identificador de transacción para consultar su estado.</p>
+            <label for="hash-recuperar">Identificador de la transacción
+              <input id="hash-recuperar" type="text" required pattern="0x[0-9a-fA-F]{64}" maxlength="66" autocomplete="off" spellcheck="false" aria-describedby="ayuda-recuperar" />
+            </label>
+            <button id="boton-recuperar" class="boton" type="submit">Consultar esta transacción</button>
+          </form>
+          <div id="transaccion-pago" class="pago-transaccion" hidden>
+            <p id="ayuda-transaccion" class="ayuda">Tu transacción quedó enviada. Si se interrumpe la confirmación, podés retomarla desde esta página.</p>
+            <a id="enlace-transaccion" target="_blank" rel="noopener noreferrer">Ver transacción en BaseScan ↗</a>
+            <details><summary>Identificador del pago</summary><code id="hash-pago"></code></details>
+          </div>
+          <a id="volver-confirmado" class="boton boton-primario" href="mis-reservas.html" hidden>Ver mis reservas</a>
+        </section>
+      </div>
+    </main>
+  </body>
+</html>

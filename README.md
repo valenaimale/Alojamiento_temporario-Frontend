@@ -14,6 +14,7 @@ La dirección busca una experiencia simple, clara y cuidada, inspirada en la jer
 - [Registro del rediseño](docs/redisenio-haylugar.md): qué se implementó y cómo se validó.
 - [Antes y después](docs/comparacion/README.md): 123 capturas, comparador de 31 vistas y galerías de mejoras funcionales.
 - [Créditos de fotografías de destinos](imagenes/destinos/README.md).
+- [Front de pagos e integración con los roles 1 y 2](docs/pagos.md): MetaMask, seña/saldo, formato de API esperado, recuperación y pruebas.
 
 ## Levantar el frontend y ver las capturas
 
@@ -33,7 +34,7 @@ Trabajar en una rama descriptiva y abrir un PR hacia `main`. No hacer push direc
 
 Esta entrega requiere los cambios coordinados del backend en `feature/haylugar-entrega4`. Antes de activar el código nuevo, aplicar allí las migraciones `20261031150000_agregar_recuperacion_contrasenia.php` y `20261031190000_agregar_estadias_y_libro.php` sobre la base correspondiente, siguiendo su documentación. La imagen de producción no aplica estas migraciones automáticamente.
 
-La configuración de Vercel dirige `/api/*` al backend de producción. Una preview del frontend por sí sola no habilita los endpoints nuevos: revisar ambos repositorios juntos en local y coordinar migraciones e integración del backend antes del frontend. La confirmación por pago sigue pendiente.
+La configuración de Vercel dirige `/api/*` al backend de producción. Una preview del frontend por sí sola no habilita los endpoints nuevos: revisar ambos repositorios juntos en local y coordinar migraciones e integración del backend antes del frontend. El front de pagos está implementado; su activación requiere los endpoints de pagos y el contrato desplegado, según [el contrato de integración](docs/pagos.md). La prueba real de punta a punta sigue pendiente.
 
 
 ## Pruebas de comportamiento

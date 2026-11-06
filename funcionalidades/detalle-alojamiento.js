@@ -471,7 +471,11 @@ async function reservar(evento) {
         estado.reservando = true; // mantener bloqueado hasta que termine la navegación
         boton.disabled = true;
         document.getElementById('personas').disabled = true;
-        window.location.href = '../reservas/mis-reservas.html?nueva=1';
+        window.location.href = resultado.reserva?.estado === 'confirmada'
+            ? '../reservas/mis-reservas.html?confirmada=1'
+            : /^[1-9]\d*$/.test(String(resultado.reserva?.id))
+            ? `../reservas/pagar.html?reserva_id=${encodeURIComponent(resultado.reserva.id)}&tipo=sena`
+            : '../reservas/mis-reservas.html?nueva=1';
         return;
     }
     errorReserva.textContent = resultado.error;

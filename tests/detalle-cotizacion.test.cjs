@@ -104,12 +104,24 @@ test('reservar exige cotización vigente y evita envíos duplicados', {timeout:2
   const duplicado=p.reservar(evento);
   await duplicado;
   assert.equal(p.pedidos.filter(x=>x.ruta==='/reservas/crear').length,1);
-  p.pedidos[1].resolve({respuesta:{ok:true,status:201},resultado:{ok:'Creada'}});
+  p.pedidos[1].resolve({respuesta:{ok:true,status:201},resultado:{ok:'Creada',reserva:{id:42}}});
   await guardar;
-  assert.equal(p.window.location.href,'../reservas/mis-reservas.html?nueva=1');
+  assert.equal(p.window.location.href,'../reservas/pagar.html?reserva_id=42&tipo=sena');
   assert.equal(p.get('boton-reservar').disabled,true);
   await p.reservar(evento);
   assert.equal(p.pedidos.length,2);
+});
+
+test('crear sin identificador utilizable conserva acceso a Mis reservas', {timeout:2000}, async () => {
+  for (const reserva of [undefined, {id:0}, {id:'42&tipo=saldo'}]) {
+    const p = pagina();
+    const cotizar=p.calcularEstadia(); p.pedidos[0].resolve(disponible(700)); await cotizar;
+    p.get('form-reservar').elements.acepta_politica.checked=true;
+    const guardar=p.reservar({preventDefault(){},target:p.get('form-reservar')});
+    p.pedidos[1].resolve({respuesta:{ok:true,status:201},resultado:{ok:'Creada',reserva}});
+    await guardar;
+    assert.equal(p.window.location.href,'../reservas/mis-reservas.html?nueva=1');
+  }
 });
 
 test('personas distintas a las cotizadas no se envían a reservar', {timeout:2000}, async () => {
@@ -169,4 +181,14 @@ test('editar viajeros invalida inmediatamente valores vacíos, fraccionarios o f
   p.pedidos[1].resolve(disponible(900)); await recuperar;
   assert.equal(p.get('form-reservar').hidden,false);
   assert.equal(p.get('precio-total').textContent,'900');
+});
+
+test('reserva confirmada sin seña va a Mis reservas sin abrir un pago',async()=>{
+  const p=pagina();
+  const cotizar=p.calcularEstadia();p.pedidos[0].resolve(disponible(700));await cotizar;
+  p.get('form-reservar').elements.acepta_politica.checked=true;
+  const guardar=p.reservar({preventDefault(){},target:p.get('form-reservar')});
+  p.pedidos[1].resolve({respuesta:{ok:true,status:201},resultado:{reserva:{id:42,estado:'confirmada',importe_sena:'0.00'}}});
+  await guardar;
+  assert.equal(p.window.location.href,'../reservas/mis-reservas.html?confirmada=1');
 });
