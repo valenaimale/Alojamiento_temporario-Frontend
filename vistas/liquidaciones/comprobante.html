@@ -1,0 +1,98 @@
+<!doctype html>
+<!-- El comprobante SIN VALOR FISCAL de una liquidación (RN-25). La misma página sirve a los dos: el backend
+     decide qué devuelve según quién lo pide. Al propietario le da el reparto completo (RF-13) y al administrador
+     solo su comisión, con su propia condición fiscal, para facturarla aparte (RF-19).
+     Está pensada para imprimirse: al imprimir se oculta todo lo que no es el comprobante. -->
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Comprobante de liquidación</title>
+    <meta
+      name="description"
+      content="Comprobante sin valor fiscal de una liquidación"
+    />
+    <link rel="stylesheet" href="../../estilos/style.css" />
+    <link rel="stylesheet" href="../../estilos/liquidaciones.css" />
+    <script src="../../funcionalidades/sesion.js" defer></script>
+    <script src="../../funcionalidades/menu.js" defer></script>
+    <script src="../../funcionalidades/unidades-comun.js" defer></script>
+    <script src="../../funcionalidades/liquidaciones-modelo.js" defer></script>
+    <script src="../../funcionalidades/comprobante-liquidacion.js" defer></script>
+    <link rel="stylesheet" href="../../estilos/haylugar.css" />
+    <link rel="icon" href="../../imagenes/marca.svg" type="image/svg+xml" />
+    <script src="../../funcionalidades/interfaz.js" defer></script>
+  </head>
+  <body class="pagina-comprobante" hidden>
+    <header class="site-header no-imprimir">
+      <a
+        class="marca"
+        href="../homes/index-sin-sesion.html"
+        aria-label="HayLugar, inicio"
+        ><svg viewBox="0 0 32 36" fill="none" aria-hidden="true">
+          <path
+            d="M5 31V13L16 5l11 8v18H5Z"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M12 31V19h8v12M20 24h.5"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+          /></svg
+        ><span>HayLugar</span></a
+      >
+      <nav id="menu" aria-label="Principal"></nav>
+      <a href="../perfil/perfil.html" class="enlace-perfil">Mi perfil</a>
+    </header>
+    <main>
+      <div class="encabezado-comprobante no-imprimir">
+        <a id="volver" class="boton boton-texto" href="mis-liquidaciones.html"
+          >Volver</a
+        >
+        <button id="imprimir" class="boton boton-primario" type="button" hidden>
+          Imprimir
+        </button>
+      </div>
+
+      <p id="mensaje-error" role="alert"></p>
+      <p id="cargando" aria-live="polite">Cargando el comprobante…</p>
+
+      <article id="comprobante" class="comprobante" hidden>
+        <header>
+          <p class="marca-comprobante">HayLugar</p>
+          <h1 id="titulo" tabindex="-1">Comprobante de liquidación</h1>
+          <p class="ayuda" id="numero"></p>
+        </header>
+
+        <section aria-labelledby="titulo-estadia">
+          <h2 id="titulo-estadia">La estadía</h2>
+          <dl id="datos-estadia" class="datos-comprobante"></dl>
+        </section>
+
+        <section aria-labelledby="titulo-partes">
+          <h2 id="titulo-partes">Las partes</h2>
+          <dl id="datos-partes" class="datos-comprobante"></dl>
+        </section>
+
+        <section aria-labelledby="titulo-detalle">
+          <h2 id="titulo-detalle">El detalle</h2>
+          <table class="tabla-comprobante">
+            <thead>
+              <tr>
+                <th scope="col">Concepto</th>
+                <th scope="col">Importe</th>
+              </tr>
+            </thead>
+            <tbody id="filas-detalle"></tbody>
+          </table>
+        </section>
+
+        <p id="aviso-retenida" class="aviso-retenida" hidden></p>
+        <p class="sin-valor-fiscal">Comprobante sin valor fiscal</p>
+      </article>
+    </main>
+  </body>
+</html>
