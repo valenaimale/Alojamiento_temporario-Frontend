@@ -49,13 +49,19 @@ function actualizarEjemplo() {
 
   for (const campo of CAMPOS_POLITICA.slice(1)) {
     const porcentaje = porcentajeDe(campo);
+    const devolucion = document.getElementById(`${EJEMPLO_DE[campo]}-devolucion`);
+    const detalle = document.getElementById(`${EJEMPLO_DE[campo]}-porcentaje`);
     if (sena === null || porcentaje === null) {
       document.getElementById(EJEMPLO_DE[campo]).textContent = "—";
+      devolucion.textContent = "—";
+      detalle.textContent = "";
       continue;
     }
     const retenido = (sena * porcentaje) / 100;
     document.getElementById(EJEMPLO_DE[campo]).textContent =
-      `${formatearPrecio(retenido)} (${porcentaje.toLocaleString("es-AR")} % de la seña) y se le devuelven ${formatearPrecio(sena - retenido)}`;
+      formatearPrecio(retenido);
+    detalle.textContent = `${porcentaje.toLocaleString("es-AR")} % de la seña`;
+    devolucion.textContent = formatearPrecio(sena - retenido);
   }
 }
 

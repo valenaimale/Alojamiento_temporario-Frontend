@@ -31,21 +31,38 @@ main {
     margin: 0 0 0.5rem;
 }
 
-.ejemplo dl {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 0.4rem 1rem;
-    margin: 0;
+.ejemplo-sena {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin: 0 0 1.25rem;
 }
 
-.ejemplo dt {
-    color: var(--color-text);
-}
+.ejemplo-retenciones { width: 100%; border-collapse: collapse; margin: 0; background: transparent; }
+.ejemplo-retenciones caption { text-align: left; color: var(--color-text-muted); font-size: 0.875rem; margin-bottom: 0.5rem; }
+.ejemplo-retenciones th, .ejemplo-retenciones td { padding: 0.8rem 0.5rem; border-bottom: 1px solid var(--color-border); vertical-align: top; background: transparent; }
+.ejemplo-retenciones th:first-child { padding-left: 0; text-align: left; width: 40%; }
+.ejemplo-retenciones th:not(:first-child), .ejemplo-retenciones td { text-align: right; font-variant-numeric: tabular-nums; }
+.ejemplo-retenciones th:last-child, .ejemplo-retenciones td:last-child { padding-right: 0; }
+.ejemplo-retenciones thead th { font-size: 0.875rem; color: var(--color-text-muted); }
+.ejemplo-retenciones tbody th { font-weight: 400; }
+.ejemplo-retenciones td { white-space: nowrap; font-weight: 600; }
+.ejemplo-retenciones small { display: block; margin-top: 0.25rem; font-size: 0.8rem; font-weight: 400; color: var(--color-text-muted); }
+.ejemplo-retenciones tr:last-child > * { border-bottom: 0; }
 
-.ejemplo dd {
-    margin: 0;
-    font-weight: 700;
-    text-align: right;
+@media (max-width: 480px) {
+    .gestion .ejemplo { padding: 1rem; }
+    .ejemplo-retenciones, .ejemplo-retenciones tbody { display: block; }
+    .ejemplo-retenciones caption { display: block; }
+    .ejemplo-retenciones thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    .ejemplo-retenciones tbody tr { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0.5rem 1rem; padding: 1rem 0; border-top: 1px solid var(--color-border); }
+    .ejemplo-retenciones tbody th:first-child { grid-column: 1 / -1; font-weight: 600; width: auto; }
+    .ejemplo-retenciones tbody th, .ejemplo-retenciones td { padding: 0; border: 0; text-align: left; font-size: 0.875rem; }
+    .ejemplo-retenciones td::before { display: block; font-size: 0.75rem; font-weight: 400; color: var(--color-text-muted); margin-bottom: 0.25rem; }
+    .ejemplo-retenciones td:nth-child(2)::before { content: "Retenés"; }
+    .ejemplo-retenciones td:nth-child(3)::before { content: "Devolvés"; }
+    .ejemplo-retenciones small { font-size: 0.75rem; white-space: normal; }
 }
 
 #mensaje-error {

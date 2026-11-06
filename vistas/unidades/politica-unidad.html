@@ -44,7 +44,7 @@
 
                     <fieldset aria-describedby="ayuda-retenciones">
                         <legend>Cuánto de la seña retenés si el huésped cancela</legend>
-                        <p class="ayuda" id="ayuda-retenciones">Es un porcentaje de la seña, según cuántos días antes del cobro del saldo cancela el huésped: como cancela antes de pagar el saldo, lo único que pagó es la seña, y se le devuelve lo que no retenés. El saldo se cobra <span id="dias-cobro-saldo">5</span> días antes del ingreso. Cuanto más cerca de la fecha cancela, más retenés: cada tramo tiene que ser igual o mayor que el anterior.</p>
+                        <p class="ayuda" id="ayuda-retenciones">La retención se calcula sobre la seña, según la anticipación al cobro del saldo. Si el huésped ya pagó el saldo, se le devuelve completo. El saldo se cobra <span id="dias-cobro-saldo">5</span> días antes del ingreso. Cuanto más cerca de la fecha cancela, más retenés: cada tramo tiene que ser igual o mayor que el anterior.</p>
                         <label>Cancela con más de 30 días de anticipación (%)
                             <input type="number" name="retencion_mas_de_30" min="0" max="100" step="0.01" inputmode="decimal" required>
                         </label>
@@ -58,16 +58,16 @@
 
                     <section aria-labelledby="titulo-ejemplo" class="ejemplo">
                         <h2 id="titulo-ejemplo">Ejemplo: una reserva de <span id="monto-ejemplo"></span></h2>
-                        <dl>
-                            <dt>El huésped paga de seña</dt>
-                            <dd id="ejemplo-sena"></dd>
-                            <dt>Si cancela con más de 30 días, retenés</dt>
-                            <dd id="ejemplo-mas-de-30"></dd>
-                            <dt>Si cancela entre 15 y 30 días antes, retenés</dt>
-                            <dd id="ejemplo-de-15-a-30"></dd>
-                            <dt>Si cancela con menos de 15 días, retenés</dt>
-                            <dd id="ejemplo-menos-de-15"></dd>
-                        </dl>
+                        <p class="ejemplo-sena">Seña del huésped <strong id="ejemplo-sena"></strong></p>
+                        <table class="ejemplo-retenciones">
+                            <caption>Cancelación antes del cobro del saldo</caption>
+                            <thead><tr><th scope="col">Anticipación</th><th scope="col">Retenés</th><th scope="col">Devolvés</th></tr></thead>
+                            <tbody>
+                                <tr><th scope="row">Más de 30 días</th><td><strong id="ejemplo-mas-de-30"></strong><small id="ejemplo-mas-de-30-porcentaje"></small></td><td id="ejemplo-mas-de-30-devolucion"></td></tr>
+                                <tr><th scope="row">De 15 a 30 días</th><td><strong id="ejemplo-de-15-a-30"></strong><small id="ejemplo-de-15-a-30-porcentaje"></small></td><td id="ejemplo-de-15-a-30-devolucion"></td></tr>
+                                <tr><th scope="row">Menos de 15 días</th><td><strong id="ejemplo-menos-de-15"></strong><small id="ejemplo-menos-de-15-porcentaje"></small></td><td id="ejemplo-menos-de-15-devolucion"></td></tr>
+                            </tbody>
+                        </table>
                     </section>
 
                     <button type="submit" class="boton boton-primario">Guardar la política</button>
