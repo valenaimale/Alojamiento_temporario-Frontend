@@ -78,6 +78,15 @@ function mostrarPartes(comprobante) {
       ...dato("Propietario", comprobante.propietario.nombre),
     );
   }
+  // La billetera a la que se le transfiere lo que le toca: es parte del comprobante, porque es el destino
+  // del dinero. Si no la cargó, el comprobante lo dice en vez de dejar el renglón vacío (#44).
+  const quienCobra = comprobante.para === "propietario"
+    ? comprobante.propietario
+    : comprobante.administrador;
+  partes.push(
+    ...dato("Billetera de cobro", quienCobra.billetera ?? "todavía sin cargar: la liquidación queda pendiente"),
+  );
+
   partes.push(...dato("Estado", LiquidacionesModelo.estado(comprobante.estado).texto));
   if (comprobante.liquidada_en !== null) {
     partes.push(...dato("Fecha de liquidación", formatearFecha(comprobante.liquidada_en)));

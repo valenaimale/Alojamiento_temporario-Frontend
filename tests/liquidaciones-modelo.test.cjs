@@ -153,3 +153,48 @@ test("cada estado explica por qué está así, que es lo que el propietario nece
   assert.equal(M.estado("pendiente").texto, "Pendiente");
   assert.equal(M.estado("pagada").texto, "Pagada");
 });
+
+// ---------- El aviso de la billetera de cobro (#42 y #44 de las decisiones de pagos) ----------
+
+test("con las billeteras cargadas no hay ningun aviso", () => {
+  assert.equal(M.avisoDeBilletera([], "propietario"), null);
+  assert.equal(M.avisoDeBilletera([], "administrador"), null);
+});
+
+test("si el backend no manda el campo, tampoco avisa nada", () => {
+  assert.equal(M.avisoDeBilletera(undefined, "propietario"), null);
+  assert.equal(M.avisoDeBilletera(null, "administrador"), null);
+});
+
+test("al que le falta SU billetera se le pide que la cargue", () => {
+  const aviso = M.avisoDeBilletera(["propietario"], "propietario");
+
+  assert.equal(aviso.propia, true);
+  assert.match(aviso.texto, /tu billetera/i);
+  assert.match(aviso.texto, /perfil/i);
+});
+
+test("al administrador que no cargo la suya tambien se le pide", () => {
+  const aviso = M.avisoDeBilletera(["administrador"], "administrador");
+
+  assert.equal(aviso.propia, true);
+  assert.match(aviso.texto, /tu billetera/i);
+});
+
+test("si falta la del otro, se explica por que no se paga y no se le pide nada", () => {
+  const alPropietario = M.avisoDeBilletera(["administrador"], "propietario");
+  const alAdministrador = M.avisoDeBilletera(["propietario"], "administrador");
+
+  assert.equal(alPropietario.propia, false);
+  assert.match(alPropietario.texto, /El administrador/);
+  assert.equal(alAdministrador.propia, false);
+  assert.match(alAdministrador.texto, /El propietario/);
+});
+
+test("si faltan las dos, a cada uno se le pide la suya primero", () => {
+  const alPropietario = M.avisoDeBilletera(["propietario", "administrador"], "propietario");
+  const alAdministrador = M.avisoDeBilletera(["propietario", "administrador"], "administrador");
+
+  assert.equal(alPropietario.propia, true);
+  assert.equal(alAdministrador.propia, true);
+});
