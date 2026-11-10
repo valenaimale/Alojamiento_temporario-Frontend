@@ -279,7 +279,10 @@ async function cancelarReserva(reserva) {
       textoCancelar: "Conservar reserva",
     });
     if (!confirmado) return;
-    aviso.textContent = "Cancelando tu reserva…";
+    // Con pagos, el back manda la devolución al contrato y espera la confirmación de la red: puede tardar unos segundos
+    aviso.textContent = cuenta.estado === "confirmada"
+      ? "Cancelando tu reserva y enviando la devolución a tu billetera. Puede tardar unos segundos…"
+      : "Cancelando tu reserva…";
     const { respuesta, resultado } = await pedirAlBack("/reservas/cancelar", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ reserva_id: reserva.id }),
