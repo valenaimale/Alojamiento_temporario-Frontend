@@ -32,6 +32,35 @@ const LiquidacionesModelo = (() => {
     );
   }
 
+  // El aviso que corresponde mostrar cuando falta alguna billetera de cobro, o null si no falta ninguna.
+  // El backend manda faltan_billeteras: ["propietario"], ["administrador"], las dos, o vacío.
+  //
+  // El texto cambia según quién esté mirando ("propietario" o "administrador"), porque las dos situaciones
+  // se resuelven distinto: si falta LA SUYA, la puede cargar él y la pantalla lo lleva al perfil; si falta
+  // la del otro, no puede hacer nada, y lo único que necesita es entender por qué no le pagaron todavía.
+  // Devuelve { propia, texto }: 'propia' dice si hay algo que pueda hacer quien mira.
+  function avisoDeBilletera(faltanBilleteras, quienMira) {
+    const faltan = faltanBilleteras ?? [];
+    if (faltan.length === 0) return null;
+
+    if (faltan.includes(quienMira)) {
+      return {
+        propia: true,
+        texto:
+          "Para poder transferirte, necesitamos tu billetera de cobro. Cargala en tu perfil: " +
+          "hasta entonces, lo que cobró esta estadía queda retenido en el contrato.",
+      };
+    }
+    // Falta la del otro: las dos partes se transfieren en la misma operación, así que tampoco se le paga a él
+    const elOtro = quienMira === "propietario" ? "El administrador" : "El propietario";
+    return {
+      propia: false,
+      texto:
+        `${elOtro} de la unidad todavía no cargó su billetera de cobro. Hasta que la cargue, esta ` +
+        "liquidación no se paga, porque las dos partes se transfieren juntas.",
+    };
+  }
+
   // Las filas del comprobante del propietario, en el orden que pidió el contador (RN-25).
   // Cada fila: { clave, concepto, porcentaje (o null), importe, signo, destacada }.
   // El signo es para mostrar: '' suma o informa, '-' resta, '=' es el total.
@@ -132,6 +161,7 @@ const LiquidacionesModelo = (() => {
 
   return {
     estado,
+    avisoDeBilletera,
     filasDelPropietario,
     filasDelAdministrador,
     totales,

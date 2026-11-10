@@ -54,6 +54,18 @@ function armarFila(comision) {
     motivo.textContent = `Falta cobrar ${formatearPrecio(comision.faltante)}`;
     celdaEstado.appendChild(motivo);
   }
+  // El otro motivo posible: el propietario de esa unidad no cargó su billetera, así que no se transfiere
+  // ninguna de las dos partes. La billetera propia va en el aviso de arriba, no fila por fila.
+  const avisoBilletera = LiquidacionesModelo.avisoDeBilletera(
+    comision.faltan_billeteras,
+    "administrador",
+  );
+  if (avisoBilletera !== null && !avisoBilletera.propia) {
+    const motivo = document.createElement("span");
+    motivo.className = "ayuda";
+    motivo.textContent = "Falta la billetera del propietario";
+    celdaEstado.appendChild(motivo);
+  }
   fila.appendChild(celdaEstado);
 
   const celdaAccion = document.createElement("td");
@@ -69,6 +81,32 @@ function armarFila(comision) {
   fila.appendChild(celdaAccion);
 
   return fila;
+}
+
+// El aviso de arriba: sin su billetera de cobro no hay a dónde transferirle su comisión (#44 de las
+// decisiones de pagos). Va una sola vez, con el enlace al perfil: el problema es de la cuenta, no de una fila.
+function armarAvisoDeBilletera(comisiones) {
+  const seccion = document.getElementById("aviso-billetera");
+  seccion.replaceChildren();
+
+  const aviso = comisiones
+    .map((comision) =>
+      LiquidacionesModelo.avisoDeBilletera(comision.faltan_billeteras, "administrador"),
+    )
+    .find((aviso) => aviso !== null && aviso.propia);
+
+  seccion.hidden = aviso === undefined;
+  if (aviso === undefined) return;
+
+  const titulo = document.createElement("h2");
+  titulo.textContent = "Nos falta tu billetera de cobro";
+  const texto = document.createElement("p");
+  texto.textContent = aviso.texto;
+  const enlace = document.createElement("a");
+  enlace.href = "../perfil/perfil.html#seccion-billetera";
+  enlace.className = "boton boton-primario";
+  enlace.textContent = "Cargar mi billetera";
+  seccion.append(titulo, texto, enlace);
 }
 
 // El resumen de arriba: cuánto hay en cada estado. Los estados sin ninguna comisión no se muestran.
@@ -122,6 +160,7 @@ async function cargarComisiones() {
 
   cargando.hidden = true;
   document.getElementById("sin-comisiones").hidden = comisiones.length > 0;
+  armarAvisoDeBilletera(comisiones);
   armarResumen(comisiones);
   document
     .getElementById("filas-comisiones")

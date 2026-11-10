@@ -47,6 +47,20 @@ function armarTarjeta(liquidacion) {
   encabezado.append(columna, badgeDeEstado(liquidacion.estado));
   item.appendChild(encabezado);
 
+  // Si el que no cargó la billetera es el administrador de la unidad, va en la tarjeta: es de esa unidad,
+  // y el propietario no puede hacer nada más que entender por qué todavía no le transfirieron.
+  // El caso de su propia billetera no va acá sino en el aviso de arriba, una sola vez para toda la página.
+  const avisoBilletera = LiquidacionesModelo.avisoDeBilletera(
+    liquidacion.faltan_billeteras,
+    "propietario",
+  );
+  if (avisoBilletera !== null && !avisoBilletera.propia) {
+    const aviso = document.createElement("p");
+    aviso.className = "aviso-retenida";
+    aviso.textContent = avisoBilletera.texto;
+    item.appendChild(aviso);
+  }
+
   // El motivo por el que está retenida, con cuánto falta cobrar (RN-16)
   if (liquidacion.faltante !== null) {
     const aviso = document.createElement("p");
@@ -115,6 +129,33 @@ function armarTarjeta(liquidacion) {
   return item;
 }
 
+// El aviso de arriba: si no cargó su billetera de cobro, no hay a dónde transferirle y las liquidaciones
+// quedan pendientes (#44 de las decisiones de pagos). Va una sola vez, con el enlace al perfil, y no en
+// cada tarjeta: el problema es de la cuenta, no de una estadía.
+function armarAvisoDeBilletera(liquidaciones) {
+  const seccion = document.getElementById("aviso-billetera");
+  seccion.replaceChildren();
+
+  const aviso = liquidaciones
+    .map((liquidacion) =>
+      LiquidacionesModelo.avisoDeBilletera(liquidacion.faltan_billeteras, "propietario"),
+    )
+    .find((aviso) => aviso !== null && aviso.propia);
+
+  seccion.hidden = aviso === undefined;
+  if (aviso === undefined) return;
+
+  const titulo = document.createElement("h2");
+  titulo.textContent = "Nos falta tu billetera de cobro";
+  const texto = document.createElement("p");
+  texto.textContent = aviso.texto;
+  const enlace = document.createElement("a");
+  enlace.href = "../perfil/perfil.html#seccion-billetera";
+  enlace.className = "boton boton-primario";
+  enlace.textContent = "Cargar mi billetera";
+  seccion.append(titulo, texto, enlace);
+}
+
 // El resumen de arriba: cuánto hay en cada estado. Los estados sin ninguna liquidación no se muestran.
 function armarResumen(liquidaciones) {
   const totales = LiquidacionesModelo.totales(liquidaciones, "importe_propietario");
@@ -166,6 +207,7 @@ async function cargarLiquidaciones() {
 
   cargando.hidden = true;
   document.getElementById("sin-liquidaciones").hidden = liquidaciones.length > 0;
+  armarAvisoDeBilletera(liquidaciones);
   armarResumen(liquidaciones);
   document
     .getElementById("lista-liquidaciones")
