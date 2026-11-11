@@ -74,6 +74,24 @@ function mostrarPagoDeReserva(reserva, cuerpo, datos) {
 
 // La tarjeta de una reserva: foto, alojamiento (con enlace al detalle), estado, fechas e importes.
 // Si está pendiente, la aclaración del pago y "Cancelar reserva".
+// En una cancelada: si la canceló el propietario (con su motivo) y la excepción que le dio al huésped (decisiones #63 y #65)
+function mostrarCancelacion(reserva, cuerpo) {
+  const cancelacion = reserva.cancelacion;
+  if (!cancelacion) return;
+  if (cancelacion.por === "propietario") {
+    const aviso = document.createElement("p");
+    aviso.className = "aviso";
+    aviso.textContent = `La canceló el propietario${cancelacion.motivo ? `: ${cancelacion.motivo}` : ""}. Te devolvemos todo lo que pagaste.`;
+    cuerpo.append(aviso);
+  }
+  if (cancelacion.excepcion !== null) {
+    const excepcion = document.createElement("p");
+    excepcion.className = "mensaje-ok";
+    excepcion.textContent = `El propietario te devuelve ${formatearPrecio(cancelacion.excepcion)} más de lo retenido.`;
+    cuerpo.append(excepcion);
+  }
+}
+
 function tarjetaDeReserva(reserva) {
   const { alojamiento } = reserva;
   const item = document.createElement("li");
@@ -165,6 +183,7 @@ function tarjetaDeReserva(reserva) {
   huespedes.href = `libro-huespedes.html?reserva_id=${reserva.id}`;
   huespedes.className = 'boton boton-secundario';
   cuerpo.append(badge, titulo, lugar, fechas, personas, total);
+  mostrarCancelacion(reserva, cuerpo);
   mostrarPagoDeReserva(reserva, cuerpo, datos);
   cuerpo.append(huespedes, detalles);
   tarjeta.append(cuerpo);
@@ -272,7 +291,7 @@ async function cancelarReserva(reserva) {
       datos: cuenta.estado === "confirmada" ? [
         ["Seña pagada", formatearPrecio(cuenta.pagado.sena)],
         ["Saldo pagado", formatearPrecio(cuenta.pagado.saldo)],
-        [`Retención (${formatearPorcentaje(cuenta.porcentaje_retencion)} de la seña)`, formatearPrecio(cuenta.retencion)],
+        [Number(cuenta.pagado.saldo) > 0 ? "Retención (todo lo pagado)" : `Retención (${formatearPorcentaje(cuenta.porcentaje_retencion)} de la seña)`, formatearPrecio(cuenta.retencion)],
         ["Devolución total", formatearPrecio(cuenta.devolucion)],
       ] : [],
       textoConfirmar: "Cancelar reserva",

@@ -132,7 +132,7 @@ test('respeta permisos y permite saldar una reserva vencida cuando backend lo ha
 test('cancelación muestra desglose antes de POST y conserva resultado pendiente de devolución',async()=>{
   const p=pagina({confirmar:true,resultado:{ok:'Reserva cancelada. La devolución está en proceso: te avisamos por mail',devolucion:{estado:'pendiente',tx_hash:null}}});
   await p.cancelarReserva(reserva({estado:'confirmada'}));
-  assert.match(p.confirmacion().detalle,/saldo pagado se devuelve entero/);
+  assert.match(p.confirmacion().detalle,/se retiene todo lo que pagaste/);//con el saldo pago (decisión #62 del back)
   assert.equal(p.confirmacion().datos.at(-1)[1],'$ 197400.00');
   assert.equal(p.solicitudes[0].ruta,'/reservas/cancelacion?reserva_id=42');
   assert.equal(p.solicitudes[1].ruta,'/reservas/cancelar');

@@ -180,9 +180,13 @@ const PagosModelo = (() => {
     const dias = datos.dias_hasta_cobro;
     const plazo = dias < 0 ? 'La fecha de cobro del saldo ya pasó.' : dias === 0 ? 'El cobro del saldo vence hoy.'
       : `Falta${dias === 1 ? '' : 'n'} ${dias} día${dias === 1 ? '' : 's'} para el cobro del saldo.`;
+    // Con el saldo pago no se devuelve nada (decisión #62 del back): solo una excepción del propietario en 48 hs
+    const conSaldo = decimal(datos.pagado.saldo).numero > 0n;
     const explicacion = datos.estado === 'pendiente'
       ? 'Las fechas quedarán libres. Si enviaste un pago, revisá primero su confirmación.'
-      : `${plazo} Se aplica el tramo de ${tramos[datos.tramo]} de la política que aceptaste. La retención se calcula sobre la seña.${decimal(datos.pagado.saldo).numero > 0n ? ' El saldo pagado se devuelve entero.' : ''} ${decimal(datos.devolucion).numero > 0n ? 'La devolución corresponde a la billetera con la que pagaste.' : 'Según la política, no corresponde devolución.'}`;
+      : conSaldo
+        ? 'Ya pagaste el saldo: según la política, se retiene todo lo que pagaste y no corresponde devolución. El propietario puede decidir devolverte una parte en las 48 hs siguientes.'
+        : `${plazo} Se aplica el tramo de ${tramos[datos.tramo]} de la política que aceptaste. La retención se calcula sobre la seña. ${decimal(datos.devolucion).numero > 0n ? 'La devolución corresponde a la billetera con la que pagaste.' : 'Según la política, no corresponde devolución.'}`;
     return {...datos, pagado: {...datos.pagado}, devolucion_wei: BigInt(datos.devolucion_wei), explicacion};
   }
 

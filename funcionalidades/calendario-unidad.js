@@ -16,6 +16,8 @@
     temporadas: [],
     bloqueos: [],
     reservas: [],
+    canceladas: [], // las que canceló el huésped en las últimas 48 hs (solo el propietario las recibe)
+    cancelando: null, // la reserva que el propietario está por cancelar
     listo: false,
     guardando: false,
     peticion: 0,
@@ -169,6 +171,7 @@
         temporadas: temporadas.temporadas,
         bloqueos: bloqueos.bloqueos,
         reservas: reservas.reservas,
+        canceladas: reservas.canceladas || [],
         listo: true,
       });
       $("ayuda-precio").textContent =
@@ -473,10 +476,14 @@
             ),
           ),
         );
+        // Solo el propietario cancela (decisión #66 del back): se le devuelve todo al huésped
+        if (r.puede_cancelar)
+          celda.append(boton("Cancelar", () => abrirCancelacion(r), "boton boton-peligro"));
         fila.append(celda);
         return fila;
       }),
     );
+    presentarCanceladas();
     $("lista-temporadas").replaceChildren(
       ...estado.temporadas.map((t) => {
         const item = el("li"),
@@ -530,6 +537,91 @@
         return item;
       }),
     );
+  }
+  // Las canceladas por el huésped en las últimas 48 hs, con el formulario de la excepción (L2-19, decisiones #64 y #65)
+  function presentarCanceladas() {
+    if (!$("lista-canceladas")) return; // el administrador no tiene la sección
+    $("cantidad-canceladas").textContent = estado.canceladas.length;
+    $("sin-canceladas").hidden = estado.canceladas.length > 0;
+    $("lista-canceladas").replaceChildren(
+      ...estado.canceladas.map((r) => {
+        const item = el("li"),
+          texto = el("div"),
+          x = r.excepcion;
+        texto.append(
+          el("h3", `${r.huesped} · ${periodo(r.ingreso, r.egreso)}`),
+          el("p", `${r.cancelada_por === "plataforma" ? "Se canceló por falta de pago del saldo" : "La canceló el huésped"}. Se retuvo ${formatearPrecio(x.retenido)}; a vos te tocan ${formatearPrecio(x.maximo)}.`),
+        );
+        if (x.excepcion !== null) {
+          texto.append(el("p", `Le devolviste ${formatearPrecio(x.excepcion)} al huésped.`, "mensaje-ok"));
+        } else if (!x.puede) {
+          texto.append(el("p", x.motivo, "ayuda"));
+        } else {
+          const hasta = new Intl.DateTimeFormat("es-AR", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Argentina/Buenos_Aires" }).format(new Date(x.hasta));
+          const form = el("form");
+          const etiqueta = el("label", `¿Cuánto le devolvés? (hasta ${formatearPrecio(x.maximo)}, antes del ${hasta})`);
+          const monto = el("input");
+          Object.assign(monto, { type: "number", name: "monto", min: "0.01", step: "0.01", max: x.maximo, required: true, inputMode: "decimal" });
+          etiqueta.append(monto);
+          const enviar = el("button", "Devolver al huésped", "boton");
+          enviar.type = "submit";
+          form.append(etiqueta, enviar);
+          form.addEventListener("submit", (e) => darExcepcion(e, r, monto.value));
+          texto.append(form);
+        }
+        item.append(texto);
+        return item;
+      }),
+    );
+  }
+  // Confirma y le da al huésped la excepción: le llega con la liquidación, en los próximos minutos
+  async function darExcepcion(evento, r, monto) {
+    evento.preventDefault();
+    if (!estado.listo || estado.guardando) return;
+    if (
+      !(await confirmar({
+        titulo: `¿Devolverle ${formatearPrecio(monto)} a ${r.huesped}?`,
+        detalle: "Sale de lo que te toca a vos de lo retenido. Se puede hacer una sola vez.",
+        textoConfirmar: "Devolver",
+      }))
+    )
+      return;
+    await guardar("/unidades/reservas/excepcion", { reserva_id: r.id, monto }, "error-canceladas", "ok-canceladas");
+  }
+  // Muestra el formulario para cancelar la reserva r, con su motivo
+  function abrirCancelacion(r) {
+    estado.cancelando = r;
+    $("error-cancelar-reserva").textContent = "";
+    $("resumen-cancelar-reserva").textContent =
+      `${r.huesped} · ${periodo(r.ingreso, r.egreso)} · ${formatearPrecio(r.importe_total)}`;
+    $("cancelar-reserva").hidden = false;
+    $("titulo-cancelar-reserva").focus();
+  }
+  // Confirma y cancela la reserva: el back le devuelve todo al huésped y le manda el motivo
+  async function cancelarReserva(evento) {
+    evento.preventDefault();
+    const r = estado.cancelando;
+    if (!r || !estado.listo || estado.guardando) return;
+    const motivo = $("form-cancelar-reserva").elements.motivo.value.trim();
+    if (
+      !(await confirmar({
+        titulo: "¿Cancelar la reserva de " + r.huesped + "?",
+        detalle: "Se le devuelve todo lo que pagó y esas noches quedan libres. No se puede deshacer.",
+        textoConfirmar: "Cancelar reserva",
+        textoCancelar: "Volver",
+      }))
+    )
+      return;
+    // con pagos, el back manda la devolución a la red y espera la confirmación: puede tardar unos segundos
+    const enviar = $("form-cancelar-reserva").querySelector('[type="submit"]');
+    enviar.textContent = "Cancelando y devolviendo…";
+    const ok = await guardar("/unidades/reservas/cancelar", { reserva_id: r.id, motivo }, "error-cancelar-reserva", "ok-reservas");
+    enviar.textContent = "Cancelar y devolver todo";
+    if (ok) {
+      estado.cancelando = null;
+      $("form-cancelar-reserva").reset();
+      $("cancelar-reserva").hidden = true;
+    }
   }
   // En una escritura se deshabilitan los controles. Un fallo conserva rango y valores para corregir.
   async function guardar(
@@ -777,6 +869,13 @@
         estado.temporada = null;
         seleccionarAccion("temporada");
       });
+      if (estado.unidad.es_propietario) {
+        $("form-cancelar-reserva").addEventListener("submit", cancelarReserva);
+        $("volver-cancelar-reserva").addEventListener("click", () => {
+          estado.cancelando = null;
+          $("cancelar-reserva").hidden = true;
+        });
+      }
       $("contenido").hidden = false;
       document.body.hidden = false;
       await cargar();

@@ -114,12 +114,16 @@ test('permiso del servidor prevalece y saldo vence al terminar fecha argentina',
 });
 
 const cancelacion = cambios => ({reserva_id:42,estado:'confirmada',tramo:'mas_de_30',dias_hasta_cobro:45,porcentaje_retencion:'30.00',pagado:{sena:'42000.00',saldo:'168000.00'},retencion:'12600.00',devolucion:'197400.00',devolucion_wei:'1974000000000000',...cambios});
-test('cancelación conserva importes del backend y wei exacto; explica cada tramo y saldo completo',()=>{
+test('cancelación conserva importes del backend y wei exacto; explica cada tramo y el saldo pago',()=>{
+  // solo con la seña: se explica el tramo
   for(const [tramo,dias,texto] of [['mas_de_30',45,'más de 30'],['de_15_a_30',15,'entre 15 y 30'],['menos_de_15',-2,'ya pasó']]){
-    const q=modelo.normalizarCancelacion(cancelacion({tramo,dias_hasta_cobro:dias}),42);
-    assert.match(q.explicacion,new RegExp(texto));assert.match(q.explicacion,/saldo pagado se devuelve entero/);
-    assert.equal(q.devolucion,'197400.00');assert.equal(q.devolucion_wei,1974000000000000n);
+    const q=modelo.normalizarCancelacion(cancelacion({tramo,dias_hasta_cobro:dias,pagado:{sena:'42000.00',saldo:'0.00'},devolucion:'29400.00',devolucion_wei:'294000000000000'}),42);
+    assert.match(q.explicacion,new RegExp(texto));
+    assert.equal(q.devolucion,'29400.00');assert.equal(q.devolucion_wei,294000000000000n);
   }
+  // con el saldo pago no se devuelve nada (decisión #62 del back), salvo una excepción del propietario
+  const conSaldo=modelo.normalizarCancelacion(cancelacion({retencion:'210000.00',devolucion:'0.00',devolucion_wei:'0'}),42);
+  assert.match(conSaldo.explicacion,/se retiene todo lo que pagaste/);assert.match(conSaldo.explicacion,/48 hs/);
   const sinPago=modelo.normalizarCancelacion(cancelacion({pagado:{sena:'0.00',saldo:'0.00'},retencion:'0.00',devolucion:'0.00',devolucion_wei:'0'}),42);
   assert.match(sinPago.explicacion,/no corresponde devolución/);
   assert.equal(modelo.normalizarCancelacion(cancelacion({devolucion_wei:'9007199254740993123456789'}),42).devolucion_wei,9007199254740993123456789n);
