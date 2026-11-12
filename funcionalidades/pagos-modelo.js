@@ -49,6 +49,17 @@ const PagosModelo = (() => {
     return Date.parse(valor);
   }
 
+  // Cuánto falta para que venza el plazo de pago, para la cuenta regresiva: {ms, texto: "09:42"}.
+  // ms nunca es negativo (0 = venció). null si no hay un vencimiento válido.
+  function tiempoRestante(venceEn, ahora = Date.now()) {
+    const vence = vencimiento(venceEn);
+    if (vence === null || Number.isNaN(vence)) return null;
+    const ms = Math.max(0, vence - ahora);
+    const segundos = Math.ceil(ms / 1000);
+    const dos = n => String(n).padStart(2, '0');
+    return { ms, texto: `${dos(Math.floor(segundos / 60))}:${dos(segundos % 60)}` };
+  }
+
   // Rechaza cotizaciones para otra reserva, otro cobro, otra red o montos inconsistentes.
   function normalizarCotizacion(payload, { reservaId, tipo }) {
     const pago = payload?.pago;
@@ -136,7 +147,8 @@ const PagosModelo = (() => {
   function estadoPagoReserva(reserva, ahora = Date.now()) {
     const estado = (texto, tipo = null, accion = null, clase = 'estado-pendiente') => ({ texto, tipo, accion, clase });
     if (!['pendiente', 'pendiente_pago', 'confirmada'].includes(reserva.estado)) {
-      return estado(reserva.estado === 'cancelada' ? 'Reserva cancelada' : 'Sin pagos habilitados', null, null, 'estado-no-publicada');
+      const texto = { cancelada: 'Reserva cancelada', expirada: 'Seña no pagada a tiempo' }[reserva.estado] ?? 'Sin pagos habilitados';
+      return estado(texto, null, null, 'estado-no-publicada');
     }
     const pagos = Array.isArray(reserva.pagos) ? reserva.pagos : [];
     const confirmado = tipo => pagos.some(p => p.tipo === tipo && p.estado === 'confirmado');
@@ -190,6 +202,6 @@ const PagosModelo = (() => {
     return {...datos, pagado: {...datos.pagado}, devolucion_wei: BigInt(datos.devolucion_wei), explicacion};
   }
 
-  return { RED, identificador, normalizarCancelacion, normalizarCotizacion, pesosAWei, weiAPesos, formatearEth, mensajeErrorPago, estadoPagoReserva, vencimiento, saldoVencido };
+  return { RED, identificador, normalizarCancelacion, normalizarCotizacion, pesosAWei, weiAPesos, formatearEth, mensajeErrorPago, estadoPagoReserva, vencimiento, tiempoRestante, saldoVencido };
 })();
 if (typeof module !== 'undefined') module.exports = PagosModelo;

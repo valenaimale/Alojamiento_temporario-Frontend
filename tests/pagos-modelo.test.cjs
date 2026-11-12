@@ -133,3 +133,16 @@ test('vista previa ajena, mal formada o sin importes impide confirmar',()=>{
     assert.throws(()=>modelo.normalizarCancelacion(cancelacion(cambio),42));
   }
 });
+
+test('tiempo restante para la cuenta regresiva: minutos y segundos, nunca negativo, y null sin un vencimiento válido', () => {
+  const vence = '2026-11-12T20:10:00Z';
+  const ahora = Date.parse('2026-11-12T20:00:18Z');
+  assert.deepEqual(modelo.tiempoRestante(vence, ahora), { ms: 582000, texto: '09:42' });
+  assert.deepEqual(modelo.tiempoRestante(vence, Date.parse('2026-11-12T20:09:59.500Z')), { ms: 500, texto: '00:01' });
+  assert.deepEqual(modelo.tiempoRestante(vence, Date.parse('2026-11-12T20:15:00Z')), { ms: 0, texto: '00:00' });
+  for (const invalido of [null, undefined, '2026-11-12 20:10:00', 'mañana']) assert.equal(modelo.tiempoRestante(invalido, ahora), null);
+});
+
+test('una reserva expirada dice que no se pagó la seña a tiempo', () => {
+  assert.equal(modelo.estadoPagoReserva({ estado: 'expirada' }).texto, 'Seña no pagada a tiempo');
+});

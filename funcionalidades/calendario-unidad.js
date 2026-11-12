@@ -554,19 +554,27 @@
         );
         if (x.excepcion !== null) {
           texto.append(el("p", `Le devolviste ${formatearPrecio(x.excepcion)} al huésped.`, "mensaje-ok"));
+        } else if (x.renuncio) {
+          texto.append(el("p", "Decidiste no devolverle nada: se aplicó la política de cancelación.", "mensaje-ok"));
         } else if (!x.puede) {
           texto.append(el("p", x.motivo, "ayuda"));
         } else {
           const hasta = new Intl.DateTimeFormat("es-AR", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Argentina/Buenos_Aires" }).format(new Date(x.hasta));
+          // noValidate: el monto se valida acá (problemaDelMonto) y el error sale con el estilo de HayLugar,
+          // en #error-canceladas, en lugar del globo del navegador
           const form = el("form");
+          form.noValidate = true;
           const etiqueta = el("label", `¿Cuánto le devolvés? (hasta ${formatearPrecio(x.maximo)}, antes del ${hasta})`);
           const monto = el("input");
           Object.assign(monto, { type: "number", name: "monto", min: "0.01", step: "0.01", max: x.maximo, required: true, inputMode: "decimal" });
           etiqueta.append(monto);
           const enviar = el("button", "Devolver al huésped", "boton");
           enviar.type = "submit";
-          form.append(etiqueta, enviar);
-          form.addEventListener("submit", (e) => darExcepcion(e, r, monto.value));
+          const nada = boton("No devolver nada", () => renunciarExcepcion(r), "boton boton-outline");
+          const acciones = el("div", undefined, "acciones");
+          acciones.append(enviar, nada);
+          form.append(etiqueta, acciones);
+          form.addEventListener("submit", (e) => darExcepcion(e, r, monto, x.maximo));
           texto.append(form);
         }
         item.append(texto);
@@ -574,10 +582,30 @@
       }),
     );
   }
+  // Qué tiene de malo el monto de la excepción (texto del input), o null si está bien: entre $0,01 y el máximo,
+  // con hasta 2 decimales. Es la misma regla que controla el back.
+  function problemaDelMonto(texto, maximo) {
+    if (texto.trim() === "") return "Escribí cuánto le devolvés.";
+    if (!/^\d+(\.\d{1,2})?$/.test(texto.trim())) return "El monto tiene que ser un número en pesos, con hasta 2 decimales.";
+    const monto = Number(texto);
+    if (monto <= 0) return "El monto tiene que ser mayor que cero.";
+    if (monto > Number(maximo)) return `Podés devolver hasta ${formatearPrecio(maximo)}: es lo que te toca a vos de lo retenido.`;
+    return null;
+  }
   // Confirma y le da al huésped la excepción: le llega con la liquidación, en los próximos minutos
-  async function darExcepcion(evento, r, monto) {
+  async function darExcepcion(evento, r, campo, maximo) {
     evento.preventDefault();
     if (!estado.listo || estado.guardando) return;
+    $("ok-canceladas").textContent = "";
+    const problema = problemaDelMonto(campo.value, maximo);
+    $("error-canceladas").textContent = problema ?? "";
+    if (problema) {
+      campo.setAttribute("aria-invalid", "true");
+      campo.focus();
+      return;
+    }
+    campo.removeAttribute("aria-invalid");
+    const monto = campo.value.trim();
     if (
       !(await confirmar({
         titulo: `¿Devolverle ${formatearPrecio(monto)} a ${r.huesped}?`,
@@ -587,6 +615,19 @@
     )
       return;
     await guardar("/unidades/reservas/excepcion", { reserva_id: r.id, monto }, "error-canceladas", "ok-canceladas");
+  }
+  // El propietario decide no devolver nada: se aplica la política tal cual y se liquida sin esperar las 48 hs (#73)
+  async function renunciarExcepcion(r) {
+    if (!estado.listo || estado.guardando) return;
+    if (
+      !(await confirmar({
+        titulo: `¿No devolverle nada a ${r.huesped}?`,
+        detalle: "Se aplica la política de cancelación tal cual y tu parte de lo retenido se liquida enseguida. Después ya no vas a poder darle una excepción.",
+        textoConfirmar: "No devolver nada",
+      }))
+    )
+      return;
+    await guardar("/unidades/reservas/excepcion/renunciar", { reserva_id: r.id }, "error-canceladas", "ok-canceladas");
   }
   // Muestra el formulario para cancelar la reserva r, con su motivo
   function abrirCancelacion(r) {

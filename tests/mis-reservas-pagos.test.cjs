@@ -364,3 +364,28 @@ test('pago encuentra extensión anidada, usa seña completa y bloquea enlace de 
     }
   }
 });
+
+test('pendiente con plazo vigente muestra la cuenta regresiva para pagar la seña', () => {
+  const vence = new Date(Date.now() + 5 * 60000).toISOString().replace(/\.\d+Z$/, 'Z');
+  const tarjeta = pagina().tarjetaDeReserva(reserva({ vence_en: vence }));
+  const cuenta = nodos(tarjeta).find(n => n.className === 'cuenta-regresiva');
+  assert.ok(cuenta);
+  assert.match(cuenta.textContent, /^Te quedan 0[45]:\d\d para pagar la seña$/);
+  assert.equal(cuenta.attributes['data-vence'], vence);
+});
+
+test('expirada: avisa que no se pagó la seña y ofrece volver a reservar con las mismas fechas', () => {
+  const tarjeta = pagina().tarjetaDeReserva(reserva({ estado: 'expirada', puede_pagar: false, puede_cancelar: false }));
+  assert.match(textos(tarjeta), /Esta reserva expiró: no pagaste la seña a tiempo para confirmarla/);
+  const volver = nodos(tarjeta).find(n => n.tag === 'a' && n.textContent === 'Volver a reservar');
+  assert.equal(volver.href, '../alojamientos/detalle.html?id=3&ingreso=2099-02-10&egreso=2099-02-17&personas=2');
+  assert.equal(cobros(tarjeta).length, 0);
+  assert.equal(nodos(tarjeta).some(n => n.textContent === 'Datos de huéspedes'), false);
+  assert.equal(nodos(tarjeta).some(n => n.className === 'cuenta-regresiva'), false);
+});
+
+test('expirada con fechas pasadas vuelve al alojamiento sin fechas', () => {
+  const tarjeta = pagina().tarjetaDeReserva(reserva({ estado: 'expirada', ingreso: '2020-02-10', egreso: '2020-02-12' }));
+  const volver = nodos(tarjeta).find(n => n.tag === 'a' && n.textContent === 'Volver a reservar');
+  assert.equal(volver.href, '../alojamientos/detalle.html?id=3');
+});

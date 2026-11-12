@@ -58,6 +58,18 @@ function mostrarPagoDeReserva(reserva, cuerpo, datos) {
     enlace.setAttribute("aria-label", `${enlace.textContent} de la reserva en ${reserva.alojamiento.nombre}`);
     resumen.append(enlace);
   }
+  // Mientras se puede pagar la seña (o la extensión): la cuenta regresiva, que actualiza actualizarCuentasRegresivas()
+  const restante = PagosModelo.tiempoRestante(reserva.vence_en);
+  if (restante && restante.ms > 0 && ["pendiente", "pendiente_pago"].includes(reserva.estado)) {
+    const que = esExtension ? "la extensión" : "la seña";
+    const cuenta = document.createElement("p");
+    cuenta.className = "cuenta-regresiva";
+    cuenta.setAttribute("data-vence", reserva.vence_en);
+    cuenta.setAttribute("data-reserva-id", String(reserva.id));
+    cuenta.setAttribute("data-que", que);
+    cuenta.textContent = textoCuentaRegresiva(que, restante);
+    resumen.append(cuenta);
+  }
   for (const [etiqueta, valor] of [
     [esExtension ? 'Plazo para pagar la extensión' : "Plazo para la seña", reserva.vence_en],
     ["Vencimiento del saldo", esExtension ? null : reserva.fecha_cobro],
@@ -73,6 +85,54 @@ function mostrarPagoDeReserva(reserva, cuerpo, datos) {
     agregarDato(datos, "Saldo pendiente", formatearPrecio(reserva.saldo));
   }
   cuerpo.append(resumen);
+}
+
+// El texto de la cuenta regresiva: "Te quedan 09:42 para pagar la seña"
+function textoCuentaRegresiva(que, restante) {
+  return `Te quedan ${restante.texto} para pagar ${que}`;
+}
+
+// Cada segundo: actualiza las cuentas regresivas. Si una llega a cero, la reserva ya está expirada (el back también
+// la ve así desde ese segundo): se marca acá y se vuelven a dibujar las tarjetas, sin esperar a recargar la página.
+function actualizarCuentasRegresivas(ahora = Date.now()) {
+  let vencio = false;
+  document.querySelectorAll(".cuenta-regresiva[data-vence]").forEach((nodo) => {
+    const restante = PagosModelo.tiempoRestante(nodo.dataset.vence, ahora);
+    if (!restante) return;
+    if (restante.ms > 0) {
+      nodo.textContent = textoCuentaRegresiva(nodo.dataset.que, restante);
+      return;
+    }
+    const reserva = reservasActuales.find((r) => String(r.id) === nodo.dataset.reservaId);
+    if (reserva && ["pendiente", "pendiente_pago"].includes(reserva.estado)) {
+      Object.assign(reserva, { estado: "expirada", vence_en: null, puede_pagar: false, puede_cancelar: false });
+      vencio = true;
+    }
+  });
+  if (vencio) mostrarReservas();
+}
+
+// En una reserva expirada (no pagó la seña a tiempo): el aviso y, si las fechas todavía no pasaron, el botón para
+// volver a reservar el mismo alojamiento con las mismas fechas y personas (si siguen libres, el detalle lo dice)
+function mostrarExpirada(reserva, cuerpo, hoy = new Date().toISOString().slice(0, 10)) {
+  if (reserva.estado !== "expirada") return;
+  const aviso = document.createElement("p");
+  aviso.className = "aviso";
+  aviso.textContent = "Esta reserva expiró: no pagaste la seña a tiempo para confirmarla, y las fechas se liberaron.";
+  cuerpo.append(aviso);
+  if (reserva.extiende_reserva_id || !/^[1-9]\d*$/.test(String(reserva.alojamiento?.id))) return;
+  const busqueda = new URLSearchParams({ id: reserva.alojamiento.id });
+  if (reserva.ingreso >= hoy) {
+    busqueda.set("ingreso", reserva.ingreso);
+    busqueda.set("egreso", reserva.egreso);
+    busqueda.set("personas", reserva.personas);
+  }
+  const volver = document.createElement("a");
+  volver.className = "boton boton-primario";
+  volver.href = `../alojamientos/detalle.html?${busqueda}`;
+  volver.textContent = "Volver a reservar";
+  volver.setAttribute("aria-label", `Volver a reservar en ${reserva.alojamiento.nombre}`);
+  cuerpo.append(volver);
 }
 
 // La tarjeta de una reserva: foto, alojamiento (con enlace al detalle), estado, fechas e importes.
@@ -398,10 +458,13 @@ function tarjetaDeReserva(reserva) {
     cuerpo.append(aviso);
   }
   mostrarCancelacion(reserva, cuerpo);
+  mostrarExpirada(reserva, cuerpo);
   mostrarPagoDeReserva(reserva, cuerpo, datos);
   mostrarExtensiones(reserva, cuerpo);
   mostrarFormularioExtension(reserva, cuerpo);
-  cuerpo.append(huespedes, detalles);
+  // una expirada nunca se va a alojar: no tiene sentido cargar sus huéspedes
+  if (reserva.estado !== "expirada") cuerpo.append(huespedes);
+  cuerpo.append(detalles);
   tarjeta.append(cuerpo);
   item.append(tarjeta);
   return item;
@@ -410,6 +473,7 @@ function tarjetaDeReserva(reserva) {
 let reservasActuales = [];
 let filtroReservas = "proximas";
 let cancelandoReserva = false;
+let relojCuentasRegresivas = null;
 function mostrarReservas() {
   const partes = new Intl.DateTimeFormat("en-CA", {
     timeZone: "America/Argentina/Buenos_Aires",
@@ -562,6 +626,8 @@ async function cargarPagina() {
       "Tu reserva quedó pendiente de pago. Abrí el pago de la seña para continuar.";
     history.replaceState(null, "", window.location.pathname); // al recargar, el aviso no vuelve a aparecer
   }
+  // la cuenta regresiva del pago de la seña: un solo reloj para toda la página (reintentar no crea otro)
+  if (relojCuentasRegresivas === null) relojCuentasRegresivas = setInterval(actualizarCuentasRegresivas, 1000);
   try {
     await cargarReservas();
   } catch (error) {

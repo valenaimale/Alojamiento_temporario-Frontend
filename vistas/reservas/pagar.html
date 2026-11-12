@@ -29,7 +29,7 @@
     <main>
       <a class="pago-volver" href="mis-reservas.html">← Mis reservas</a>
       <h1 id="titulo-pago" tabindex="-1">Pagar mi reserva</h1>
-      <p class="subtitulo">Revisá el importe y seguí la confirmación de tu pago.</p>
+      <p class="subtitulo">Revisá el importe y seguí la confirmación de tu pago. <a href="../ayuda/pagos.html#huesped">¿Cómo funcionan los pagos?</a></p>
       <p id="cargando-pago" role="status">Cargando tu reserva…</p>
       <p id="error-pago" class="mensaje-error" role="alert" tabindex="-1"></p>
       <p id="aviso-pago" role="status"></p>
@@ -52,6 +52,8 @@
             <div><dt>Seña de la reserva</dt><dd id="sena-reserva"></dd></div>
           </dl>
           <p id="plazo-pago" class="ayuda" hidden></p>
+          <!-- la cuenta regresiva para pagar la seña (pagar.js, actualizarCuentaPago) -->
+          <p id="cuenta-pago" class="cuenta-regresiva" hidden></p>
           <p class="pago-prueba"><strong id="modalidad-pago">Modalidad de pago</strong><br /><span id="ayuda-modalidad">Estamos consultando cómo pagar esta reserva.</span></p>
         </section>
 

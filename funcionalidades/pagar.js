@@ -168,6 +168,41 @@ function mostrarCotizacionPago() {
     const vencido = pago.tipo === 'saldo' && (pago.vencido || PagosModelo.saldoVencido(plazo));
     elementoPago('plazo-pago').textContent = vencido ? `Saldo vencido desde el ${texto}: pagalo antes de ingresar.` : `${pago.tipo === 'sena' ? 'Pagá la seña antes del' : 'Vencimiento del saldo:'} ${texto}${soloFecha ? '.' : ' (hora argentina).'}`;
   }
+  if (pago.tipo === 'sena') iniciarCuentaPago();
+}
+
+// La cuenta regresiva para pagar la seña (o la extensión): "Te quedan 09:42". Si llega a cero sin un pago en camino,
+// la reserva ya expiró (el back también la ve así): se saca el botón de pagar y se ofrece volver al alojamiento.
+// Un pago ya enviado se sigue confirmando: el back decide si llegó a tiempo.
+let relojCuentaPago = null;
+function actualizarCuentaPago() {
+  const nodo = elementoPago('cuenta-pago');
+  const reserva = estadoDelPago.reserva;
+  const restante = estadoDelPago.tipo === 'sena' && reserva?.estado === 'pendiente' && !estadoDelPago.completo
+    ? PagosModelo.tiempoRestante(reserva.vence_en) : null;
+  nodo.hidden = !restante;
+  if (!restante) return;
+  const que = reserva.extiende_reserva_id ? 'la extensión' : 'la seña';
+  if (restante.ms > 0) {
+    nodo.textContent = `Te quedan ${restante.texto} para pagar ${que}.`;
+    return;
+  }
+  if (estadoDelPago.pendiente || estadoDelPago.ocupado || estadoDelPago.espera) {
+    nodo.textContent = 'Se cumplió el plazo: estamos confirmando el pago que ya enviaste.';
+    return;
+  }
+  reserva.estado = 'expirada';
+  estadoDelPago.cotizacion = null;
+  nodo.hidden = true;
+  elementoPago('cotizacion-pago').hidden = true;
+  elementoPago('error-pago').textContent = `Se venció el plazo para pagar ${que}: la reserva expiró y las fechas se liberaron.`;
+  mostrarRegresoAlAlojamiento();
+  actualizarBotonPago();
+}
+// Arranca el reloj de la cuenta regresiva una sola vez (en los tests no hay setInterval: ahí se llama a mano)
+function iniciarCuentaPago() {
+  actualizarCuentaPago();
+  if (relojCuentaPago === null && typeof setInterval === 'function') relojCuentaPago = setInterval(actualizarCuentaPago, 1000);
 }
 
 // Carga viem solamente al iniciar o recuperar un pago.
