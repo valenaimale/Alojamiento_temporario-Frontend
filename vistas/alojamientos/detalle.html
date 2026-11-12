@@ -26,6 +26,7 @@
             <nav id="menu" aria-label="Principal"></nav>
             <a href="../perfil/perfil.html" class="enlace-perfil" id="enlace-perfil" hidden>Mi perfil</a>
             <p class="acceso" id="acceso" hidden>
+                <a href="../ayuda/pagos.html" class="enlace-ayuda">Cómo pagar</a>
                 <a href="../sesion/inicio-sesion.html" class="boton boton-outline">Iniciar sesión</a>
                 <a href="../registros/pre-registro.html" class="boton boton-primario">Registrarme</a>
             </p>
@@ -105,7 +106,7 @@
                                 Leí y acepto la <a href="#titulo-politica">política de cancelación</a>
                             </label>
                             <button type="submit" class="boton boton-primario" aria-describedby="aclaracion-pago">Reservar</button>
-                            <p id="aclaracion-pago" class="ayuda">Tu reserva queda pendiente de pago. El pago de la seña llega en la próxima versión de la plataforma: mientras tanto, la reserva te guarda las fechas.</p>
+                            <p id="aclaracion-pago" class="ayuda">Tu reserva queda pendiente: tenés <strong>10 minutos</strong> para pagar la seña con MetaMask (ETH de prueba, red Base Sepolia), y mientras tanto te guardamos las fechas. <a href="../ayuda/pagos.html#huesped">¿Primera vez? Mirá cómo pagar</a></p>
                         </form>
                         <!-- si no puede reservar: por qué (sin sesión, sin el mail verificado o con otro tipo de cuenta) -->
                         <p id="aviso-reservar" class="ayuda" hidden></p>
