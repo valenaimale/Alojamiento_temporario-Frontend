@@ -168,7 +168,7 @@ test('doble clic durante consulta no abre dos diálogos ni cancela dos veces',as
   assert.equal(p.solicitudes.length,1);resolver();await primero;
 });
 
-const enCurso = cambios => reserva({estado:'confirmada', saldo:'0.00', estadia:{ingreso_en:'2026-11-11T17:00:00Z', egreso_en:null}, ...cambios});
+const enCurso = cambios => reserva({estado:'confirmada', saldo:'0.00', puede_extender:true, ...cambios});
 const cotizacionExtension = cambios => ({reserva_id:42, noches:2, ingreso:'2099-02-17', egreso:'2099-02-19', importe_total:'30000.00', porcentaje_descuento:'10.00', ...cambios});
 const controlesExtension = tarjeta => ({
   abrir:nodos(tarjeta).find(n => n.textContent === 'Extender estadía'),
@@ -178,17 +178,33 @@ const controlesExtension = tarjeta => ({
 });
 const enviarFormulario = controles => controles.formulario.eventos.submit({preventDefault(){}});
 
-test('Extender estadía aparece solo con ingreso registrado y estadía abierta',()=>{
+test('Extender estadía requiere puede_extender true del servidor, sin campo estadia',()=>{
   assert.ok(controlesExtension(pagina().tarjetaDeReserva(enCurso())).abrir);
   for(const cambios of [
     {estado:'pendiente'}, {estado:'finalizada'}, {estado:'no_show'}, {estado:'cancelada'},
-    {estadia:null}, {estadia:{ingreso_en:'2026-11-11'}},
-    {estadia:{ingreso_en:'2026-11-11T17:00:00Z',egreso_en:'2026-11-12T17:00:00Z'}},
-    {puede_extender:false}, {extiende_reserva_id:21}, {id:'42&noches=4'},
+    {puede_extender:false}, {puede_extender:undefined}, {puede_extender:null},
+    {puede_extender:'true'}, {puede_extender:1}, {extiende_reserva_id:21}, {id:'42&noches=4'},
     {extensiones:[{id:43,estado:'pendiente',vence_en:'2099-01-01T00:00:00Z'}]},
     {extensiones:[{id:43,estado:'pendiente',vence_en:null}]},
   ]) assert.equal(controlesExtension(pagina().tarjetaDeReserva(enCurso(cambios))).abrir,undefined,JSON.stringify(cambios));
   assert.ok(controlesExtension(pagina().tarjetaDeReserva(enCurso({extensiones:[{id:43,estado:'pendiente',vence_en:'2020-01-01T00:00:00Z'}]}))).abrir);
+});
+
+test('próximas conserva estadía extensible con salida pasada y respeta permiso del servidor',()=>{
+  const p=pagina();
+  p.contexto.listaDePrueba=[
+    enCurso({id:42,ingreso:'2020-01-01',egreso:'2020-01-03'}),
+    enCurso({id:43,ingreso:'2020-01-01',egreso:'2020-01-03',puede_extender:false}),
+    enCurso({id:44,ingreso:'2020-01-01',egreso:'2020-01-03',puede_extender:undefined}),
+    enCurso({id:45,ingreso:'2020-01-01',egreso:'2020-01-03',puede_extender:'true'}),
+    reserva({id:46,puede_extender:false}),
+    enCurso({id:47,estado:'finalizada',ingreso:'2020-01-01',egreso:'2020-01-03'}),
+  ];
+  vm.runInContext('reservasActuales = listaDePrueba',p.contexto);
+  p.mostrarReservas();
+  assert.equal(p.get('cantidad-proximas').textContent,2);
+  assert.equal(p.get('cantidad-historial').textContent,4);
+  assert.deepEqual(nodos(p.get('lista-reservas')).filter(n=>n.tag==='h2').map(n=>n.id),['reserva-42','reserva-46']);
 });
 
 test('no-show informa retención y no permite pagar, cancelar ni extender',()=>{
@@ -266,7 +282,7 @@ test('noches inválidas y falta de disponibilidad no habilitan confirmación',as
   const p=pagina({pedir:()=>({respuesta:{ok:false,status:409},resultado:{error:'No hay lugar para esas noches'}})});
   const tarjeta=p.tarjetaDeReserva(enCurso());
   const controles=controlesExtension(tarjeta);
-  for(const valor of ['0','-1','1.5','NaN','9007199254740992']){
+  for(const valor of ['0','-1','1.5','31','NaN','9007199254740992']){
     controles.noches.value=valor;
     await enviarFormulario(controles);
   }
@@ -306,7 +322,7 @@ test('agenda muestra límite argentino y lo cierra exactamente a las 24 horas',(
 });
 
 test('agenda usa salida extendida y evita movimientos duplicados o no-show',()=>{
-  const original=enCurso({ingreso:'2026-11-14',egreso_original:'2026-11-16',egreso:'2026-11-19'});
+  const original=enCurso({ingreso:'2026-11-14',egreso_original:'2026-11-16',egreso:'2026-11-19',estadia:{ingreso_en:'2026-11-14T17:00:00Z',egreso_en:null}});
   const movimientos=EstadiasModelo.movimientos([original],'2026-11-15');
   assert.equal(movimientos.length,1);
   assert.equal(movimientos[0].tipo,'egreso');

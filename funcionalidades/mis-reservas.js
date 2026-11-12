@@ -95,8 +95,8 @@ function mostrarCancelacion(reserva, cuerpo) {
   }
 }
 
-// Contrato pendiente de fase 0: /reservas/mias aporta estadia y extensiones,
-// o reservas vinculadas mediante extiende_reserva_id. No inferimos ingreso por fecha.
+// /reservas/mias informa puede_extender y vincula las extensiones por extiende_reserva_id.
+// La elegibilidad de la estadía la calcula el servidor; no se infiere por la fecha.
 function extensionesDeReserva(reserva) {
   return Array.isArray(reserva.extensiones) ? reserva.extensiones : [];
 }
@@ -118,9 +118,7 @@ function extensionPendiente(reserva) {
 function puedeExtenderReserva(reserva) {
   return PagosModelo.identificador(reserva.id) !== null &&
     !reserva.extiende_reserva_id && reserva.estado === 'confirmada' &&
-    Number.isFinite(PagosModelo.vencimiento(reserva.estadia?.ingreso_en)) &&
-    !reserva.estadia?.egreso_en && reserva.puede_extender !== false &&
-    !extensionPendiente(reserva);
+    reserva.puede_extender === true && !extensionPendiente(reserva);
 }
 
 function agruparReservas(reservas) {
@@ -201,6 +199,7 @@ function mostrarFormularioExtension(reserva, cuerpo) {
   const noches = document.createElement('input');
   noches.type = 'number';
   noches.min = '1';
+  noches.max = '30';
   noches.step = '1';
   noches.required = true;
   noches.value = '1';
@@ -248,8 +247,8 @@ function mostrarFormularioExtension(reserva, cuerpo) {
     evento.preventDefault();
     if (ocupado || creada) return;
     const cantidad = Number(noches.value);
-    if (!Number.isSafeInteger(cantidad) || cantidad < 1) {
-      error.textContent = 'Ingresá una cantidad entera de noches, mayor que cero.';
+    if (!Number.isSafeInteger(cantidad) || cantidad < 1 || cantidad > 30) {
+      error.textContent = 'Ingresá una cantidad entera de noches, entre 1 y 30.';
       return;
     }
     ocupar(true);
@@ -422,7 +421,8 @@ function mostrarReservas() {
     .map((tipo) => partes.find((p) => p.type === tipo).value)
     .join("-");
   const proxima = (r) =>
-    ["pendiente", "pendiente_pago", "confirmada"].includes(r.estado) && (salidaDeReserva(r) >= hoy || (r.estado === 'confirmada' && r.estadia?.ingreso_en && !r.estadia?.egreso_en));
+    ["pendiente", "pendiente_pago", "confirmada"].includes(r.estado) &&
+    (salidaDeReserva(r) >= hoy || (r.estado === 'confirmada' && r.puede_extender === true));
   const agrupadas = agruparReservas(reservasActuales);
   const proximas = agrupadas
     .filter(proxima)
