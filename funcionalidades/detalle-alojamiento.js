@@ -380,6 +380,16 @@ function mostrarEstadia(estadia) {
     }
     seleccion.textContent = `${fechas}: está disponible.`;
     document.getElementById('noches').textContent = estadia.noches;
+    // Descuento por estadía larga (US2.10): el precio de las noches tachado y el % que se descuenta.
+    // El total ya viene con el descuento aplicado desde el back.
+    const conDescuento = DescuentosModelo.tieneDescuento(estadia);
+    for (const id of ['texto-sin-descuento', 'sin-descuento', 'texto-descuento', 'descuento']) {
+        document.getElementById(id).hidden = !conDescuento;
+    }
+    if (conDescuento) {
+        document.getElementById('importe-sin-descuento').textContent = formatearPrecio(estadia.importe_sin_descuento);
+        document.getElementById('descuento').textContent = `−${DescuentosModelo.textoPorcentaje(estadia.porcentaje_descuento)}`;
+    }
     document.getElementById('precio-total').textContent = formatearPrecio(estadia.precio_total);
     document.getElementById('texto-sena').textContent = `Seña al reservar (${Number(estado.alojamiento.porcentaje_sena).toLocaleString('es-AR')} %)`;
     document.getElementById('sena').textContent = formatearPrecio(estadia.sena);

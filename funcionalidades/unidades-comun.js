@@ -206,7 +206,10 @@ function mostrarNavegacionUnidad(unidad, activa) {
       "datos-unidad.html",
     ],
     ...(unidad.es_propietario
-      ? [["condiciones", "Condiciones", "politica-unidad.html"]]
+      ? [
+          ["condiciones", "Condiciones", "politica-unidad.html"],
+          ["descuentos", "Descuentos", "descuentos-unidad.html"], // US2.10: solo el propietario
+        ]
       : []),
     ["equipo", "Equipo", "gestion-unidad.html"],
   ];

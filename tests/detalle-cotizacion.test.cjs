@@ -23,6 +23,7 @@ function pagina() {
     window, history: { replaceState: (_, __, url) => { window.location.search = url; } },
     URLSearchParams, Intl, Date, Map, console: {error(){}},
     MENSAJE_SIN_CONEXION: 'Sin conexión', formatearPrecio: String, formatearFecha: String,
+    DescuentosModelo: require('../funcionalidades/descuentos-modelo.js'),//detalle.html lo carga antes que el detalle
     pedirAlBack: (ruta, opciones) => new Promise((resolve, reject) => pedidos.push({ruta, opciones, resolve, reject})),
   });
   const comunes = fs.readFileSync(path.join(__dirname, '../funcionalidades/unidades-comun.js'), 'utf8');
@@ -191,4 +192,20 @@ test('reserva confirmada sin seña va a Mis reservas sin abrir un pago',async()=
   p.pedidos[1].resolve({respuesta:{ok:true,status:201},resultado:{reserva:{id:42,estado:'confirmada',importe_sena:'0.00'}}});
   await guardar;
   assert.equal(p.window.location.href,'../reservas/mis-reservas.html?confirmada=1');
+});
+
+test('con descuento por estadía larga muestra el precio de las noches tachado y el porcentaje; sin descuento, los oculta', {timeout:2000}, async () => {
+  const p = pagina();
+  let pendiente = p.calcularEstadia();
+  p.pedidos[0].resolve({respuesta:{ok:true,status:200}, resultado:{estadia:{disponible:true,noches:10,
+    importe_sin_descuento:'700000.00', porcentaje_descuento:'10.00', precio_total:'630000.00', sena:'126000.00'}}});
+  await pendiente;
+  assert.equal(p.get('importe-sin-descuento').textContent, '700000.00');
+  assert.equal(p.get('descuento').textContent, '−10 %');
+  assert.equal(p.get('precio-total').textContent, '630000.00');
+  for (const id of ['texto-sin-descuento', 'sin-descuento', 'texto-descuento', 'descuento']) assert.equal(p.get(id).hidden, false, id);
+
+  p.estado.ingreso = '2027-03-10'; p.estado.egreso = '2027-03-17';
+  pendiente = p.calcularEstadia(); p.pedidos[1].resolve(disponible(700)); await pendiente;
+  for (const id of ['texto-sin-descuento', 'sin-descuento', 'texto-descuento', 'descuento']) assert.equal(p.get(id).hidden, true, id);
 });

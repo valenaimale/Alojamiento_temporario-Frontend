@@ -14,6 +14,7 @@
         <script src="../../funcionalidades/sesion.js" defer></script>
         <script src="../../funcionalidades/menu.js" defer></script>
         <script src="../../funcionalidades/unidades-comun.js" defer></script>
+        <script src="../../funcionalidades/descuentos-modelo.js" defer></script>
         <script src="../../funcionalidades/detalle-alojamiento.js" defer></script>
         <link rel="stylesheet" href="../../estilos/haylugar.css">
         <link rel="icon" href="../../imagenes/marca.svg" type="image/svg+xml">
@@ -86,6 +87,10 @@
                         <dl id="precio-estadia" hidden>
                             <dt>Noches</dt>
                             <dd id="noches"></dd>
+                            <dt id="texto-sin-descuento" hidden>Precio de las noches</dt>
+                            <dd id="sin-descuento" hidden><s id="importe-sin-descuento"></s></dd>
+                            <dt id="texto-descuento" hidden>Descuento por estadía larga</dt>
+                            <dd id="descuento" hidden></dd>
                             <dt>Precio total (final)</dt>
                             <dd id="precio-total"></dd>
                             <dt id="texto-sena">Seña al reservar</dt>
