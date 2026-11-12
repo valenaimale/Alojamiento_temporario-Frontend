@@ -58,6 +58,7 @@ async function prepararDatos() {
   form.elements.nombre.value = unidad.nombre;
   form.elements.direccion.value = unidad.direccion;
   form.elements.capacidad.value = unidad.capacidad;
+  form.elements.hora_check_in.value = (unidad.hora_check_in || "14:00").slice(0, 5);
   form.elements.caracteristicas.value = unidad.caracteristicas ?? "";
   try {
     await cargarLocalidades(form.elements.localidad_id, unidad.localidad_id);
@@ -89,6 +90,7 @@ async function prepararDatos() {
       return;
     }
     unidad.nombre = form.elements.nombre.value.trim();
+    unidad.hora_check_in = form.elements.hora_check_in.value;
     mostrarNombre();
     dibujarFotos(fotosActuales); // el texto alternativo de las fotos lleva el nombre
     aviso("datos").textContent = `${resultado.ok}.`;

@@ -12,16 +12,24 @@ function elementoAgenda(tag, texto, clase = '') {
 function tarjetaDeMovimiento({tipo, reserva: r}) {
   const item = document.createElement('li'), tarjeta = elementoAgenda('article', '', 'tarjeta');
   const realizado = r.estadia?.[`${tipo}_en`];
+  const ingresoVencido = tipo === 'ingreso' && EstadiasModelo.plazoIngresoVencido(r);
   tarjeta.append(elementoAgenda('p', `${tipo === 'ingreso' ? 'Ingreso' : 'Egreso'}${realizado ? ' registrado' : ''}`, `badge badge-${tipo}`), elementoAgenda('h3', r.huesped), elementoAgenda('p', r.unidad.nombre, 'unidad'), elementoAgenda('p', `${r.unidad.direccion}, ${r.unidad.localidad}`), elementoAgenda('p', `${r.personas} huéspedes · Del ${formatearFecha(r.ingreso)} al ${formatearFecha(r.egreso)}`, 'estadia'));
+  if (r.egreso_original && r.egreso > r.egreso_original) tarjeta.append(elementoAgenda('p', `Salida extendida al ${formatearFecha(r.egreso)}. Salida original: ${formatearFecha(r.egreso_original)}.`, 'ayuda'));
+  if (tipo === 'ingreso' && !realizado && r.estado === 'confirmada') {
+    const plazo = EstadiasModelo.textoLimiteIngreso(r);
+    if (plazo) tarjeta.append(elementoAgenda('p', plazo, 'ayuda'));
+  }
   if (realizado) {
     if (tipo === 'egreso') tarjeta.append(elementoAgenda('p', `Ingreso: ${fechaMovimiento.format(new Date(r.estadia.ingreso_en))}`, 'ayuda'));
     tarjeta.append(elementoAgenda('p', fechaMovimiento.format(new Date(realizado)), 'movimiento-hora'));
     for (const campo of ['estado', 'notas']) if (r.estadia[`${campo}_${tipo}`]) tarjeta.append(elementoAgenda('p', r.estadia[`${campo}_${tipo}`], 'movimiento-notas'));
-  } else if (r.estado === 'pendiente') tarjeta.append(elementoAgenda('p', 'Pendiente de confirmación. Todavía no se puede registrar.', 'ayuda'));
+  } else if (r.estado === 'no_show') tarjeta.append(elementoAgenda('p', 'No se presentó. No se puede registrar el ingreso.', 'ayuda'));
+  else if (r.estado === 'pendiente') tarjeta.append(elementoAgenda('p', 'Pendiente de confirmación. Todavía no se puede registrar.', 'ayuda'));
+  else if (ingresoVencido) tarjeta.append(elementoAgenda('p', 'Venció el plazo para registrar el ingreso.', 'ayuda'));
   else if (r[`puede_registrar_${tipo}`]) {
     const boton = elementoAgenda('button', `Registrar ${tipo}`, 'boton boton-primario'); boton.type = 'button';
     boton.addEventListener('click', () => abrirMovimiento(r, tipo)); tarjeta.append(boton);
-  } else tarjeta.append(elementoAgenda('p', tipo === 'ingreso' ? `Disponible desde el ${formatearFecha(r.ingreso)}.` : 'Primero debe registrarse el ingreso.', 'ayuda'));
+  } else tarjeta.append(elementoAgenda('p', tipo === 'ingreso' ? (r.saldo_pagado === false ? 'El huésped debe pagar el saldo antes de registrar el ingreso.' : `Disponible desde el ${formatearFecha(r.ingreso)}.`) : 'Primero debe registrarse el ingreso.', 'ayuda'));
   item.append(tarjeta); return item;
 }
 async function cargarAgenda() {
@@ -58,11 +66,15 @@ function guardarBorrador() {
   } catch { $agenda('error-movimiento').textContent = 'No pudimos guardar el borrador en este dispositivo. Mantené esta ventana abierta.'; }
 }
 function abrirMovimiento(r, tipo) {
+  if (tipo === 'ingreso' && (r.estado === 'no_show' || EstadiasModelo.plazoIngresoVencido(r))) {
+    avisoAgenda('Venció el plazo para registrar el ingreso. Actualizá la agenda.', true);
+    return;
+  }
   try {
     const datos = almacenAgenda.leer();
     if (datos.pendientes.some(e => e.reserva_id === r.id && e.tipo === tipo)) { avisoAgenda('Este movimiento ya está guardado y pendiente de envío. Usá Reintentar envío.', true); return; }
     const borrador = datos.borradores[`${r.id}.${tipo}`] || {};
-    movimientoAbierto = {reserva_id:r.id, tipo, alojamiento:r.unidad.nombre};
+    movimientoAbierto = {reserva_id:r.id, tipo, alojamiento:r.unidad.nombre, limite_ingreso:r.limite_ingreso};
     $agenda('titulo-movimiento').textContent = `Registrar ${tipo}`;
     $agenda('contexto-movimiento').textContent = `${r.huesped} · ${r.unidad.nombre}`;
     $agenda('estado-movimiento').value = borrador.estado_unidad || ''; $agenda('notas-movimiento').value = borrador.notas || '';
@@ -80,7 +92,7 @@ async function enviarPendientes(manual = false) {
     if (!actual || actual.id !== usuarioAgenda.id || actual.rol !== 'operador') throw new Error('Volvé a iniciar sesión con la misma cuenta para enviar tus movimientos.');
     for (const e of almacenAgenda.leer().pendientes) {
       if (e.error && !manual) continue;
-      const {alojamiento, error, ...datos} = e;
+      const {alojamiento, error, limite_ingreso, ...datos} = e;
       const respuesta = await fetch(URL_BACK + '/operador/estadias/registrar', {method:'POST', credentials:'include', headers:{'Content-Type':'application/json'}, body:JSON.stringify(datos)});
       const resultado = await respuesta.json();
       if (respuesta.ok) { almacenAgenda.quitar(e.evento_id); avisoAgenda(`${resultado.ok}.`); }
@@ -100,6 +112,10 @@ dialogoMovimiento.addEventListener('close', () => { movimientoAbierto = null; })
 $agenda('form-movimiento').addEventListener('submit', async event => {
   event.preventDefault();
   if (!movimientoAbierto) return;
+  if (movimientoAbierto.tipo === 'ingreso' && EstadiasModelo.plazoIngresoVencido(movimientoAbierto)) {
+    $agenda('error-movimiento').textContent = 'Venció el plazo para registrar el ingreso. Tus notas siguen en el formulario.';
+    return;
+  }
   try {
     const evento = {...movimientoAbierto, evento_id:crypto.randomUUID(), ocurrido_en:new Date().toISOString().replace(/\.\d{3}Z$/, 'Z'), estado_unidad:$agenda('estado-movimiento').value.trim(), notas:$agenda('notas-movimiento').value.trim()};
     almacenAgenda.agregar(evento); dialogoMovimiento.close(); pendientesAgenda();

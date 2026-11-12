@@ -98,7 +98,8 @@ function actualizarBotonPago() {
     : estadoDelPago.pendiente ? 'Retomar confirmación'
     : estadoDelPago.fallido ? 'Pagar de nuevo'
     : estadoDelPago.cotizacion?.simulado ? 'Pagar (simulado)'
-    : estadoDelPago.tipo === 'saldo' ? 'Pagar el saldo' : 'Pagar la seña';
+    : estadoDelPago.tipo === 'saldo' ? 'Pagar el saldo'
+    : estadoDelPago.reserva?.extiende_reserva_id ? 'Pagar la extensión' : 'Pagar la seña';
 }
 
 // Traduce los errores HTTP y conserva el hash si la sesión vence.
@@ -387,8 +388,22 @@ async function cargarPaginaPago() {
     document.body.hidden = false;
     elementoPago('titulo-pago').textContent = tipo === 'saldo' ? 'Pagá el saldo de tu reserva' : 'Confirmá tu reserva con la seña';
     const resultado = await consultarPago('/reservas/mias');
-    estadoDelPago.reserva = resultado.reservas?.find(reserva => String(reserva.id) === id);
+    const reservas = Array.isArray(resultado.reservas) ? resultado.reservas : [];
+    estadoDelPago.reserva = reservas.find(reserva => String(reserva.id) === id);
+    if (!estadoDelPago.reserva) {
+      for (const original of reservas) {
+        const extension = original.extensiones?.find(reserva => String(reserva.id) === id);
+        if (extension) {
+          estadoDelPago.reserva = { ...extension, extiende_reserva_id: original.id, alojamiento: original.alojamiento };
+          break;
+        }
+      }
+    }
     if (!estadoDelPago.reserva) throw errorPantallaPago('No encontramos esta reserva en tu cuenta. Volvé a Mis reservas.');
+    if (estadoDelPago.reserva.extiende_reserva_id) {
+      if (tipo !== 'sena') throw errorPantallaPago('La extensión se paga entera en un solo pago. Abrila desde Mis reservas.');
+      elementoPago('titulo-pago').textContent = 'Pagar la extensión';
+    }
     mostrarResumenPago();
     estadoDelPago.pendiente = leerPagoPendiente();
     const pagoServidor = estadoDelPago.reserva.pagos?.find(pago => pago.tipo === tipo && ['pendiente', 'confirmado'].includes(pago.estado) && /^0x[0-9a-fA-F]{64}$/.test(pago.tx_hash || ''));

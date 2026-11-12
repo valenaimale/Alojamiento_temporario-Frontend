@@ -4,15 +4,16 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const PagosModelo = require('../funcionalidades/pagos-modelo.js');
+const EstadiasModelo = require('../funcionalidades/estadias-modelo.js');
 
 // DOM mínimo para comprobar el contenido y los destinos que recibe el huésped.
 function elemento(tag = 'div') {
   return {
-    tag, textContent: '', children: [], attributes: {}, hidden: false,
+    tag, textContent: '', children: [], attributes: {}, hidden: false, eventos: {},
     append(...children) { this.children.push(...children); },
     replaceChildren(...children) { this.children = children; },
     setAttribute(nombre, valor) { this.attributes[nombre] = valor; },
-    addEventListener() {}, focus() {},
+    addEventListener(nombre, callback) { this.eventos[nombre] = callback; }, focus() {},
   };
 }
 
@@ -28,7 +29,7 @@ function pagina(opciones = {}) {
   const contexto = vm.createContext({
     document: { createElement: elemento, getElementById: get, querySelectorAll: () => [] },
     PagosModelo, Intl, Date, URLSearchParams, encodeURIComponent,
-    MENSAJE_SIN_CONEXION:'Sin conexión', console,
+    MENSAJE_SIN_CONEXION:'Sin conexión', console, window: { location: { href: '' } },
     formatearPrecio: valor => `$ ${valor}`, formatearFecha: String, formatearPorcentaje: valor => `${valor} %`,
     pedirAlBack:async(ruta,envio)=>{
       solicitudes.push({ruta,envio});
@@ -41,7 +42,7 @@ function pagina(opciones = {}) {
   const fuente = fs.readFileSync(path.join(__dirname, '../funcionalidades/mis-reservas.js'), 'utf8')
     .replace(/\ncargarPagina\(\);\s*$/, '');
   vm.runInContext(fuente, contexto);
-  return { ...vm.runInContext('({tarjetaDeReserva, cancelarReserva, fechaDePagoVisible, mostrarReservas})', contexto),
+  return { ...vm.runInContext('({tarjetaDeReserva, cancelarReserva, fechaDePagoVisible, mostrarReservas, agruparReservas, normalizarCotizacionExtension})', contexto),
     get, contexto, solicitudes, confirmacion: () => confirmacion };
 }
 
@@ -165,4 +166,185 @@ test('doble clic durante consulta no abre dos diálogos ni cancela dos veces',as
   const p=pagina({pedir:async ruta=>{if(ruta.startsWith('/reservas/cancelacion?'))await espera;}});
   const primero=p.cancelarReserva(reserva());await p.cancelarReserva(reserva());
   assert.equal(p.solicitudes.length,1);resolver();await primero;
+});
+
+const enCurso = cambios => reserva({estado:'confirmada', saldo:'0.00', estadia:{ingreso_en:'2026-11-11T17:00:00Z', egreso_en:null}, ...cambios});
+const cotizacionExtension = cambios => ({reserva_id:42, noches:2, ingreso:'2099-02-17', egreso:'2099-02-19', importe_total:'30000.00', porcentaje_descuento:'10.00', ...cambios});
+const controlesExtension = tarjeta => ({
+  abrir:nodos(tarjeta).find(n => n.textContent === 'Extender estadía'),
+  formulario:nodos(tarjeta).find(n => n.tag === 'form'),
+  noches:nodos(tarjeta).find(n => n.tag === 'input'),
+  confirmar:nodos(tarjeta).find(n => n.textContent === 'Confirmar extensión y pagar'),
+});
+const enviarFormulario = controles => controles.formulario.eventos.submit({preventDefault(){}});
+
+test('Extender estadía aparece solo con ingreso registrado y estadía abierta',()=>{
+  assert.ok(controlesExtension(pagina().tarjetaDeReserva(enCurso())).abrir);
+  for(const cambios of [
+    {estado:'pendiente'}, {estado:'finalizada'}, {estado:'no_show'}, {estado:'cancelada'},
+    {estadia:null}, {estadia:{ingreso_en:'2026-11-11'}},
+    {estadia:{ingreso_en:'2026-11-11T17:00:00Z',egreso_en:'2026-11-12T17:00:00Z'}},
+    {puede_extender:false}, {extiende_reserva_id:21}, {id:'42&noches=4'},
+    {extensiones:[{id:43,estado:'pendiente',vence_en:'2099-01-01T00:00:00Z'}]},
+    {extensiones:[{id:43,estado:'pendiente',vence_en:null}]},
+  ]) assert.equal(controlesExtension(pagina().tarjetaDeReserva(enCurso(cambios))).abrir,undefined,JSON.stringify(cambios));
+  assert.ok(controlesExtension(pagina().tarjetaDeReserva(enCurso({extensiones:[{id:43,estado:'pendiente',vence_en:'2020-01-01T00:00:00Z'}]}))).abrir);
+});
+
+test('no-show informa retención y no permite pagar, cancelar ni extender',()=>{
+  const tarjeta=pagina().tarjetaDeReserva(enCurso({estado:'no_show',puede_cancelar:true,puede_pagar:true}));
+  assert.match(textos(tarjeta),/No te presentaste: se retuvo lo pagado/);
+  assert.equal(cobros(tarjeta).length,0);
+  assert.equal(nodos(tarjeta).some(n=>n.textContent==='Cancelar reserva'),false);
+  assert.equal(controlesExtension(tarjeta).abrir,undefined);
+});
+
+test('agrupa extensiones, actualiza salida confirmada y cuenta una sola reserva',()=>{
+  const p=pagina();
+  const original=enCurso({ingreso:'2020-01-01',egreso:'2020-01-03'});
+  const pagada=reserva({id:43,extiende_reserva_id:42,estado:'confirmada',ingreso:'2020-01-03',egreso:'2099-02-19'});
+  const pendiente=reserva({id:44,extiende_reserva_id:42,ingreso:'2099-02-19',egreso:'2099-02-21'});
+  p.contexto.listaDePrueba=[original,pagada,pendiente];
+  vm.runInContext('reservasActuales = listaDePrueba',p.contexto);
+  p.mostrarReservas();
+  assert.equal(p.get('cantidad-proximas').textContent,1);
+  assert.equal(p.get('lista-reservas').children.length,1);
+  const tarjeta=p.get('lista-reservas').children[0];
+  assert.match(textos(tarjeta),/Extensión pagada. No se puede cancelar/);
+  assert.equal(cobros(tarjeta)[0].href,'pagar.html?reserva_id=44&tipo=sena');
+  assert.equal(cobros(tarjeta)[0].textContent,'Pagar la extensión');
+  const fechas=nodos(tarjeta).find(n=>n.className==='fechas-reserva');
+  assert.match(textos(fechas),/19/);
+  assert.doesNotMatch(textos(fechas),/21/);
+  assert.equal(p.agruparReservas([{...original,extensiones:[pagada]},pagada])[0].extensiones.length,1);
+});
+
+test('cotiza noches extra, confirma una sola vez y redirige al pago de la extensión',async()=>{
+  const p=pagina({confirmar:true,pedir:ruta=>({respuesta:{ok:true,status:200},resultado:ruta.startsWith('/reservas/extension?')?cotizacionExtension():{reserva:{id:43}}})});
+  const tarjeta=p.tarjetaDeReserva(enCurso());
+  const controles=controlesExtension(tarjeta);
+  controles.abrir.eventos.click();
+  assert.equal(controles.formulario.hidden,false);
+  assert.equal(controles.abrir.attributes['aria-expanded'],'true');
+  controles.noches.value='2';
+  await enviarFormulario(controles);
+  assert.equal(p.solicitudes[0].ruta,'/reservas/extension?reserva_id=42&noches=2');
+  assert.match(textos(tarjeta),/30000.00.*10 % de descuento/);
+  assert.equal(controles.confirmar.hidden,false);
+  const primero=controles.confirmar.eventos.click();
+  await controles.confirmar.eventos.click();
+  await primero;
+  assert.equal(p.solicitudes.filter(s=>s.ruta==='/reservas/extender').length,1);
+  assert.deepEqual(JSON.parse(p.solicitudes[1].envio.body),{reserva_id:42,noches:2});
+  assert.equal(p.contexto.window.location.href,'pagar.html?reserva_id=43&tipo=sena');
+});
+
+test('cambiar noches invalida cotización y no se crea extensión sin confirmar',async()=>{
+  const p=pagina({pedir:()=>({respuesta:{ok:true,status:200},resultado:cotizacionExtension()})});
+  const controles=controlesExtension(p.tarjetaDeReserva(enCurso()));
+  controles.noches.value='2';
+  await enviarFormulario(controles);
+  await controles.confirmar.eventos.click();
+  assert.equal(p.solicitudes.length,1);
+  controles.noches.value='3';
+  controles.noches.eventos.input();
+  assert.equal(controles.confirmar.hidden,true);
+  await controles.confirmar.eventos.click();
+  assert.equal(p.solicitudes.length,1);
+});
+
+test('rechaza cotización ajena, importes inválidos y fechas o noches inconsistentes',()=>{
+  const p=pagina();
+  for(const cambios of [
+    {reserva_id:99},{noches:3},{ingreso:'2099-02-18'},{egreso:'2099-02-20'},
+    {egreso:'2099-02-30'},{egreso:'2099-99-99'},{importe_total:'-1'},{importe_total:'NaN'},{importe_total:'9'.repeat(400)},
+    {porcentaje_descuento:'<script>'},{porcentaje_descuento:101},
+  ]) assert.throws(()=>p.normalizarCotizacionExtension(cotizacionExtension(cambios),enCurso(),2));
+});
+
+test('noches inválidas y falta de disponibilidad no habilitan confirmación',async()=>{
+  const p=pagina({pedir:()=>({respuesta:{ok:false,status:409},resultado:{error:'No hay lugar para esas noches'}})});
+  const tarjeta=p.tarjetaDeReserva(enCurso());
+  const controles=controlesExtension(tarjeta);
+  for(const valor of ['0','-1','1.5','NaN','9007199254740992']){
+    controles.noches.value=valor;
+    await enviarFormulario(controles);
+  }
+  assert.equal(p.solicitudes.length,0);
+  controles.noches.value='2';
+  await enviarFormulario(controles);
+  assert.match(textos(tarjeta),/No hay lugar/);
+  assert.equal(controles.confirmar.hidden,true);
+  assert.equal(controles.noches.disabled,false);
+});
+
+test('POST incierto pide actualizar y no repite creación ni redirige al cobro',async()=>{
+  const p=pagina({confirmar:true,pedir:ruta=>{
+    if(ruta==='/reservas/extender')throw new Error('Sin conexión');
+    return {respuesta:{ok:true,status:200},resultado:cotizacionExtension()};
+  }});
+  const tarjeta=p.tarjetaDeReserva(enCurso());
+  const controles=controlesExtension(tarjeta);
+  controles.noches.value='2';
+  await enviarFormulario(controles);
+  await controles.confirmar.eventos.click();
+  await controles.confirmar.eventos.click();
+  assert.equal(p.solicitudes.length,2);
+  assert.match(textos(tarjeta),/Actualizá Mis reservas/);
+  assert.equal(p.contexto.window.location.href,'');
+});
+
+test('agenda muestra límite argentino y lo cierra exactamente a las 24 horas',()=>{
+  const r={limite_ingreso:'2026-11-15T17:00:00Z'};
+  assert.equal(EstadiasModelo.textoLimiteIngreso(r),'Registrá el ingreso antes de las 14:00 del 15/11.');
+  assert.equal(EstadiasModelo.plazoIngresoVencido(r,new Date('2026-11-15T16:59:59Z')),false);
+  assert.equal(EstadiasModelo.plazoIngresoVencido(r,new Date('2026-11-15T17:00:00Z')),true);
+  for(const limite_ingreso of [null,'','invalido','2026-11-15T14:00:00','2026-11-15 14:00:00','2026-11-15',123]){
+    assert.equal(EstadiasModelo.textoLimiteIngreso({limite_ingreso}),'');
+    assert.equal(EstadiasModelo.plazoIngresoVencido({limite_ingreso}),false);
+  }
+});
+
+test('agenda usa salida extendida y evita movimientos duplicados o no-show',()=>{
+  const original=enCurso({ingreso:'2026-11-14',egreso_original:'2026-11-16',egreso:'2026-11-19'});
+  const movimientos=EstadiasModelo.movimientos([original],'2026-11-15');
+  assert.equal(movimientos.length,1);
+  assert.equal(movimientos[0].tipo,'egreso');
+  assert.equal(movimientos[0].fecha,'2026-11-19');
+  assert.deepEqual(EstadiasModelo.movimientos([enCurso({estado:'no_show'}),enCurso({extiende_reserva_id:1})],'2026-11-15'),[]);
+});
+
+test('pago encuentra extensión anidada, usa seña completa y bloquea enlace de saldo',async()=>{
+  for(const tipo of ['sena','saldo']){
+    const elementos=new Map();
+    const get=id=>{
+      if(!elementos.has(id))elementos.set(id,{...elemento(),classList:{toggle(){}},removeAttribute(){}});
+      return elementos.get(id);
+    };
+    const rutas=[];
+    const contexto=vm.createContext({
+      document:{getElementById:get,body:{hidden:true}},
+      window:{location:{search:`?reserva_id=43&tipo=${tipo}`},addEventListener(){}},
+      PagosModelo,Intl,Date,URLSearchParams,encodeURIComponent,
+      sessionStorage:{getItem:()=>null},clearTimeout(){},
+      obtenerSesion:async()=>({id:7,rol:'huesped'}),tienePermiso:()=>true,armarMenu(){},formatearPrecio:String,
+      pedirAlBack:async ruta=>{
+        rutas.push(ruta);
+        return {respuesta:{ok:true,status:200},resultado:ruta==='/reservas/mias'
+          ? {reservas:[enCurso({extensiones:[reserva({id:43,importe_total:'30000.00',importe_sena:'30000.00'})]})]}
+          : {reserva_id:43,tipo:'sena',monto_pesos:'30000.00',monto_wei:'300000000000000',pesos_por_eth:'100000000',red:31337,pago:{contrato:null,funcion:'pagarSena',simulado:true}}};
+      },
+    });
+    vm.runInContext(fs.readFileSync(path.join(__dirname,'../funcionalidades/pagar.js'),'utf8').replace(/\ncargarPaginaPago\(\);\s*$/,''),contexto);
+    await vm.runInContext('cargarPaginaPago()',contexto);
+    if(tipo==='sena'){
+      assert.equal(get('titulo-pago').textContent,'Pagar la extensión');
+      assert.equal(get('error-pago').textContent,'');
+      assert.deepEqual(rutas,['/reservas/mias','/pagos/sena?reserva_id=43']);
+      assert.equal(get('total-reserva').textContent,get('sena-reserva').textContent);
+    }else{
+      assert.match(get('error-pago').textContent,/se paga entera/);
+      assert.deepEqual(rutas,['/reservas/mias']);
+    }
+  }
 });
