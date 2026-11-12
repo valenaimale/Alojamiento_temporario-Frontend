@@ -4,18 +4,26 @@ const ENLACES_HUESPED = [
     { texto: 'Explorar', url: '../homes/index-huesped.html' },
     { texto: 'Mis reservas', url: '../reservas/mis-reservas.html' },
 ];
+// La ayuda de los pagos (vistas/ayuda/pagos.html), abierta en la sección de cada rol. El operador no paga ni cobra.
+const AYUDA_PAGOS = {
+    huesped: { texto: 'Cómo pagar', url: '../ayuda/pagos.html#huesped' },
+    propietario: { texto: 'Pagos y cobros', url: '../ayuda/pagos.html#propietario' },
+    administrador: { texto: 'Pagos y cobros', url: '../ayuda/pagos.html#administrador' },
+};
 const MENU = {
-    huesped: ENLACES_HUESPED,
+    huesped: [...ENLACES_HUESPED, AYUDA_PAGOS.huesped],
     // el propietario ve lo mismo que el huésped y además "Mis alojamientos"
     propietario: [
         ...ENLACES_HUESPED,
         { texto: 'Mis alojamientos', url: '../homes/index-propietario.html' },
         { texto: 'Liquidaciones', url: '../liquidaciones/mis-liquidaciones.html' },
+        AYUDA_PAGOS.propietario,
     ],
     operador: [{ texto: 'Agenda', url: '../homes/index-operador.html' }],
     administrador: [
         { texto: 'Alojamientos a cargo', url: '../homes/index-administrador.html' },
         { texto: 'Mis comisiones', url: '../liquidaciones/comisiones.html' },
+        AYUDA_PAGOS.administrador,
     ],
     backoffice: [{ texto: 'Usuarios', url: '../homes/index-backoffice.html' }],   // la página la crea la Tarea 2
 };
