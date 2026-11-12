@@ -1,0 +1,239 @@
+<!doctype html>
+<!-- Cómo funcionan los pagos en HayLugar: qué se necesita (MetaMask, Base Sepolia, ETH de prueba) y qué pasa con
+     la plata, explicado para el huésped, el propietario y el administrador. Es pública: se ve con o sin sesión.
+     Las reglas salen de docs/pagos-decisiones.md del back: si cambia una regla, hay que cambiarla también acá. -->
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cómo funcionan los pagos</title>
+    <meta name="description" content="Qué necesitás para pagar y cobrar en HayLugar, y qué pasa con la plata en cada caso." />
+    <link rel="stylesheet" href="../../estilos/style.css" />
+    <link rel="stylesheet" href="../../estilos/haylugar.css" />
+    <link rel="stylesheet" href="../../estilos/ayuda-pagos.css" />
+    <link rel="icon" href="../../imagenes/marca.svg" type="image/svg+xml" />
+    <script src="../../funcionalidades/sesion.js" defer></script>
+    <script src="../../funcionalidades/menu.js" defer></script>
+    <script src="../../funcionalidades/unidades-comun.js" defer></script>
+    <script src="../../funcionalidades/ayuda-pagos.js" defer></script>
+    <script src="../../funcionalidades/interfaz.js" defer></script>
+  </head>
+  <body class="ayuda-pagos">
+    <header class="site-header">
+      <a class="marca" href="../homes/index-sin-sesion.html" aria-label="HayLugar, inicio"><svg viewBox="0 0 32 36" fill="none" aria-hidden="true"><path d="M5 31V13L16 5l11 8v18H5Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round" /><path d="M12 31V19h8v12M20 24h.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" /></svg><span>HayLugar</span></a>
+      <nav id="menu" aria-label="Principal"></nav>
+      <a href="../perfil/perfil.html" class="enlace-perfil" id="enlace-perfil" hidden>Mi perfil</a>
+      <p class="acceso" id="acceso" hidden>
+        <a href="../sesion/inicio-sesion.html" class="boton boton-outline">Iniciar sesión</a>
+        <a href="../registros/pre-registro.html" class="boton boton-primario">Registrarme</a>
+      </p>
+    </header>
+
+    <main>
+      <h1>Cómo funcionan los pagos</h1>
+      <p class="subtitulo">
+        En HayLugar los pagos se hacen con una billetera de criptomonedas. La plata no va directo de una persona a otra:
+        queda guardada en un <strong>contrato inteligente</strong> (un programa público en la blockchain) y el contrato la reparte
+        cuando corresponde. Así nadie puede quedarse con plata que no le toca, y cada movimiento se puede verificar.
+      </p>
+
+      <nav class="indice-ayuda" aria-label="Elegí tu caso">
+        <a class="boton boton-outline" href="#huesped">Soy huésped</a>
+        <a class="boton boton-outline" href="#propietario">Soy propietario</a>
+        <a class="boton boton-outline" href="#administrador">Soy administrador</a>
+      </nav>
+
+      <aside class="aviso-prueba" aria-label="Aviso importante">
+        <strong>Es una plataforma de prueba.</strong> Los pagos usan <strong>ETH de prueba</strong> de la red
+        <strong>Base Sepolia</strong>: no tienen valor real y se consiguen gratis. Los precios se muestran en pesos y se
+        convierten a ETH de prueba con un tipo de cambio fijo de la plataforma.
+      </aside>
+
+      <section class="tarjeta" aria-labelledby="titulo-necesitas">
+        <h2 id="titulo-necesitas">Qué necesitás antes de empezar</h2>
+        <ol class="pasos-ayuda">
+          <li>
+            <strong>Instalá MetaMask</strong>, la extensión de billetera para el navegador (Chrome, Firefox, Brave o Edge), y creá una
+            billetera. Guardá la frase de recuperación en un lugar seguro: <strong>nunca se la pases a nadie</strong>, tampoco a HayLugar.
+          </li>
+          <li>
+            <strong>Agregá la red Base Sepolia</strong> en MetaMask, con estos datos:
+            <dl class="datos-red">
+              <dt>Nombre de la red</dt><dd>Base Sepolia</dd>
+              <dt>URL de RPC</dt><dd><code>https://sepolia.base.org</code></dd>
+              <dt>ID de la cadena</dt><dd><code>84532</code></dd>
+              <dt>Símbolo</dt><dd>ETH</dd>
+              <dt>Explorador de bloques</dt><dd><code>https://sepolia.basescan.org</code></dd>
+            </dl>
+          </li>
+          <li>
+            <strong>Conseguí ETH de prueba</strong> (solo si vas a pagar): se piden gratis en un <em>faucet</em> de Base Sepolia,
+            por ejemplo el de Coinbase Developer Platform. Pedí un poco más de lo que vas a pagar: cada transacción cobra un
+            pequeño costo de red (<em>gas</em>).
+          </li>
+        </ol>
+        <p class="ayuda">
+          Cada pago tiene un comprobante público en <strong>BaseScan</strong> (el explorador de la red). En HayLugar vas a ver el
+          enlace "Ver transacción en BaseScan" al lado de cada pago, devolución o liquidación.
+        </p>
+      </section>
+
+      <!-- ===================== HUÉSPED ===================== -->
+      <section class="tarjeta seccion-rol" id="huesped" aria-labelledby="titulo-huesped">
+        <h2 id="titulo-huesped">Si sos huésped</h2>
+        <p>Necesitás MetaMask, la red Base Sepolia y ETH de prueba. Todo lo pagás desde <strong>Mis reservas</strong>.</p>
+
+        <h3>1. Reservás y pagás la seña (tenés 10 minutos)</h3>
+        <p>
+          Al reservar, la reserva queda <strong>pendiente</strong> y las fechas quedan guardadas para vos durante
+          <strong>10 minutos</strong>. Vas a ver una cuenta regresiva. En ese tiempo tenés que pagar la <strong>seña</strong>:
+          un porcentaje del total que define cada alojamiento (lo ves en el detalle antes de reservar).
+        </p>
+        <ul>
+          <li>Si pagás a tiempo, la reserva queda <strong>confirmada</strong>.</li>
+          <li>
+            Si no pagás, la reserva <strong>expira</strong>: las fechas se liberan para otros huéspedes. La vas a seguir viendo en
+            tu historial, con el botón "Volver a reservar" por si las fechas siguen libres.
+          </li>
+        </ul>
+        <p class="ayuda">
+          Al pagar, MetaMask te muestra el importe en ETH de prueba más el costo de la red. Confirmás ahí, y HayLugar espera a
+          que la red confirme la transacción (suele tardar unos segundos). Si cerrás la página en el medio, no pagues otra vez:
+          volvé a abrir el pago desde Mis reservas y retomá la confirmación.
+        </p>
+
+        <h3>2. Pagás el saldo antes de llegar</h3>
+        <p>
+          El <strong>saldo</strong> es el resto del total. Se paga hasta la <strong>fecha de cobro</strong>, que es unos días antes del
+          ingreso (la ves en tu reserva). Si se te pasa, tenés <strong>3 días más</strong> (o hasta el día del ingreso, si llega antes).
+          Si tampoco lo pagás, la reserva <strong>se cancela sola</strong>, como si la hubieras cancelado vos.
+        </p>
+        <p><strong>Sin el saldo pago no se puede registrar tu ingreso.</strong> Si llegás con el saldo pendiente, lo podés pagar en el momento.</p>
+
+        <h3>3. Dónde está tu plata</h3>
+        <p>
+          La seña y el saldo quedan guardados en el contrato. El propietario recién cobra cuando se registra tu
+          <strong>ingreso</strong> al alojamiento. Hasta ese momento, si corresponde una devolución, sale del contrato directo a tu billetera.
+        </p>
+
+        <h3>4. Si cancelás</h3>
+        <p>Podés cancelar desde Mis reservas <strong>hasta el día anterior al ingreso</strong>. Antes de confirmar, te mostramos cuánto se retiene y cuánto te devolvemos.</p>
+        <div class="tabla-ayuda" role="region" aria-label="Qué se retiene si cancelás" tabindex="0">
+          <table>
+            <thead><tr><th scope="col">Qué pagaste</th><th scope="col">Qué se retiene</th><th scope="col">Qué te devolvemos</th></tr></thead>
+            <tbody>
+              <tr><td>Nada todavía (pendiente)</td><td>Nada</td><td>No hay nada que devolver</td></tr>
+              <tr><td>Solo la seña</td><td>Un porcentaje de la seña, según cuántos días falten para la fecha de cobro (más de 30, de 15 a 30 o menos de 15). Lo define la política de cada alojamiento.</td><td>El resto de la seña</td></tr>
+              <tr><td>La seña y el saldo</td><td>Todo lo pagado</td><td>Nada, salvo que el propietario te dé una excepción</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          Después de que cancelás, el propietario tiene <strong>48 horas</strong> para darte una <strong>excepción</strong>: devolverte
+          parte o todo de lo que le toca a él de lo retenido. Si te la da, te llega a la billetera en los minutos siguientes.
+        </p>
+
+        <h3>5. Si cancela el propietario</h3>
+        <p>Te devolvemos <strong>todo lo que pagaste</strong>, seña y saldo, y te avisamos por mail con su motivo.</p>
+
+        <h3>6. Si no te presentás</h3>
+        <p>
+          Desde el horario de check-in del día del ingreso hay <strong>24 horas</strong> para registrar tu llegada. Si nadie la registra,
+          la reserva queda como <strong>"No te presentaste"</strong> y se retiene todo lo pagado. El propietario tiene 48 horas para darte una excepción.
+        </p>
+
+        <h3>7. Si querés quedarte más noches</h3>
+        <p>
+          Con la estadía en curso, desde Mis reservas podés <strong>extenderla</strong> si las noches siguientes están libres. La extensión
+          se paga <strong>entera, en un solo pago</strong>, con el mismo plazo que una seña. Una vez pagada, <strong>no se puede cancelar</strong>.
+        </p>
+
+        <p class="nota-ayuda">
+          Las devoluciones van siempre a <strong>la billetera con la que pagaste la seña</strong>, aunque el saldo lo hayas pagado desde otra.
+        </p>
+      </section>
+
+      <!-- ===================== PROPIETARIO ===================== -->
+      <section class="tarjeta seccion-rol" id="propietario" aria-labelledby="titulo-propietario">
+        <h2 id="titulo-propietario">Si sos propietario</h2>
+        <p>
+          Para cobrar necesitás una <strong>billetera de cobro</strong>: la dirección pública de tu billetera (empieza con
+          <code>0x</code> y tiene 42 caracteres). Se carga al registrarte o en <strong>Mi perfil</strong>.
+          <strong>No necesitás ETH</strong>: el costo de red de los cobros lo paga la plataforma.
+        </p>
+        <p class="aviso-billetera">Mientras no cargues tu billetera, tus liquidaciones quedan pendientes: la plata sigue guardada en el contrato hasta que la cargues.</p>
+
+        <h3>1. Qué configurás vos</h3>
+        <ul>
+          <li><strong>La seña:</strong> qué porcentaje del total paga el huésped al reservar (al menos el 1 %).</li>
+          <li><strong>La política de cancelación:</strong> qué porcentaje de la seña se retiene en cada tramo (más de 30 días, de 15 a 30, menos de 15).</li>
+          <li><strong>Los descuentos por estadía larga</strong>, si querés ofrecerlos.</li>
+        </ul>
+
+        <h3>2. Cuándo y cuánto cobrás</h3>
+        <p>
+          Cobrás cuando se registra el <strong>ingreso</strong> del huésped. En los minutos siguientes, la plataforma arma la
+          <strong>liquidación</strong> y el contrato te transfiere tu parte a la billetera de cobro, en una sola transacción.
+        </p>
+        <div class="tabla-ayuda" role="region" aria-label="Cómo se reparte lo cobrado" tabindex="0">
+          <table>
+            <thead><tr><th scope="col">De lo que pagó el huésped…</th><th scope="col">Va a</th></tr></thead>
+            <tbody>
+              <tr><td>La comisión de la plataforma: <strong>7,5 %</strong></td><td>HayLugar</td></tr>
+              <tr><td>La comisión del administrador, si la unidad tiene uno (el porcentaje que acordaron)</td><td>El administrador</td></tr>
+              <tr><td>Todo el resto</td><td>Vos</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="ayuda">
+          Si discriminás IVA, las comisiones se calculan sobre el importe <strong>sin IVA</strong> (el IVA queda de tu lado).
+          Cada liquidación tiene su comprobante en <strong>Mis liquidaciones</strong>, con el enlace a la transacción en BaseScan.
+        </p>
+
+        <h3>3. Si el huésped cancela o no se presenta</h3>
+        <p>
+          Lo retenido según tu política también se liquida, con el mismo reparto. Antes, tenés <strong>48 horas</strong> para decidir,
+          desde el calendario de la unidad ("Canceladas en las últimas 48 hs"):
+        </p>
+        <ul>
+          <li><strong>Devolverle algo al huésped</strong> (una excepción), hasta lo que te toca a vos. La comisión del administrador y la de la plataforma se cobran igual.</li>
+          <li><strong>No devolver nada:</strong> se aplica tu política tal cual y cobrás enseguida, sin esperar las 48 horas.</li>
+        </ul>
+        <p class="ayuda">Si no decidís nada, pasadas las 48 horas se aplica la política y se liquida sola.</p>
+
+        <h3>4. Si cancelás vos</h3>
+        <p>Podés cancelar una reserva hasta el día anterior al ingreso, con un <strong>motivo obligatorio</strong>. Al huésped se le devuelve <strong>todo</strong> lo que pagó, y no cobrás nada de esa reserva.</p>
+
+        <h3>5. Extensiones</h3>
+        <p>Si el huésped extiende su estadía, las noches extra se pagan enteras y se liquidan <strong>apenas se confirma el pago</strong>.</p>
+      </section>
+
+      <!-- ===================== ADMINISTRADOR ===================== -->
+      <section class="tarjeta seccion-rol" id="administrador" aria-labelledby="titulo-administrador">
+        <h2 id="titulo-administrador">Si sos administrador</h2>
+        <p>
+          Igual que el propietario, necesitás una <strong>billetera de cobro</strong> (la dirección pública, <code>0x…</code>), que se
+          carga al registrarte o en <strong>Mi perfil</strong>. No necesitás ETH: el costo de red lo paga la plataforma.
+        </p>
+        <h3>Qué cobrás</h3>
+        <ul>
+          <li>
+            Tu <strong>comisión</strong> (el porcentaje que acordaste con el propietario de cada unidad) en cada liquidación de las unidades
+            que administrás. Se calcula sobre el importe sin IVA si el propietario discrimina IVA.
+          </li>
+          <li>
+            También cobrás tu comisión sobre lo <strong>retenido</strong> cuando un huésped cancela o no se presenta.
+            Tu comisión se respeta <strong>siempre</strong>: si el propietario le devuelve algo al huésped, sale solo de su parte.
+          </li>
+          <li>Te llega en la misma transacción que la liquidación del propietario, en los minutos siguientes al ingreso del huésped.</li>
+        </ul>
+        <h3>Qué no hacés</h3>
+        <p>Cancelar reservas y dar excepciones son decisiones del <strong>propietario</strong>: es su plata.</p>
+        <p class="ayuda">Tus cobros, con sus comprobantes y el enlace a BaseScan, están en <strong>Comisiones</strong>.</p>
+      </section>
+
+      <p class="ayuda volver-arriba"><a href="#contenido-principal">Volver arriba</a></p>
+    </main>
+    <footer class="site-footer"><strong>HayLugar</strong><span>Alojamientos temporarios</span></footer>
+  </body>
+</html>

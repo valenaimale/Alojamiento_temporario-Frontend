@@ -354,6 +354,20 @@ td .boton {
 #mensaje-ok {
   color: var(--color-primary-dark);
 }
+/* La cuenta regresiva para pagar la seña (Mis reservas y la pantalla de pago): números de ancho fijo, para que no salte */
+.cuenta-regresiva {
+  display: inline-block;
+  margin: 8px 0;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--color-purple-light);
+  color: var(--color-purple);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.cuenta-regresiva[hidden] {
+  display: none;
+}
 .mensaje-error:empty,
 .error:empty,
 #mensaje-error:empty,
