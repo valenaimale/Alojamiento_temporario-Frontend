@@ -4,9 +4,30 @@ const EstadiasModelo = (() => {
     const partes = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Buenos_Aires', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(fecha);
     return ['year', 'month', 'day'].map(tipo => partes.find(p => p.type === tipo).value).join('-');
   }
+  function limiteIngreso(reserva) {
+    if (typeof reserva.limite_ingreso !== 'string' ||
+        !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/.test(reserva.limite_ingreso)) return null;
+    const limite = new Date(reserva.limite_ingreso);
+    return Number.isNaN(limite.getTime()) ? null : limite;
+  }
+  function plazoIngresoVencido(reserva, ahora = new Date()) {
+    const limite = limiteIngreso(reserva);
+    return limite !== null && ahora >= limite;
+  }
+  function textoLimiteIngreso(reserva) {
+    const limite = limiteIngreso(reserva);
+    if (!limite) return '';
+    const partes = new Intl.DateTimeFormat('es-AR', {
+      timeZone: 'America/Argentina/Buenos_Aires', day: '2-digit', month: '2-digit',
+      hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+    }).formatToParts(limite);
+    const parte = tipo => partes.find(p => p.type === tipo).value;
+    return `Registrá el ingreso antes de las ${parte('hour')}:${parte('minute')} del ${parte('day')}/${parte('month')}.`;
+  }
   function movimientos(reservas, hoy = dia()) {
     const lista = [];
     for (const r of reservas) {
+      if (r.estado === 'no_show' || r.extiende_reserva_id) continue;
       const e = r.estadia;
       if (e?.egreso_en) {
         if (dia(new Date(e.egreso_en)) === hoy) lista.push({fecha: hoy, tipo: 'egreso', reserva: r});
@@ -39,6 +60,6 @@ const EstadiasModelo = (() => {
       error: (id, mensaje) => cambiar(d => { const e = d.pendientes.find(e => e.evento_id === id); if (e) e.error = mensaje; }),
     };
   }
-  return {dia, movimientos, almacen};
+  return {dia, limiteIngreso, plazoIngresoVencido, textoLimiteIngreso, movimientos, almacen};
 })();
 if (typeof module !== 'undefined') module.exports = EstadiasModelo;

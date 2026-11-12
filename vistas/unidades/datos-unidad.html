@@ -124,6 +124,23 @@
               Cuántas personas pueden alojarse, de 1 a 50.
             </p>
 
+            <label for="hora-check-in"
+              >Horario de check-in
+              <input
+                type="time"
+                id="hora-check-in"
+                name="hora_check_in"
+                value="14:00"
+                step="60"
+                required
+                aria-describedby="ayuda-check-in"
+              />
+            </label>
+            <p class="ayuda" id="ayuda-check-in">
+              Hora de Argentina. Hay 24 horas desde este horario para registrar
+              el ingreso del huésped.
+            </p>
+
             <label for="caracteristicas"
               >Características (opcional)
               <textarea

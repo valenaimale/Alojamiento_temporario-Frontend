@@ -9,8 +9,33 @@ const mensajeError = document.getElementById('mensaje-error');
 const mensajeProgreso = document.getElementById('mensaje-progreso');
 const botonAlta = formAlta.querySelector('button[type="submit"]');
 
+// Agrega el horario de check-in sin duplicarlo al reintentar la carga.
+function prepararHorarioCheckIn() {
+    if (formAlta.elements.hora_check_in) return;
+    const grupo = document.createElement('div');
+    const etiqueta = document.createElement('label');
+    etiqueta.htmlFor = 'hora-check-in';
+    etiqueta.textContent = 'Horario de check-in';
+    const horario = document.createElement('input');
+    horario.type = 'time';
+    horario.id = 'hora-check-in';
+    horario.name = 'hora_check_in';
+    horario.value = '14:00';
+    horario.step = '60';
+    horario.required = true;
+    horario.setAttribute('aria-describedby', 'ayuda-check-in');
+    etiqueta.append(horario);
+    const ayuda = document.createElement('p');
+    ayuda.id = 'ayuda-check-in';
+    ayuda.className = 'ayuda';
+    ayuda.textContent = 'Hora de Argentina. Hay 24 horas desde este horario para registrar el ingreso del huésped.';
+    grupo.append(etiqueta, ayuda);
+    formAlta.querySelector('.grupo-alta').append(grupo);
+}
+
 // Llena el <select> de localidades. Si el back no responde, avisa y deja el formulario sin poder enviarse.
 async function prepararFormulario() {
+    prepararHorarioCheckIn();
     try {
         await cargarLocalidades(document.getElementById('localidad'));
     } catch (error) {
