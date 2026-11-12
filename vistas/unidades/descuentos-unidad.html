@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<!-- Los descuentos por estadía larga de una unidad (?id=), US2.10. Solo los ve y los cambia el propietario.
+     Cada escalón dice desde cuántas noches aplica y qué porcentaje descuenta; a una estadía se le aplica el más alto
+     que alcanza. Muestra un ejemplo calculado en vivo. -->
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Descuentos por estadía larga</title>
+        <meta name="description" content="Definí cuánto descontás a las estadías largas en tu unidad">
+        <link rel="stylesheet" href="../../estilos/style.css">
+        <link rel="stylesheet" href="../../estilos/politica-unidad.css">
+        <link rel="stylesheet" href="../../estilos/descuentos-unidad.css">
+        <script src="../../funcionalidades/sesion.js" defer></script>
+        <script src="../../funcionalidades/menu.js" defer></script>
+        <script src="../../funcionalidades/unidades-comun.js" defer></script>
+        <script src="../../funcionalidades/descuentos-modelo.js" defer></script>
+        <script src="../../funcionalidades/descuentos-unidad.js" defer></script>
+        <link rel="stylesheet" href="../../estilos/haylugar.css">
+        <link rel="icon" href="../../imagenes/marca.svg" type="image/svg+xml">
+        <script src="../../funcionalidades/interfaz.js" defer></script>
+    </head>
+    <body class="gestion" hidden>
+        <header class="site-header">
+            <a class="marca" href="../homes/index-sin-sesion.html" aria-label="HayLugar, inicio"><svg viewBox="0 0 32 36" fill="none" aria-hidden="true"><path d="M5 31V13L16 5l11 8v18H5Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M12 31V19h8v12M20 24h.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg><span>HayLugar</span></a>
+            <nav id="menu" aria-label="Principal"></nav>
+            <a href="../perfil/perfil.html" class="enlace-perfil">Mi perfil</a>
+        </header>
+        <main>
+            <p><a href="configurar-unidad.html" id="enlace-volver">Volver a la unidad</a></p>
+
+            <p id="mensaje-error" role="alert"></p>
+
+            <article id="descuentos" hidden>
+                <h1>Descuentos por estadía larga</h1>
+                <p id="nombre-unidad" class="subtitulo"></p>
+                <p>Premiá a quien se queda más tiempo: por ejemplo, 10 % desde 10 noches y 15 % desde 14. A cada estadía se le aplica <strong>el descuento más alto que alcanza</strong>, en cualquier temporada. El huésped ve el precio con el descuento antes de reservar, y la seña y el saldo se calculan sobre ese precio.</p>
+                <p class="ayuda">Los cambios valen para las reservas nuevas: las que ya están hechas mantienen su precio.</p>
+
+                <form id="form-descuentos" novalidate>
+                    <fieldset>
+                        <legend>Tus descuentos</legend>
+                        <p class="ayuda" id="sin-descuentos">Todavía no tenés descuentos: todas las estadías pagan el precio de cada noche.</p>
+                        <ol id="lista-descuentos" class="lista-descuentos"></ol>
+                        <button type="button" class="boton boton-secundario" id="agregar-descuento">Agregar un descuento</button>
+                    </fieldset>
+
+                    <section aria-labelledby="titulo-ejemplo" class="ejemplo" id="ejemplo" hidden>
+                        <h2 id="titulo-ejemplo">Ejemplo con <span id="precio-ejemplo"></span> por noche</h2>
+                        <dl id="ejemplo-descuentos"></dl>
+                    </section>
+
+                    <p class="mensaje-error" id="error-descuentos" role="alert"></p>
+                    <button type="submit" class="boton boton-primario">Guardar los descuentos</button>
+                    <p id="mensaje-ok" role="status"></p>
+                </form>
+            </article>
+        </main>
+    </body>
+</html>

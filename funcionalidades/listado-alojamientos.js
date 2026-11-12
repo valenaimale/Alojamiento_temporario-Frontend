@@ -39,12 +39,24 @@ function crearTarjeta(unidad, parametros) {
   precio.className = "precio";
   const total = document.createElement("strong");
   total.textContent = formatearPrecio(unidad.precio_total);
+  // Descuento por estadía larga (US2.10): el precio de las noches tachado antes del total con el descuento
+  if (DescuentosModelo.tieneDescuento(unidad)) {
+    const anterior = document.createElement("s");
+    anterior.textContent = formatearPrecio(unidad.importe_sin_descuento);
+    precio.append(anterior, " ");
+  }
   precio.append(
     total,
     ` por ${unidad.noches} ${unidad.noches === 1 ? "noche" : "noches"}, precio final`,
   );
 
   tarjeta.append(titulo, lugar, precio);
+  if (DescuentosModelo.tieneDescuento(unidad)) {
+    const etiqueta = document.createElement("p");
+    etiqueta.className = "ayuda";
+    etiqueta.textContent = `${DescuentosModelo.textoPorcentaje(unidad.porcentaje_descuento)} de descuento por estadía larga`;
+    tarjeta.append(etiqueta);
+  }
   item.appendChild(tarjeta);
   return item;
 }

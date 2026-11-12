@@ -1,0 +1,32 @@
+/* Estilos de los descuentos por estadía larga de una unidad (vistas/unidades/descuentos-unidad.html).
+   Usa además politica-unidad.css: el mismo ancho, la ayuda y la tarjeta del ejemplo. */
+
+#form-descuentos {
+    max-width: 560px;
+}
+
+/* cada escalón en una fila: "Desde [10] noches, [10] % menos" y el botón para quitarlo */
+.lista-descuentos {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem;
+    display: grid;
+    gap: 0.75rem;
+}
+
+.lista-descuentos li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.5rem 1rem;
+}
+
+.lista-descuentos label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.lista-descuentos input {
+    width: 7rem;
+}
