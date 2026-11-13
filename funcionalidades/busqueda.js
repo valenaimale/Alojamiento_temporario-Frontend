@@ -26,6 +26,32 @@ function ajustarEgreso(formulario) {
   }
 }
 
+// "AAAA-MM-DD" como "14/11/2026", para los mensajes de error
+function fechaLegibleBusqueda(texto) {
+  const [anio, mes, dia] = texto.split("-");
+  return `${dia}/${mes}/${anio}`;
+}
+
+// Qué tiene de malo la búsqueda, o null si está bien: { campo, mensaje }, con campo = el nombre del input a marcar.
+// Son las mismas reglas que controla el back al reservar: ingreso de mañana en adelante, egreso posterior al
+// ingreso y de 1 a 50 huéspedes. "manana" es la fecha mínima del ingreso, como "AAAA-MM-DD".
+function problemaDeBusqueda({ ingreso, egreso, personas }, manana) {
+  if (ingreso === "") return { campo: "ingreso", mensaje: "Elegí la fecha de ingreso." };
+  if (ingreso < manana) {
+    // AAAA-MM-DD se compara como texto
+    return {
+      campo: "ingreso",
+      mensaje: `El ingreso tiene que ser desde el ${fechaLegibleBusqueda(manana)}: para hoy ya no se puede reservar.`,
+    };
+  }
+  if (egreso === "") return { campo: "egreso", mensaje: "Elegí la fecha de egreso." };
+  if (egreso <= ingreso) return { campo: "egreso", mensaje: "El egreso tiene que ser posterior al ingreso." };
+  if (!/^\d+$/.test(String(personas).trim()) || Number(personas) < 1 || Number(personas) > 50) {
+    return { campo: "personas", mensaje: "La cantidad de huéspedes tiene que ser de 1 a 50." };
+  }
+  return null;
+}
+
 // Prepara el formulario de búsqueda de la página (#form-busqueda): carga los destinos, fija las fechas mínimas
 // (el ingreso es de mañana en adelante: hoy ya no se reserva) y lo completa con la búsqueda que vino en la URL.
 async function prepararBusqueda() {
@@ -65,16 +91,28 @@ async function prepararBusqueda() {
   actualizarContador();
   ingreso.addEventListener("change", () => ajustarEgreso(formulario));
 
-  // el navegador ya controla los campos obligatorios y los mínimos; esto cubre los navegadores que no lo hacen
+  // noValidate: las fechas y los huéspedes se validan acá (problemaDeBusqueda) y el error sale con el estilo de
+  // HayLugar, en #error-busqueda, en lugar del globo del navegador. Los "min" quedan para el selector de fechas.
+  formulario.noValidate = true;
   formulario.addEventListener("submit", (evento) => {
     const error = document.getElementById("error-busqueda");
-    error.textContent = "";
-    if (egreso.value !== "" && egreso.value <= ingreso.value) {
+    [ingreso, egreso, personas].forEach((campo) => campo.removeAttribute("aria-invalid"));
+    const problema = problemaDeBusqueda(
+      { ingreso: ingreso.value, egreso: egreso.value, personas: personas.value },
+      sumarDias(fechaATextoBusqueda(new Date()), 1),
+    );
+    error.textContent = problema ? problema.mensaje : "";
+    if (problema) {
       evento.preventDefault();
-      error.textContent = "El egreso tiene que ser posterior al ingreso.";
-      egreso.focus();
+      const campo = formulario.elements[problema.campo];
+      campo.setAttribute("aria-invalid", "true");
+      campo.focus();
     }
   });
+  // al corregir un campo marcado, se le quita la marca de error
+  [ingreso, egreso, personas].forEach((campo) =>
+    campo.addEventListener("input", () => campo.removeAttribute("aria-invalid")),
+  );
 
   try {
     const seleccionada = Number(parametros.get("localidad_id")) || null;
@@ -110,3 +148,6 @@ async function prepararBusqueda() {
     }
   }
 }
+
+// Para los tests de Node (en el navegador no hay "module")
+if (typeof module !== "undefined") module.exports = { problemaDeBusqueda, sumarDias, fechaATextoBusqueda };
