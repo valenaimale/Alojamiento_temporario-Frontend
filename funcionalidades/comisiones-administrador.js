@@ -24,11 +24,19 @@ function armarFila(comision) {
   encabezado.appendChild(localidad);
   fila.appendChild(encabezado);
 
-  fila.appendChild(
-    celdaConTexto(
-      `${formatearFecha(comision.reserva.ingreso)} al ${formatearFecha(comision.reserva.egreso)}`,
-    ),
+  // Las fechas y, debajo, por qué se liquida: una cancelación, un no-show o una extensión no son una estadía,
+  // y el administrador cobra su comisión igual (#57, #65, #67 y #70). Una estadía normal no necesita aclaración.
+  const celdaFechas = celdaConTexto(
+    `${formatearFecha(comision.reserva.ingreso)} al ${formatearFecha(comision.reserva.egreso)}`,
   );
+  const motivo = LiquidacionesModelo.motivo(comision);
+  if (motivo.clave !== "estadia") {
+    const aclaracion = document.createElement("span");
+    aclaracion.className = "ayuda";
+    aclaracion.textContent = motivo.texto;
+    celdaFechas.appendChild(aclaracion);
+  }
+  fila.appendChild(celdaFechas);
   fila.appendChild(celdaConTexto(comision.propietario));
   fila.appendChild(celdaConTexto(formatearPrecio(comision.base_comisiones)));
 

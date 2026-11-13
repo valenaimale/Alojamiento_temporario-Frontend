@@ -30,20 +30,25 @@ function documentoDe(parte) {
   return parte.dni ? `DNI ${parte.dni}` : "sin CUIT ni DNI cargado";
 }
 
-// Los datos de la estadía que liquida
+// Los datos de la estadía que liquida, con el motivo por el que se liquida (una estadía, lo retenido de una
+// cancelación o de un no-show, o las noches extra de una extensión) y el período que corresponde a ese motivo:
+// en una extensión, las noches del comprobante son las noches extra, no las de la reserva original (#70).
 function mostrarEstadia(comprobante) {
   const reserva = comprobante.reserva;
-  document.getElementById("datos-estadia").replaceChildren(
+  const motivo = LiquidacionesModelo.motivo(comprobante);
+  const datos = [
     ...dato("Alojamiento", `${reserva.unidad.nombre} · ${reserva.unidad.localidad}, ${reserva.unidad.provincia}`),
     ...dato("Reserva", `N.º ${reserva.id}`),
+    ...dato("Motivo", `${motivo.texto} · ${motivo.ayuda}`),
     ...dato(
-      "Estadía",
+      LiquidacionesModelo.tituloDelPeriodo(comprobante),
       `Del ${formatearFecha(reserva.ingreso)} al ${formatearFecha(reserva.egreso)} · ` +
         `${reserva.noches} ${reserva.noches === 1 ? "noche" : "noches"} · ` +
         `${reserva.personas} ${reserva.personas === 1 ? "persona" : "personas"}`,
     ),
     ...dato("Huésped", reserva.huesped),
-  );
+  ];
+  document.getElementById("datos-estadia").replaceChildren(...datos);
 }
 
 // Las partes: quién cobra y quién factura. El comprobante del administrador solo nombra al propietario.

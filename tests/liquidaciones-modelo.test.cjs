@@ -198,3 +198,54 @@ test("si faltan las dos, a cada uno se le pide la suya primero", () => {
   assert.equal(alPropietario.propia, true);
   assert.equal(alAdministrador.propia, true);
 });
+
+// ---------- Por qué se liquida: no-show y extensión (decisiones #57, #67 y #70) ----------
+
+test("una estadia normal se muestra como estadia y su periodo son las noches de la estadia", () => {
+  const liquidacion = { motivo: "estadia", reserva: { id: 7, extiende_reserva_id: null } };
+
+  assert.equal(M.motivo(liquidacion).clave, "estadia");
+  assert.equal(M.motivo(liquidacion).texto, "Estadía");
+  assert.equal(M.esExtension(liquidacion), false);
+  assert.equal(M.tituloDelPeriodo(liquidacion), "Estadía");
+});
+
+test("un no-show se muestra como 'No se presento' y explica que se retuvo todo lo pagado", () => {
+  const liquidacion = { motivo: "no_show", reserva: { id: 7, extiende_reserva_id: null } };
+  const motivo = M.motivo(liquidacion);
+
+  assert.equal(motivo.texto, "No se presentó");
+  assert.match(motivo.ayuda, /24 hs/);
+  assert.match(motivo.ayuda, /todo lo que había pagado/i);
+  // no es una extensión: su período sigue siendo la estadía que no se usó
+  assert.equal(M.esExtension(liquidacion), false);
+  assert.equal(M.tituloDelPeriodo(liquidacion), "Estadía");
+});
+
+test("una cancelacion se distingue de un no-show: nadie cancelo nada en un no-show", () => {
+  assert.equal(M.motivo({ motivo: "cancelacion" }).texto, "Cancelación");
+  assert.match(M.motivo({ motivo: "cancelacion" }).ayuda, /política de cancelación/i);
+  assert.notEqual(M.motivo({ motivo: "cancelacion" }).texto, M.motivo({ motivo: "no_show" }).texto);
+});
+
+test("una extension nombra la reserva que extiende y su periodo son las noches extra", () => {
+  const liquidacion = { motivo: "extension", reserva: { id: 12, extiende_reserva_id: 7 } };
+
+  assert.equal(M.motivo(liquidacion).texto, "Extensión de la reserva n.º 7");
+  assert.match(M.motivo(liquidacion).ayuda, /noches extra/i);
+  assert.equal(M.esExtension(liquidacion), true);
+  assert.equal(M.tituloDelPeriodo(liquidacion), "Noches extra");
+});
+
+test("una extension sin la reserva original igual se entiende", () => {
+  assert.equal(M.motivo({ motivo: "extension" }).texto, "Extensión");
+  assert.equal(M.motivo({ motivo: "extension", reserva: { id: 12, extiende_reserva_id: null } }).texto, "Extensión");
+});
+
+test("un motivo que el front no conoce se muestra tal cual y no rompe la pagina", () => {
+  const motivo = M.motivo({ motivo: "reintegro_judicial", reserva: { id: 1, extiende_reserva_id: null } });
+
+  assert.equal(motivo.texto, "reintegro_judicial");
+  assert.equal(motivo.ayuda, "");
+  assert.equal(M.tituloDelPeriodo({ motivo: "reintegro_judicial" }), "Estadía");
+});
