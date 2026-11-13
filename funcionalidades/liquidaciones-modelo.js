@@ -32,6 +32,52 @@ const LiquidacionesModelo = (() => {
     );
   }
 
+  // Por qué se liquida, que es lo primero que el propietario necesita entender cuando ve un cobro:
+  // no es lo mismo una estadía que una reserva que no se usó. El backend lo manda en "motivo".
+  const MOTIVOS = {
+    estadia: {
+      texto: "Estadía",
+      ayuda: "El huésped ingresó: lo que cobró la reserva ya es tuyo.",
+    },
+    cancelacion: {
+      texto: "Cancelación",
+      ayuda: "Es lo que retuvo la política de cancelación que aceptó el huésped.",
+    },
+    no_show: {
+      texto: "No se presentó",
+      ayuda:
+        "Nadie registró el ingreso dentro de las 24 hs del horario de check-in: se retuvo todo lo que había pagado.",
+    },
+    extension: {
+      texto: "Extensión",
+      ayuda: "Son las noches extra que el huésped agregó a una estadía en curso.",
+    },
+  };
+
+  // Cómo mostrar el motivo de una liquidación: { clave, texto, ayuda }.
+  // En una extensión el texto nombra la reserva original, que es lo que le permite al propietario
+  // relacionar ese cobro con la estadía a la que se le agregaron las noches.
+  // Un motivo nuevo del backend se muestra tal cual en vez de romper la página.
+  function motivo(liquidacion) {
+    const clave = liquidacion.motivo;
+    const base = MOTIVOS[clave] ?? { texto: clave, ayuda: "" };
+    const original = liquidacion.reserva?.extiende_reserva_id ?? null;
+    if (clave !== "extension" || original === null) {
+      return { clave, ...base };
+    }
+    return { clave, ...base, texto: `Extensión de la reserva n.º ${original}` };
+  }
+
+  // Si la liquidación es de una extensión: sus noches son las noches extra, no las de la estadía original (#70)
+  function esExtension(liquidacion) {
+    return liquidacion.motivo === "extension";
+  }
+
+  // Cómo se nombra el período que liquida: las noches de la estadía, o las noches extra de una extensión
+  function tituloDelPeriodo(liquidacion) {
+    return esExtension(liquidacion) ? "Noches extra" : "Estadía";
+  }
+
   // El aviso que corresponde mostrar cuando falta alguna billetera de cobro, o null si no falta ninguna.
   // El backend manda faltan_billeteras: ["propietario"], ["administrador"], las dos, o vacío.
   //
@@ -161,6 +207,9 @@ const LiquidacionesModelo = (() => {
 
   return {
     estado,
+    motivo,
+    esExtension,
+    tituloDelPeriodo,
     avisoDeBilletera,
     filasDelPropietario,
     filasDelAdministrador,

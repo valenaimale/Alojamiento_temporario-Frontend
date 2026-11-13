@@ -41,6 +41,7 @@
     pendiente: "Pendiente de pago",
     confirmada: "Confirmada",
     cancelada: "Cancelada",
+    no_show: "No se presentó", // el huésped no llegó dentro de las 24 hs del check-in (#67)
   };
   const precioBreve = (valor) =>
     new Intl.NumberFormat("es-AR", {
@@ -538,7 +539,19 @@
       }),
     );
   }
-  // Las canceladas por el huésped en las últimas 48 hs, con el formulario de la excepción (L2-19, decisiones #64 y #65)
+  // Por qué esa reserva quedó con retención: la canceló el huésped, la canceló la plataforma por el saldo
+  // impago (#23), o el huésped no se presentó y el sistema la cerró solo (no-show, #67). El no-show se trata
+  // igual que una cancelación del huésped con todo pagado, pero se muestra aparte: nadie canceló nada.
+  function porQueSeRetuvo(r) {
+    if (r.motivo === "no_show") {
+      return "No se presentó: nadie registró el ingreso dentro de las 24 hs del horario de check-in";
+    }
+    return r.cancelada_por === "plataforma"
+      ? "Se canceló por falta de pago del saldo"
+      : "La canceló el huésped";
+  }
+  // Las canceladas por el huésped y los no-show de las últimas 48 hs, con el formulario de la excepción
+  // (L2-19, decisiones #64, #65 y #67)
   function presentarCanceladas() {
     if (!$("lista-canceladas")) return; // el administrador no tiene la sección
     $("cantidad-canceladas").textContent = estado.canceladas.length;
@@ -550,12 +563,15 @@
           x = r.excepcion;
         texto.append(
           el("h3", `${r.huesped} · ${periodo(r.ingreso, r.egreso)}`),
-          el("p", `${r.cancelada_por === "plataforma" ? "Se canceló por falta de pago del saldo" : "La canceló el huésped"}. Se retuvo ${formatearPrecio(x.retenido)}; a vos te tocan ${formatearPrecio(x.maximo)}.`),
+          el("p", `${porQueSeRetuvo(r)}. Se retuvo ${formatearPrecio(x.retenido)}; a vos te tocan ${formatearPrecio(x.maximo)}.`),
         );
         if (x.excepcion !== null) {
           texto.append(el("p", `Le devolviste ${formatearPrecio(x.excepcion)} al huésped.`, "mensaje-ok"));
         } else if (x.renuncio) {
-          texto.append(el("p", "Decidiste no devolverle nada: se aplicó la política de cancelación.", "mensaje-ok"));
+          // en un no-show no hubo cancelación: lo que se aplicó fue la retención de todo lo pagado (#67)
+          texto.append(el("p", r.motivo === "no_show"
+            ? "Decidiste no devolverle nada: se retuvo todo lo que había pagado."
+            : "Decidiste no devolverle nada: se aplicó la política de cancelación.", "mensaje-ok"));
         } else if (!x.puede) {
           texto.append(el("p", x.motivo, "ayuda"));
         } else {
@@ -622,7 +638,10 @@
     if (
       !(await confirmar({
         titulo: `¿No devolverle nada a ${r.huesped}?`,
-        detalle: "Se aplica la política de cancelación tal cual y tu parte de lo retenido se liquida enseguida. Después ya no vas a poder darle una excepción.",
+        detalle: (r.motivo === "no_show"
+          ? "Se retiene todo lo que había pagado"
+          : "Se aplica la política de cancelación tal cual")
+          + " y tu parte de lo retenido se liquida enseguida. Después ya no vas a poder darle una excepción.",
         textoConfirmar: "No devolver nada",
       }))
     )

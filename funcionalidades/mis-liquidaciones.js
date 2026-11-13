@@ -38,14 +38,28 @@ function armarTarjeta(liquidacion) {
   titulo.textContent = liquidacion.reserva.unidad.nombre;
   const fechas = document.createElement("p");
   fechas.className = "ayuda";
+  // "Estadía del ... al ...", o "Noches extra del ... al ..." si lo que se liquida es una extensión (#70)
   fechas.textContent =
-    `Estadía del ${formatearFecha(liquidacion.reserva.ingreso)} al ` +
+    `${LiquidacionesModelo.tituloDelPeriodo(liquidacion)} del ${formatearFecha(liquidacion.reserva.ingreso)} al ` +
     `${formatearFecha(liquidacion.reserva.egreso)} · ${liquidacion.reserva.noches} ` +
     `${liquidacion.reserva.noches === 1 ? "noche" : "noches"} · ${liquidacion.reserva.huesped}`;
   const columna = document.createElement("div");
   columna.append(titulo, fechas);
   encabezado.append(columna, badgeDeEstado(liquidacion.estado));
   item.appendChild(encabezado);
+
+  // Por qué se liquida. En una estadía normal no hace falta decirlo (ya lo dice la línea de arriba), pero una
+  // cancelación, un no-show o una extensión sí: el propietario tiene que entender de dónde salió ese cobro
+  // sin que nadie se haya alojado esas noches (#57, #67 y #70).
+  const motivo = LiquidacionesModelo.motivo(liquidacion);
+  if (motivo.clave !== "estadia") {
+    const linea = document.createElement("p");
+    linea.className = "ayuda";
+    const nombre = document.createElement("strong");
+    nombre.textContent = `${motivo.texto}. `;
+    linea.append(nombre, document.createTextNode(motivo.ayuda));
+    item.appendChild(linea);
+  }
 
   // Si el que no cargó la billetera es el administrador de la unidad, va en la tarjeta: es de esa unidad,
   // y el propietario no puede hacer nada más que entender por qué todavía no le transfirieron.
