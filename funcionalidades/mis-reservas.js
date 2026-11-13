@@ -48,7 +48,8 @@ function mostrarPagoDeReserva(reserva, cuerpo, datos) {
   resumen.className = "pago-reserva";
   const estado = document.createElement("p");
   estado.className = "estado-pago-reserva";
-  estado.textContent = `Pago: ${pago.texto}`;
+  // una extensión se paga entera, sin seña ni saldo: "Seña pendiente" sería confuso
+  estado.textContent = `Pago: ${esExtension && pago.texto === 'Seña pendiente' ? 'Pendiente' : pago.texto}`;
   resumen.append(estado);
   if (pago.tipo && /^[1-9]\d*$/.test(String(reserva.id))) {
     const enlace = document.createElement("a");
@@ -81,7 +82,7 @@ function mostrarPagoDeReserva(reserva, cuerpo, datos) {
     plazo.textContent = `${etiqueta}: ${fecha}`;
     resumen.append(plazo);
   }
-  if (typeof reserva.saldo === "string" && /^\d+(?:\.\d{1,2})?$/.test(reserva.saldo)) {
+  if (!esExtension && typeof reserva.saldo === "string" && /^\d+(?:\.\d{1,2})?$/.test(reserva.saldo)) {
     agregarDato(datos, "Saldo pendiente", formatearPrecio(reserva.saldo));
   }
   cuerpo.append(resumen);

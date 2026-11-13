@@ -389,3 +389,17 @@ test('expirada con fechas pasadas vuelve al alojamiento sin fechas', () => {
   const volver = nodos(tarjeta).find(n => n.tag === 'a' && n.textContent === 'Volver a reservar');
   assert.equal(volver.href, '../alojamientos/detalle.html?id=3');
 });
+
+test('la extensión pendiente dice "Pago: Pendiente" y no muestra un saldo que no tiene',()=>{
+  const p=pagina();
+  const original=enCurso({ingreso:'2020-01-01',egreso:'2099-02-19'});
+  const pendiente=reserva({id:44,extiende_reserva_id:42,ingreso:'2099-02-19',egreso:'2099-02-21',saldo:'0.00',
+    vence_en:new Date(Date.now()+600000).toISOString()});
+  p.contexto.listaDePrueba=[original,pendiente];
+  vm.runInContext('reservasActuales = listaDePrueba',p.contexto);
+  p.mostrarReservas();
+  const extension=nodos(p.get('lista-reservas').children[0]).find(n=>n.attributes?.['aria-label']==='Extensión de la estadía');
+  assert.match(textos(extension),/Pago: Pendiente/);
+  assert.doesNotMatch(textos(extension),/Seña pendiente|Saldo pendiente/);
+  assert.match(textos(extension),/para pagar la extensión/);
+});

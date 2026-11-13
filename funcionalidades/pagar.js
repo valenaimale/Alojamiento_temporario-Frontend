@@ -145,6 +145,13 @@ function mostrarResumenPago() {
   elementoPago('personas-reserva').textContent = `${reserva.noches} ${reserva.noches === 1 ? 'noche' : 'noches'} · ${reserva.personas} ${reserva.personas === 1 ? 'huésped' : 'huéspedes'}`;
   elementoPago('total-reserva').textContent = formatearPrecio(reserva.importe_total);
   elementoPago('sena-reserva').textContent = formatearPrecio(reserva.importe_sena);
+  // Una extensión se paga entera (sin seña ni saldo) y se liquida apenas se paga, porque el ingreso ya se registró (#70, #71)
+  const esExtension = Boolean(reserva.extiende_reserva_id);
+  elementoPago('etiqueta-total-reserva').textContent = esExtension ? 'Total de la extensión' : 'Total de la estadía';
+  elementoPago('fila-sena-reserva').hidden = esExtension;
+  elementoPago('destino-pago-guia').textContent = esExtension
+    ? 'Como ya registraron tu ingreso, el pago le llega al propietario apenas se confirma.'
+    : 'Tu plata queda guardada en el contrato hasta que registren tu ingreso.';
 }
 
 // Presenta pesos, ETH exacto y tipo de cambio del servidor antes de firmar.
@@ -152,7 +159,8 @@ function mostrarCotizacionPago() {
   const pago = estadoDelPago.cotizacion;
   elementoPago('cotizacion-pago').hidden = !pago;
   if (!pago) return;
-  elementoPago('concepto-pago').textContent = pago.tipo === 'saldo' ? 'Saldo a pagar' : 'Seña a pagar';
+  const esExtension = Boolean(estadoDelPago.reserva?.extiende_reserva_id);
+  elementoPago('concepto-pago').textContent = pago.tipo === 'saldo' ? 'Saldo a pagar' : esExtension ? 'Extensión a pagar' : 'Seña a pagar';
   elementoPago('monto-pesos').textContent = formatearPrecio(pago.monto_pesos);
   elementoPago('monto-eth').textContent = `${PagosModelo.formatearEth(pago.monto_wei)} ETH de prueba`;
   elementoPago('cambio-pago').textContent = `Conversión de prueba: 1 ETH = ${formatearPrecio(pago.pesos_por_eth)}.${pago.simulado ? ' No se transfieren fondos.' : ' El costo de la red se suma en MetaMask.'}`;
@@ -166,7 +174,7 @@ function mostrarCotizacionPago() {
     if (!soloFecha) formato.timeStyle = 'short';
     const texto = new Intl.DateTimeFormat('es-AR', formato).format(fecha);
     const vencido = pago.tipo === 'saldo' && (pago.vencido || PagosModelo.saldoVencido(plazo));
-    elementoPago('plazo-pago').textContent = vencido ? `Saldo vencido desde el ${texto}: pagalo antes de ingresar.` : `${pago.tipo === 'sena' ? 'Pagá la seña antes del' : 'Vencimiento del saldo:'} ${texto}${soloFecha ? '.' : ' (hora argentina).'}`;
+    elementoPago('plazo-pago').textContent = vencido ? `Saldo vencido desde el ${texto}: pagalo antes de ingresar.` : `${pago.tipo === 'sena' ? (esExtension ? 'Pagá la extensión antes del' : 'Pagá la seña antes del') : 'Vencimiento del saldo:'} ${texto}${soloFecha ? '.' : ' (hora argentina).'}`;
   }
   if (pago.tipo === 'sena') iniciarCuentaPago();
 }
