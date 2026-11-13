@@ -264,3 +264,26 @@ test('seña vencida ofrece volver al alojamiento, sin enlazar otra reserva ni of
   assert.equal(p.get('boton-pagar').disabled,true);
   assert.equal(cotizaciones(p).length,0);
 });
+
+test('una extensión se presenta como extensión: sin seña, con su propio plazo y sin esperar el ingreso',async()=>{
+  const p=pagina({
+    reservas:[reserva({extiende_reserva_id:41,importe_total:'60000.00',importe_sena:'60000.00',noches:1})],
+    cotizacion:{...real(),vence_en:'2099-01-01T15:00:00Z'},
+  });
+  await p.cargarPaginaPago();
+  assert.equal(p.get('concepto-pago').textContent,'Extensión a pagar');
+  assert.equal(p.get('etiqueta-total-reserva').textContent,'Total de la extensión');
+  assert.equal(p.get('fila-sena-reserva').hidden,true);
+  assert.match(p.get('destino-pago-guia').textContent,/ya registraron tu ingreso/);
+  assert.match(p.get('plazo-pago').textContent,/^Pagá la extensión antes del/);
+  assert.equal(p.get('boton-pagar').textContent,'Pagar la extensión');
+});
+
+test('una reserva común sigue mostrando la seña',async()=>{
+  const p=pagina({cotizacion:{...real(),vence_en:'2099-01-01T15:00:00Z'}});
+  await p.cargarPaginaPago();
+  assert.equal(p.get('concepto-pago').textContent,'Seña a pagar');
+  assert.equal(p.get('etiqueta-total-reserva').textContent,'Total de la estadía');
+  assert.equal(p.get('fila-sena-reserva').hidden,false);
+  assert.match(p.get('plazo-pago').textContent,/^Pagá la seña antes del/);
+});
