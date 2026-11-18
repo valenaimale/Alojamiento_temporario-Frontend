@@ -25,3 +25,78 @@ jobs:
           done < <(git ls-files '*.js' '*.cjs')
       - name: Probar reglas y estados de interfaz
         run: node --test tests/*.test.cjs
+
+  # Tests de punta a punta (E2E) con Playwright: un navegador de verdad contra el front y el back juntos.
+  # Levanta MySQL, baja el back (rama main), y Playwright arma la base alojamiento_e2e con los datos de ejemplo,
+  # levanta el back con el pago simulado y el front, y recorre los flujos de e2e/tests. Ver e2e/README.md.
+  e2e:
+    name: Tests de punta a punta (Playwright)
+    runs-on: ubuntu-latest
+    needs: tests
+    timeout-minutes: 20
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    steps:
+      - name: Descargar el front
+        uses: actions/checkout@v4
+
+      # El back siempre desde main: un cambio del front que necesita un endpoint nuevo se mergea después del back
+      - name: Descargar el back
+        uses: actions/checkout@v4
+        with:
+          repository: valenaimale/Alojamiento_temporario-Backend
+          ref: main
+          path: backend
+
+      - name: Instalar PHP 8.5
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: pdo_mysql, curl, mbstring, openssl, bcmath, gmp
+          tools: composer:v2
+          coverage: none
+
+      - name: Instalar las dependencias del back
+        working-directory: backend
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: e2e/package-lock.json
+
+      - name: Instalar Playwright y Chromium
+        working-directory: e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Correr los E2E
+        working-directory: e2e
+        env:
+          E2E_BACK_DIR: ${{ github.workspace }}/backend
+          E2E_DB_HOST: 127.0.0.1
+          E2E_DB_PORT: 3306
+          E2E_DB_USER: root
+          E2E_DB_PASS: root
+        run: npx playwright test
+
+      # El reporte HTML (con la traza, la captura y el video de cada test que falló) queda descargable en el resumen
+      - name: Subir el reporte de Playwright
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-playwright
+          path: e2e/playwright-report/
+          retention-days: 14

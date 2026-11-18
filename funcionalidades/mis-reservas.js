@@ -48,6 +48,7 @@ function mostrarPagoDeReserva(reserva, cuerpo, datos) {
   resumen.className = "pago-reserva";
   const estado = document.createElement("p");
   estado.className = "estado-pago-reserva";
+  estado.setAttribute("data-testid", "estado-pago-reserva");
   // una extensión se paga entera, sin seña ni saldo: "Seña pendiente" sería confuso
   estado.textContent = `Pago: ${esExtension && pago.texto === 'Seña pendiente' ? 'Pendiente' : pago.texto}`;
   resumen.append(estado);
@@ -55,6 +56,7 @@ function mostrarPagoDeReserva(reserva, cuerpo, datos) {
     const enlace = document.createElement("a");
     enlace.href = `pagar.html?reserva_id=${encodeURIComponent(reserva.id)}&tipo=${pago.tipo}`;
     enlace.className = "boton boton-primario";
+    enlace.setAttribute("data-testid", "accion-pago-reserva");
     enlace.textContent = esExtension && pago.accion === 'Pagar la seña' ? 'Pagar la extensión' : pago.accion;
     enlace.setAttribute("aria-label", `${enlace.textContent} de la reserva en ${reserva.alojamiento.nombre}`);
     resumen.append(enlace);
@@ -365,6 +367,9 @@ function tarjetaDeReserva(reserva) {
   const item = document.createElement("li");
   const tarjeta = document.createElement("article");
   tarjeta.className = "tarjeta reserva";
+  // para los E2E (e2e/paginas/PaginaMisReservas.js): la tarjeta, su id y su estado
+  tarjeta.setAttribute("data-testid", "tarjeta-reserva");
+  tarjeta.setAttribute("data-reserva-id", String(reserva.id));
   tarjeta.setAttribute("aria-labelledby", `reserva-${reserva.id}`);
   if (alojamiento.foto_principal) {
     const foto = document.createElement("img");
@@ -381,6 +386,7 @@ function tarjetaDeReserva(reserva) {
   };
   const badge = document.createElement("span");
   badge.className = `estado ${estado.clase}`;
+  badge.setAttribute("data-testid", "estado-reserva");
   badge.textContent = estado.texto;
   const titulo = document.createElement("h2");
   titulo.id = `reserva-${reserva.id}`;

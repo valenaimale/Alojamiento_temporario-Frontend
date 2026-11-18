@@ -11,6 +11,7 @@ function elementoAgenda(tag, texto, clase = '') {
 }
 function tarjetaDeMovimiento({tipo, reserva: r}) {
   const item = document.createElement('li'), tarjeta = elementoAgenda('article', '', 'tarjeta');
+  tarjeta.setAttribute('data-testid', 'movimiento-agenda'); tarjeta.setAttribute('data-tipo', tipo);   // para los E2E (e2e/paginas/PaginaAgenda.js)
   const realizado = r.estadia?.[`${tipo}_en`];
   const ingresoVencido = tipo === 'ingreso' && EstadiasModelo.plazoIngresoVencido(r);
   tarjeta.append(elementoAgenda('p', `${tipo === 'ingreso' ? 'Ingreso' : 'Egreso'}${realizado ? ' registrado' : ''}`, `badge badge-${tipo}`), elementoAgenda('h3', r.huesped), elementoAgenda('p', r.unidad.nombre, 'unidad'), elementoAgenda('p', `${r.unidad.direccion}, ${r.unidad.localidad}`), elementoAgenda('p', `${r.personas} huéspedes · Del ${formatearFecha(r.ingreso)} al ${formatearFecha(r.egreso)}`, 'estadia'));

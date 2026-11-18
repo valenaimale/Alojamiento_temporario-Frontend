@@ -41,10 +41,10 @@
                 <button id="reintentar-envio" type="button" class="boton boton-secundario">Reintentar envío</button>
             </section>
             <p id="cargando" aria-live="polite">Cargando tu agenda…</p>
-            <p id="agenda-vacia" hidden>No tenés ingresos ni egresos próximos.</p>
+            <p id="agenda-vacia" data-testid="agenda-vacia" hidden>No tenés ingresos ni egresos próximos.</p>
 
             <!-- un elemento por día con movimientos: su título (h2) y sus ingresos y egresos -->
-            <ol class="dias" id="dias" aria-label="Días con ingresos o egresos"></ol>
+            <ol class="dias" id="dias" data-testid="agenda-dias" aria-label="Días con ingresos o egresos"></ol>
         </main>
         <dialog id="dialogo-movimiento" class="dialogo-movimiento" aria-labelledby="titulo-movimiento" aria-describedby="contexto-movimiento">
             <h2 id="titulo-movimiento">Registrar movimiento</h2>

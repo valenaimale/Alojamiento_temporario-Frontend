@@ -1,0 +1,16 @@
+{
+  "name": "haylugar-e2e",
+  "private": true,
+  "description": "Tests de punta a punta (E2E) de HayLugar con Playwright y Page Object Model. Ver e2e/README.md.",
+  "type": "commonjs",
+  "scripts": {
+    "test": "playwright test",
+    "test:ver": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "reporte": "playwright show-report"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
+    "@playwright/test": "1.64.1"
+  }
+}

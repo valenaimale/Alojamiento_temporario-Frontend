@@ -1,0 +1,6 @@
+# Lo que generan npm y Playwright: no va al repo
+node_modules/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
