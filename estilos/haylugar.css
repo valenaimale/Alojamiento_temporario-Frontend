@@ -1389,3 +1389,10 @@
   border-bottom: 0;
   padding-bottom: 0;
 }
+
+/* Accesibilidad (WCAG 1.4.1, axe "link-in-text-block"): un enlace en medio de un texto no se distingue solo por el color.
+   Los enlaces dentro de un párrafo del contenido van subrayados; los que tienen forma de botón, no. */
+main p a:not(.boton) {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}

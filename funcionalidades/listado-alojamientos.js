@@ -10,6 +10,7 @@ function crearTarjeta(unidad, parametros) {
   const item = document.createElement("li");
   const tarjeta = document.createElement("article");
   tarjeta.className = "tarjeta";
+  tarjeta.setAttribute("data-testid", "tarjeta-alojamiento"); // para los E2E (e2e/paginas/PaginaListado.js)
 
   if (unidad.foto_principal !== null) {
     const foto = document.createElement("img");

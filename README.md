@@ -47,6 +47,10 @@ node --test tests/*.test.cjs
 
 No requiere paquetes adicionales. Cubre calendario, respuestas de cotización fuera de orden, cambios de viajeros, guardado de reserva, sesión vencida/fallos, límite de fotos y reenvío de movimientos de estadías. Los tests de DOM/HTTP simulado no sustituyen la comprobación visual ni las pruebas de API del backend.
 
+## Pruebas de punta a punta (E2E)
+
+En [`e2e/`](e2e/README.md), con Playwright y Page Object Model: un navegador real recorre los flujos principales (iniciar sesión, buscar, reservar y pagar la seña, Mis reservas, agenda del operador) contra el back local con el pago simulado, y revisa la accesibilidad con axe-core. Corren en el CI en cada push. Cómo correrlos y cómo escribir uno nuevo: [e2e/README.md](e2e/README.md).
+
 
 ### Estadías y libro de huéspedes
 

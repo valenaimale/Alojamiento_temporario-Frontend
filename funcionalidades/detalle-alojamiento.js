@@ -212,6 +212,7 @@ function dibujarCalendario() {
         const boton = document.createElement('button');
         boton.type = 'button';
         boton.dataset.fecha = datos.fecha;
+        boton.setAttribute('data-testid', `dia-${datos.fecha}`);   // para los E2E (e2e/paginas/PaginaDetalle.js)
         boton.tabIndex = datos.fecha === estado.foco ? 0 : -1;
         boton.setAttribute('aria-label', nombreAccesible(datos.fecha, datos));
         if (!sePuedeElegir(datos.fecha)) {

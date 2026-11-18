@@ -37,7 +37,7 @@
             <p id="mensaje-error" role="alert"></p>
 
             <article id="alojamiento" hidden>
-                <h1 id="nombre"></h1>
+                <h1 id="nombre" data-testid="detalle-nombre"></h1>
                 <p id="ubicacion" class="subtitulo"></p>
 
                 <section aria-labelledby="titulo-fotos">
@@ -84,7 +84,7 @@
 
                     <section aria-labelledby="titulo-estadia" class="estadia tarjeta">
                         <h3 id="titulo-estadia">Tu estadía</h3>
-                        <p id="seleccion" role="status">Elegí las fechas en el calendario para ver el precio.</p>
+                        <p id="seleccion" role="status" data-testid="detalle-seleccion">Elegí las fechas en el calendario para ver el precio.</p>
                         <dl id="precio-estadia" hidden>
                             <dt>Noches</dt>
                             <dd id="noches"></dd>
@@ -93,14 +93,14 @@
                             <dt id="texto-descuento" hidden>Descuento por estadía larga</dt>
                             <dd id="descuento" hidden></dd>
                             <dt>Precio total (final)</dt>
-                            <dd id="precio-total"></dd>
+                            <dd id="precio-total" data-testid="detalle-precio-total"></dd>
                             <dt id="texto-sena">Seña al reservar</dt>
-                            <dd id="sena"></dd>
+                            <dd id="sena" data-testid="detalle-sena"></dd>
                         </dl>
                         <p id="aclaracion-saldo" class="ayuda" hidden></p>
 
                         <!-- se muestra solo si la estadía está disponible y quien la ve puede reservar -->
-                        <form id="form-reservar" hidden>
+                        <form id="form-reservar" data-testid="detalle-form-reservar" hidden>
                             <label class="aceptar-politica">
                                 <input type="checkbox" name="acepta_politica" required>
                                 Leí y acepto la <a href="#titulo-politica">política de cancelación</a>
@@ -109,8 +109,8 @@
                             <p id="aclaracion-pago" class="ayuda">Tu reserva queda pendiente: tenés <strong>10 minutos</strong> para pagar la seña con MetaMask (ETH de prueba, red Base Sepolia), y mientras tanto te guardamos las fechas. <a href="../ayuda/pagos.html#huesped">¿Primera vez? Mirá cómo pagar</a></p>
                         </form>
                         <!-- si no puede reservar: por qué (sin sesión, sin el mail verificado o con otro tipo de cuenta) -->
-                        <p id="aviso-reservar" class="ayuda" hidden></p>
-                        <p class="mensaje-error" id="error-reserva" role="alert"></p>
+                        <p id="aviso-reservar" class="ayuda" data-testid="detalle-aviso-reservar" hidden></p>
+                        <p class="mensaje-error" id="error-reserva" role="alert" data-testid="detalle-error-reserva"></p>
                     </section>
                 </section>
 
