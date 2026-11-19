@@ -8,6 +8,8 @@ class PaginaInicio {
     this.egreso = page.getByLabel('Egreso');
     this.personas = page.getByLabel('Cantidad de huéspedes');
     this.botonBuscar = page.getByRole('button', { name: 'Buscar' });
+    // Los destinos de la fila "Un lugar para tu próxima escapada": llegan del back (si no, hay un aviso de error)
+    this.destinos = page.getByRole('list', { name: 'Destinos para explorar' }).getByRole('listitem');
   }
 
   // Abre el inicio sin sesión
