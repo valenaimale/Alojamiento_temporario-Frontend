@@ -51,8 +51,10 @@ form.addEventListener('submit', async (evento) => { // "escucha" el form: cada v
         return;
     }
 
+    // La cuenta todavía no existe: se crea cuando la persona abre el enlace del mail (verificar-mail.html).
+    // post-registro.html muestra a qué mail se mandó el enlace y ofrece reenviarlo.
     sessionStorage.setItem('mensajeRegistro', resultado.ok);     // guarda el mensaje en el session storage del navegador para que lo lea la página siguiente.
-    sessionStorage.setItem('registroExitoso', '1');              // para que la página siguiente avise del mail de verificación
+    sessionStorage.setItem('mailRegistro', resultado.mail);      // para el botón "Reenviar el mail" de la página siguiente
     //lo que se guarda en el session storage del navegador permanece ahi hasta cerrar la ventana.
-    window.location.href = 'post-registro.html';                 // navega a la página de resultado   
+    window.location.href = 'post-registro.html';                 // navega a la página de resultado
 }); // cierra la función del submit y el addEventListener

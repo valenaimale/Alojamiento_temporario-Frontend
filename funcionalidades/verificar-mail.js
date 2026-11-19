@@ -1,6 +1,10 @@
 // Página a la que lleva el enlace del mail de verificación.
 // El token viaja en la URL (?token=...), así que esta página no necesita sesión:
 // el usuario puede abrir el mail en otro navegador o en el celular.
+// Hay dos clases de enlace, y el back sabe cuál es:
+//  - el del registro: crea la cuenta y deja la sesión iniciada en este navegador ("Tu cuenta quedó creada");
+//  - el de una cuenta vieja que se creó sin verificar: solo marca el mail como verificado.
+// En los dos casos "Ir al inicio" lleva al home del rol, porque hay sesión.
 const mensaje = document.getElementById('mensaje');
 
 // Manda al backend el token del enlace y muestra si el mail quedó verificado
