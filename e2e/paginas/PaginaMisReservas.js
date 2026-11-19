@@ -27,6 +27,30 @@ class PaginaMisReservas {
     return this.page.locator(`[data-testid="tarjeta-reserva"][data-reserva-id="${reservaId}"]`);
   }
 
+  // Consulta las fechas nuevas desde la tarjeta que corresponde a la reserva.
+  async cotizarFechas(id, ingreso, egreso) {
+    const tarjeta = this.tarjeta(id);
+    await tarjeta.getByText('Modificar fechas', {exact: true}).click();
+    await tarjeta.getByLabel('Nuevo ingreso').fill(ingreso);
+    await tarjeta.getByLabel('Nuevo egreso').fill(egreso);
+    await tarjeta.getByRole('button', {name: 'Consultar diferencia'}).click();
+  }
+
+  // Muestra los importes de la cotización antes de autorizar un cambio.
+  resumenCambio(id) {
+    return this.tarjeta(id).getByRole('status').filter({hasText: 'Retención'});
+  }
+
+  // Confirma una reducción cuya cotización indica que no hay pago adicional.
+  async confirmarCambioSinPago(id) {
+    await this.tarjeta(id).getByRole('button', {name: 'Confirmar cambio', exact: true}).click();
+  }
+
+  // Confirma la cotización positiva para pasar al pago de la reserva vinculada.
+  async confirmarCambioConPago(id) {
+    await this.tarjeta(id).getByRole('button', {name: 'Confirmar y pasar al pago'}).click();
+  }
+
   // El estado de la reserva ("Confirmada", "Pendiente de pago", ...)
   estado(reservaId) {
     return this.tarjeta(reservaId).getByTestId('estado-reserva');
