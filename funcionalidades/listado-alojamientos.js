@@ -4,6 +4,17 @@
 
 const resumen = document.getElementById("resumen-busqueda");
 
+function rutaDetalle(unidad, parametros) {
+  const busqueda = new URLSearchParams({
+    id: unidad.id,
+    ingreso: parametros.get("ingreso"),
+    egreso: parametros.get("egreso"),
+    personas: parametros.get("personas"),
+    localidad_id: parametros.get("localidad_id") ?? "", // para volver a esta misma búsqueda
+  });
+  return `detalle.html?${busqueda}`;
+}
+
 // Una tarjeta de resultado: la foto, el nombre (enlace al detalle, con la misma búsqueda), dónde queda,
 // para cuántas personas y el precio final de toda la estadía
 function crearTarjeta(unidad, parametros) {
@@ -22,14 +33,7 @@ function crearTarjeta(unidad, parametros) {
 
   const titulo = document.createElement("h2");
   const enlace = document.createElement("a");
-  const busqueda = new URLSearchParams({
-    id: unidad.id,
-    ingreso: parametros.get("ingreso"),
-    egreso: parametros.get("egreso"),
-    personas: parametros.get("personas"),
-    localidad_id: parametros.get("localidad_id") ?? "", // para volver a esta misma búsqueda
-  });
-  enlace.href = `detalle.html?${busqueda}`;
+  enlace.href = rutaDetalle(unidad, parametros);
   enlace.textContent = unidad.nombre;
   titulo.appendChild(enlace);
 
@@ -76,6 +80,7 @@ async function buscar() {
     retry.hidden = !reintentar;
     resumen.textContent = "";
   };
+  document.getElementById("vista-mapa").hidden = true;
   vacio.hidden = true;
   lista.replaceChildren();
   if (!parametros.get("ingreso") || !parametros.get("egreso")) {
@@ -116,6 +121,7 @@ async function buscar() {
       );
       return;
     }
+    prepararMapaResultados(resultado.unidades, parametros);
     lista.replaceChildren(
       ...resultado.unidades.map((unidad) => crearTarjeta(unidad, parametros)),
     );

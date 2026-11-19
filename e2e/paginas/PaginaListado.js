@@ -3,6 +3,7 @@ class PaginaListado {
   // Guarda la página del navegador y ubica los elementos de la pantalla
   constructor(page) {
     this.page = page;
+    this.enlacesMapa = page.getByRole('list', { name: 'Alojamientos en el mapa' }).getByRole('link');
     this.resumen = page.getByTestId('resumen-busqueda');
     this.tarjetas = page.getByTestId('tarjeta-alojamiento');
     // El título cambia al terminar: "N alojamientos disponibles", "Busquemos otras fechas" o, si el back falló, "Alojamientos"
@@ -27,6 +28,12 @@ class PaginaListado {
   async abrir({ ingreso, egreso, personas = 2 }) {
     const busqueda = new URLSearchParams({ ingreso, egreso, personas: String(personas), localidad_id: '' });
     await this.page.goto(`/vistas/alojamientos/listado.html?${busqueda}`);
+  }
+
+  // Abre el mapa público y elige uno de los barrios de los resultados disponibles.
+  async filtrarMapaPorBarrio(barrio) {
+    await this.page.getByText('Ver alojamientos en el mapa', {exact: true}).click();
+    await this.page.getByLabel('Barrio', {exact: true}).selectOption(barrio);
   }
 
   // La tarjeta del alojamiento con ese nombre

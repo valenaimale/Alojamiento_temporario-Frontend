@@ -12,6 +12,10 @@
     />
     <link rel="stylesheet" href="../../estilos/style.css" />
     <link rel="stylesheet" href="../../estilos/datos-unidad.css" />
+    <link rel="stylesheet" href="../../funcionalidades/leaflet/leaflet.css" />
+    <link rel="stylesheet" href="../../estilos/mapa.css" />
+    <script src="../../funcionalidades/leaflet/leaflet.js" defer></script>
+    <script src="../../funcionalidades/mapa.js" defer></script>
     <script src="../../funcionalidades/sesion.js" defer></script>
     <script src="../../funcionalidades/menu.js" defer></script>
     <script src="../../funcionalidades/unidades-comun.js" defer></script>
@@ -104,6 +108,17 @@
                 autocomplete="off"
               />
             </label>
+            <details id="ubicacion-publica">
+              <summary>Ubicación en el mapa (opcional)</summary>
+              <p>Marcá el punto que querés mostrar en la búsqueda pública o ingresá sus coordenadas.</p>
+              <div id="mapa" class="mapa" aria-label="Elegir ubicación pública"></div>
+              <label>Latitud <input name="latitud" type="number" min="-90" max="90" step="any"></label>
+              <label>Longitud <input name="longitud" type="number" min="-180" max="180" step="any"></label>
+              <label>Barrio <input name="barrio" maxlength="100"></label>
+              <label>Distancia aproximada a la playa (metros) <input type="number" name="metros_playa" min="0" max="9999999"></label>
+              <label>Distancia aproximada al centro (metros) <input type="number" name="metros_centro" min="0" max="9999999"></label>
+              <button type="button" class="boton" id="quitar-ubicacion">Quitar ubicación del mapa</button>
+            </details>
 
             <label for="capacidad"
               >Capacidad

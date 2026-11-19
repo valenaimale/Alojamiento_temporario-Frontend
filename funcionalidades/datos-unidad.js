@@ -57,6 +57,7 @@ async function prepararDatos() {
   const form = document.getElementById("form-datos");
   form.elements.nombre.value = unidad.nombre;
   form.elements.direccion.value = unidad.direccion;
+  prepararMapaPropietario(form, unidad);
   form.elements.capacidad.value = unidad.capacidad;
   form.elements.hora_check_in.value = (unidad.hora_check_in || "14:00").slice(0, 5);
   form.elements.caracteristicas.value = unidad.caracteristicas ?? "";

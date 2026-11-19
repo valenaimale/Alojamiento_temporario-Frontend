@@ -1,0 +1,5 @@
+.mapa { width: 100%; height: clamp(17rem, 50vh, 32rem); margin-block: .75rem; z-index: 0; }
+#vista-mapa, #ubicacion-publica { margin-block: 1rem; }
+#vista-mapa summary, #ubicacion-publica summary { cursor: pointer; padding-block: .75rem; font-weight: bold; }
+#vista-mapa label { display: inline-block; margin: .5rem 1rem .5rem 0; }
+#mapa-unidades li { margin-block: .5rem; }
