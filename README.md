@@ -55,3 +55,15 @@ En [`e2e/`](e2e/README.md), con Playwright y Page Object Model: un navegador rea
 ### Estadías y libro de huéspedes
 
 RF-10: registro desde la agenda del operador, con notas, hora y reenvío de movimientos pendientes. RF-20: datos por reserva desde Mis reservas; consulta mensual y CSV desde administración/calendario de la unidad. Nuevos patrones documentados en [guía de diseño](docs/guia-diseno.md#12-estadías-y-huéspedes). Requiere la migración de estadías/libro del backend.
+
+## Dos réplicas del front en local
+
+Con Docker, ejecutá `docker compose up -d --build` en este repositorio y abrí
+`http://localhost:5500`. El navegador usa el backend local del proyecto en
+el puerto 8000. El balanceador alterna entre dos copias de los archivos públicos.
+
+Repetí `curl -sI http://localhost:5500/vistas/homes/index-sin-sesion.html`:
+el encabezado `X-Replica` identifica a `front1` o `front2`.
+Con `docker compose stop front1` la misma URL sigue respondiendo desde `front2`.
+Para reponer la réplica usá `docker compose start front1`. Para apagar el entorno,
+`docker compose down`. El despliegue público sirve el front estático desde la CDN de Vercel.

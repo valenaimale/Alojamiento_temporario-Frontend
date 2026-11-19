@@ -1,0 +1,18 @@
+x-front: &front
+  build: .
+  image: haylugar-frontend:local
+
+services:
+  front1:
+    <<: *front
+    hostname: front1
+  front2:
+    <<: *front
+    hostname: front2
+  balanceador:
+    image: nginx:alpine
+    volumes:
+      - ./docker/balanceador.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "127.0.0.1:${FRONT_PORT:-5500}:80"
+    depends_on: [front1, front2]
