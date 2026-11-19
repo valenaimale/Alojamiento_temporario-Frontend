@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<!-- Resultado del registro y aviso de que se mandó el mail de verificación. -->
+<!-- Después de registrarse: la cuenta se crea recién cuando se abre el enlace del mail, así que acá se avisa a qué mail
+     se mandó y se ofrece reenviarlo. -->
 <html lang="es">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Post Registro</title>
+        <title>Revisá tu mail</title>
         <link rel="stylesheet" href="../../estilos/style.css">
         <link rel="stylesheet" href="../../estilos/post-registro.css">
         <script src="../../funcionalidades/sesion.js" defer></script>
@@ -16,9 +17,13 @@
     <body class="cuenta">
         <header class="site-header"><a class="marca" href="../homes/index-sin-sesion.html" aria-label="HayLugar, inicio"><svg viewBox="0 0 32 36" fill="none" aria-hidden="true"><path d="M5 31V13L16 5l11 8v18H5Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M12 31V19h8v12M20 24h.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg><span>HayLugar</span></a></header>
         <main>
-            <h1>Tu cuenta en HayLugar</h1>
-            <p id="mensaje"></p>
-            <p id="aviso-verificacion" hidden>Te enviamos un mail para verificar tu cuenta.</p>
+            <h1>Revisá tu mail</h1>
+            <p id="mensaje" data-testid="post-registro-mensaje"></p>
+            <div id="aviso-enlace" hidden>
+                <p>Tu cuenta se crea cuando abrís el enlace del mail. Vence en 24 horas. Si no lo ves, revisá la carpeta de spam.</p>
+                <button type="button" id="boton-reenviar" class="boton">Reenviar el mail</button>
+                <p id="mensaje-reenvio" role="status" data-testid="post-registro-reenvio"></p>
+            </div>
             <button type="button" id="boton-volver-inicio" class="boton boton-primario">Volver al inicio</button>
         </main>
         <footer class="site-footer"><strong>HayLugar</strong><span>Alojamientos temporarios</span></footer>
