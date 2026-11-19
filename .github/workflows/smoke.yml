@@ -1,0 +1,52 @@
+# Smoke de producción: unos pocos tests de solo lectura (e2e/smoke/) contra la app desplegada, para saber si quedó viva.
+# Corre:
+#   - cuando Vercel termina un deploy de producción del front (Vercel le avisa a GitHub con un "deployment_status");
+#   - (después de cada deploy del back corren estos mismos tests, desde el job "Smoke de producción" del CI del back);
+#   - todos los días a las 8 de Argentina, por si se cae Railway o Aiven aunque nadie haya desplegado;
+#   - a mano, desde Actions → Smoke de producción → Run workflow.
+name: Smoke de producción
+
+on:
+  deployment_status:
+  schedule:
+    - cron: '0 11 * * *'   # 11:00 UTC = 8:00 en Argentina
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Smoke de producción (Playwright)
+    # Con deployment_status, solo los deploys de producción que terminaron bien (no las previews)
+    if: >-
+      github.event_name != 'deployment_status' ||
+      (github.event.deployment_status.state == 'success' && github.event.deployment.environment == 'Production')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: e2e/package-lock.json
+
+      - name: Instalar Playwright y Chromium
+        working-directory: e2e
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Correr el smoke contra producción
+        working-directory: e2e
+        run: npx playwright test -c playwright.smoke.config.js
+
+      - name: Subir el reporte
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-smoke
+          path: e2e/playwright-report/
+          retention-days: 14

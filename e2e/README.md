@@ -121,3 +121,28 @@ Las reglas:
 ## Accesibilidad
 
 `tests/accesibilidad.spec.js` pasa axe-core por las pantallas principales y falla si encuentra problemas graves (WCAG 2.1 A y AA, impacto "serious" o "critical"). Para sumar una pantalla, se agrega una entrada en `PANTALLAS`. Todos los hallazgos, también los menores, quedan adjuntos en el reporte como `axe.json`.
+
+## Smoke de producción
+
+`smoke/produccion.spec.js` es otro grupo de tests, que corre **contra la app desplegada** y no contra el back local. Su configuración propia es `playwright.smoke.config.js`. Son 4 tests de **solo lectura**: nunca reservan, pagan ni modifican nada en producción.
+
+| Test | Qué pieza comprueba |
+| --- | --- |
+| `/api/estado` responde `ok` | La redirección `/api` de Vercel, el back en Railway y la base en Aiven |
+| El inicio carga con los destinos | El front en Vercel y su primer pedido al back |
+| La búsqueda responde y abre un detalle | `/buscar` y el detalle de un alojamiento real |
+| El inicio de sesión responde | Un `POST` con un mail que no existe llega al back (CORS y cookies), y vuelve el error de credenciales, no el de "sin conexión" |
+
+Cuándo corre:
+
+- **Después de cada deploy del front:** `.github/workflows/smoke.yml`, cuando Vercel termina un deploy de producción.
+- **Después de cada deploy del back:** el job "Smoke de producción" del CI del back baja este repo y corre los mismos tests.
+- **Todos los días a las 8**, por si se cae Railway o Aiven aunque nadie haya desplegado.
+- **A mano:** en Actions → Smoke de producción → Run workflow, o en tu máquina, dentro de `e2e/`:
+
+```bash
+npx playwright test -c playwright.smoke.config.js
+SMOKE_URL=https://<una-preview>.vercel.app npx playwright test -c playwright.smoke.config.js   # otro despliegue
+```
+
+Un smoke nuevo tiene que ser de solo lectura y no puede depender de datos de prueba: en producción no está el seeder.
