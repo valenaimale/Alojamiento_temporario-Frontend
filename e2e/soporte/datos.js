@@ -4,7 +4,7 @@
 // Todos los usuarios de ejemplo tienen el mail verificado y esta contraseña
 const CONTRASENIA = 'clave-segura-1';
 
-// Un usuario por rol (y dos huéspedes)
+// Un usuario por rol (y dos huéspedes y dos propietarias)
 const USUARIOS = {
   huesped: { nombre: 'Juan Pérez', mail: 'juan@ejemplo.local' },
   otraHuesped: { nombre: 'Lucía Sosa', mail: 'lucia@ejemplo.local' },
@@ -12,6 +12,7 @@ const USUARIOS = {
   propietariaConIva: { nombre: 'Elsa Quiroga', mail: 'elsa@ejemplo.local' },
   administrador: { nombre: 'Cacho Fernández', mail: 'cacho@ejemplo.local' },
   operadora: { nombre: 'Nadia Ruiz', mail: 'nadia@ejemplo.local' },
+  backoffice: { nombre: 'Rocío Paz', mail: 'rocio@ejemplo.local' },
 };
 
 // Las unidades. Fechas ocupadas, en días desde hoy (el egreso no es una noche):

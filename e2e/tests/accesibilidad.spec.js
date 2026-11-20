@@ -7,6 +7,7 @@ const { PaginaInicioSesion } = require('../paginas/PaginaInicioSesion');
 const { PaginaListado } = require('../paginas/PaginaListado');
 const { PaginaMisReservas } = require('../paginas/PaginaMisReservas');
 const { PaginaAgenda } = require('../paginas/PaginaAgenda');
+const { PaginaLiquidacionesBackoffice } = require('../paginas/PaginaLiquidacionesBackoffice');
 const { diasDesdeHoy } = require('../soporte/datos');
 
 const BUSQUEDA = { ingreso: diasDesdeHoy(10), egreso: diasDesdeHoy(13), personas: 2 };
@@ -37,6 +38,10 @@ const PANTALLAS = {
     const pagina = new PaginaAgenda(page);
     await pagina.abrir();
     await pagina.movimientos.first().waitFor();
+  }],
+  'liquidaciones del backoffice': ['backoffice', async (page) => {
+    const pagina = new PaginaLiquidacionesBackoffice(page);
+    await pagina.abrir();
   }],
 };
 

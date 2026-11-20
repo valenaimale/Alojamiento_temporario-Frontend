@@ -25,7 +25,10 @@ const MENU = {
         { texto: 'Mis comisiones', url: '../liquidaciones/comisiones.html' },
         AYUDA_PAGOS.administrador,
     ],
-    backoffice: [{ texto: 'Usuarios', url: '../homes/index-backoffice.html' }],   // la página la crea la Tarea 2
+    backoffice: [
+        { texto: 'Usuarios', url: '../homes/index-backoffice.html' },
+        { texto: 'Liquidaciones', url: '../backoffice/liquidaciones.html' },   // generar y pagar sin esperar al cron
+    ],
 };
 
 // Arma el menú dentro del <nav id="menu"> de la página.

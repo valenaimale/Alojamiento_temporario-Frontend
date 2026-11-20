@@ -55,6 +55,9 @@ e2e/
     PaginaPago.js           pago de seña, saldo o extensión
     PaginaMisReservas.js    Mis reservas
     PaginaAgenda.js         agenda del operador
+    PaginaRegistro.js       formularios de registro y "Revisá tu mail"
+    PaginaVerificarMail.js  el enlace del mail que crea la cuenta
+    PaginaLiquidacionesBackoffice.js  liquidaciones del backoffice: generar y pagar
   tests/                  un archivo por flujo
   soporte/
     fixtures.js           el test y el expect que usan todos los tests
@@ -76,6 +79,7 @@ Todos los usuarios tienen la contraseña `clave-segura-1` y el mail verificado. 
 | `propietariaConIva` | Elsa Quiroga | propietaria, discrimina IVA |
 | `administrador` | Cacho Fernández | administrador |
 | `operadora` | Nadia Ruiz | operadora |
+| `backoffice` | Rocío Paz | backoffice (genera y paga las liquidaciones) |
 
 Las unidades, sus precios y sus fechas ocupadas están comentadas en `soporte/datos.js`. Si necesitás otro dato de partida, se agrega al seeder del back y se documenta ahí.
 
