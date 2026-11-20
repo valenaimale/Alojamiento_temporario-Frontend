@@ -109,7 +109,8 @@ test('permiso del servidor prevalece y saldo vence al terminar fecha argentina',
   assert.equal(modelo.estadoPagoReserva({estado:'pendiente'}).tipo,null);
   const r={estado:'confirmada',saldo:'50.00',puede_pagar_saldo:true,fecha_cobro:'2026-11-05'};
   assert.equal(modelo.estadoPagoReserva(r,Date.parse('2026-11-06T02:59:59Z')).tipo,'saldo');
-  assert.equal(modelo.estadoPagoReserva(r,Date.parse('2026-11-06T03:00:00Z')).texto,'Saldo vencido: pagalo antes de ingresar');
+  assert.equal(modelo.estadoPagoReserva(r,Date.parse('2026-11-06T03:00:00Z')).texto,'Saldo vencido: la reserva se cancela');
+  assert.equal(modelo.estadoPagoReserva(r,Date.parse('2026-11-06T03:00:00Z')).tipo,null);//sin gracia (#75): ya no se paga
   assert.equal(modelo.estadoPagoReserva({...r,puede_pagar_saldo:false},Date.parse('2026-11-05T12:00:00Z')).tipo,null);
 });
 

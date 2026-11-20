@@ -148,10 +148,18 @@ function mostrarResumenPago() {
   // Una extensión se paga entera (sin seña ni saldo) y se liquida apenas se paga, porque el ingreso ya se registró (#70, #71)
   const esExtension = Boolean(reserva.extiende_reserva_id);
   elementoPago('etiqueta-total-reserva').textContent = esExtension ? 'Total de la extensión' : 'Total de la estadía';
-  elementoPago('fila-sena-reserva').hidden = esExtension;
+  // Reservando con 5 días o menos se paga el total al reservar (#75 del back): no hay una seña aparte que mostrar
+  elementoPago('fila-sena-reserva').hidden = esExtension || esPagoTotal(reserva);
   elementoPago('destino-pago-guia').textContent = esExtension
     ? 'Como ya registraron tu ingreso, el pago le llega al propietario apenas se confirma.'
     : 'Tu plata queda guardada en el contrato hasta que registren tu ingreso.';
+}
+
+// Si la seña de la reserva es el total (reservó con 5 días o menos, #75 del back). Una extensión no cuenta: tiene su propio texto.
+function esPagoTotal(reserva) {
+  if (!reserva || reserva.extiende_reserva_id) return false;
+  const sena = Number(reserva.importe_sena);
+  return Number.isFinite(sena) && sena > 0 && sena === Number(reserva.importe_total);
 }
 
 // Presenta pesos, ETH exacto y tipo de cambio del servidor antes de firmar.
@@ -160,7 +168,8 @@ function mostrarCotizacionPago() {
   elementoPago('cotizacion-pago').hidden = !pago;
   if (!pago) return;
   const esExtension = Boolean(estadoDelPago.reserva?.extiende_reserva_id);
-  elementoPago('concepto-pago').textContent = pago.tipo === 'saldo' ? 'Saldo a pagar' : esExtension ? 'Extensión a pagar' : 'Seña a pagar';
+  elementoPago('concepto-pago').textContent = pago.tipo === 'saldo' ? 'Saldo a pagar' : esExtension ? 'Extensión a pagar'
+    : esPagoTotal(estadoDelPago.reserva) ? 'Total a pagar' : 'Seña a pagar';
   elementoPago('monto-pesos').textContent = formatearPrecio(pago.monto_pesos);
   elementoPago('monto-eth').textContent = `${PagosModelo.formatearEth(pago.monto_wei)} ETH de prueba`;
   elementoPago('cambio-pago').textContent = `Conversión de prueba: 1 ETH = ${formatearPrecio(pago.pesos_por_eth)}.${pago.simulado ? ' No se transfieren fondos.' : ' El costo de la red se suma en MetaMask.'}`;
@@ -174,7 +183,12 @@ function mostrarCotizacionPago() {
     if (!soloFecha) formato.timeStyle = 'short';
     const texto = new Intl.DateTimeFormat('es-AR', formato).format(fecha);
     const vencido = pago.tipo === 'saldo' && (pago.vencido || PagosModelo.saldoVencido(plazo));
-    elementoPago('plazo-pago').textContent = vencido ? `Saldo vencido desde el ${texto}: pagalo antes de ingresar.` : `${pago.tipo === 'sena' ? (esExtension ? 'Pagá la extensión antes del' : 'Pagá la seña antes del') : 'Vencimiento del saldo:'} ${texto}${soloFecha ? '.' : ' (hora argentina).'}`;
+    // El saldo se paga hasta las 23:59 de la fecha de cobro, sin días de gracia (#75 del back)
+    elementoPago('plazo-pago').textContent = vencido
+      ? `El plazo del saldo venció el ${texto}: la reserva se cancela sola.`
+      : pago.tipo === 'saldo'
+        ? `Pagá el saldo hasta el ${texto}, a las 23:59 (hora argentina).`
+        : `${esExtension ? 'Pagá la extensión antes del' : 'Pagá la seña antes del'} ${texto}${soloFecha ? '.' : ' (hora argentina).'}`;
   }
   if (pago.tipo === 'sena') iniciarCuentaPago();
 }

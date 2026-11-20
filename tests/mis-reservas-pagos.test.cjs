@@ -122,12 +122,18 @@ test('reserva pendiente_pago permanece en próximas', () => {
   assert.equal(p.get('lista-reservas').children.length, 1);
 });
 
-test('respeta permisos y permite saldar una reserva vencida cuando backend lo habilita',()=>{
-  const p=pagina();
-  assert.equal(cobros(p.tarjetaDeReserva(reserva({puede_pagar:false}))).length,0);
-  const vencida=p.tarjetaDeReserva(reserva({estado:'confirmada',saldo:'400.00',fecha_cobro:'2020-01-01',puede_pagar_saldo:true}));
-  assert.equal(cobros(vencida).length,1);
-  assert.match(textos(vencida),/Saldo vencido/);
+// Sin días de gracia (#75 del back): pasada la fecha de cobro el saldo ya no se paga, la reserva se cancela sola
+test('respeta permisos y no ofrece pagar un saldo vencido', () => {
+  // Arrange
+  const p = pagina();
+
+  // Act
+  const vencida = p.tarjetaDeReserva(reserva({estado: 'confirmada', saldo: '400.00', fecha_cobro: '2020-01-01', puede_pagar_saldo: true}));
+
+  // Assert
+  assert.equal(cobros(p.tarjetaDeReserva(reserva({puede_pagar: false}))).length, 0);
+  assert.equal(cobros(vencida).length, 0);
+  assert.match(textos(vencida), /Saldo vencido: la reserva se cancela/);
 });
 
 test('cancelación muestra desglose antes de POST y conserva resultado pendiente de devolución',async()=>{
