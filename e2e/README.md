@@ -76,7 +76,7 @@ Todos los usuarios tienen la contraseña `clave-segura-1` y el mail verificado. 
 | Clave en `datos.js` | Usuario | Rol |
 | --- | --- | --- |
 | `huesped` | Juan Pérez | huésped |
-| `otraHuesped` | Lucía Sosa | huésped (tiene una reserva confirmada que ingresa en 3 días, con el saldo pendiente) |
+| `otraHuesped` | Lucía Sosa | huésped (tiene una reserva confirmada que ingresa en 6 días, con el saldo pendiente que vence mañana) |
 | `propietaria` | Marisa Gómez | propietaria, no discrimina IVA |
 | `propietariaConIva` | Elsa Quiroga | propietaria, discrimina IVA |
 | `administrador` | Cacho Fernández | administrador |

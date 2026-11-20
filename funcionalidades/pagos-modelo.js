@@ -207,9 +207,8 @@ const PagosModelo = (() => {
       try {
         const faltante = decimal(reserva.saldo);
         if (faltante.numero === 0n) return estado('Pago completo', null, null, 'estado-publicada');
-        if (saldoVencido(reserva.fecha_cobro, ahora)) return reserva.puede_pagar_saldo === true
-          ? estado('Saldo vencido: pagalo antes de ingresar', 'saldo', 'Pagar el saldo')
-          : estado('Saldo vencido; pago no habilitado', null, null, 'estado-no-publicada');
+        // Sin días de gracia (#75 del back): pasada la fecha de cobro ya no se paga y la reserva se cancela sola
+        if (saldoVencido(reserva.fecha_cobro, ahora)) return estado('Saldo vencido: la reserva se cancela', null, null, 'estado-no-publicada');
         return reserva.puede_pagar_saldo === true ? estado('Saldo pendiente', 'saldo', 'Pagar el saldo') : estado('Saldo pendiente; pago no habilitado');
       } catch { return estado('Estado de pago no informado', null, null, 'estado-no-publicada'); }
     }

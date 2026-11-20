@@ -18,7 +18,7 @@ const USUARIOS = {
 // Las unidades. Fechas ocupadas, en días desde hoy (el egreso no es una noche):
 //  - Cabaña del Mar: bloqueada del 20 al 26 y reservada (pendiente) del 40 al 45. Temporada baja hasta el día 59
 //    (mínimo 2 noches, $60.000 la noche) y alta desde el 60 (mínimo 7 noches, $90.000).
-//  - Casa del Bosque: reservada por Lucía (confirmada, con el saldo pendiente) del 3 al 8. Mínimo 3 noches, $80.000.
+//  - Casa del Bosque: reservada por Lucía (confirmada, con el saldo pendiente) del 6 al 9: la fecha de cobro es mañana. Mínimo 3 noches, $80.000.
 //  - Loft del Centro: mínimo 2 noches, $85.000.
 //  - Departamento Costanera: en borrador, nunca aparece en la búsqueda.
 //  - Cabaña de los Pinos: de Elsa, en Mar de las Pampas, mínimo 4 noches (no aparece en las búsquedas de 3 noches).

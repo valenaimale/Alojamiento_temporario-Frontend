@@ -78,7 +78,7 @@ Se reutiliza `GET /reservas/mias`, con `reservas[]`:
 
 - Pendiente y `puede_pagar: true`: **Pagar la seña**, mientras no haya vencido `vence_en`.
 - Confirmada, `saldo > 0` y `puede_pagar_saldo: true`: **Pagar el saldo**, incluso si venció `fecha_cobro`.
-- Fecha de cobro pasada: **Saldo vencido: pagalo antes de ingresar**, con botón si `puede_pagar_saldo: true`; sin botón si es falso. Una fecha sin hora se considera vigente hasta terminar ese día en Argentina.
+- Fecha de cobro pasada: **Saldo vencido: la reserva se cancela**, sin botón: no hay días de gracia (decisión #75 del back) y la reserva se cancela sola al día siguiente. Una fecha sin hora se considera vigente hasta terminar ese día en Argentina.
 - Saldo cero: pago completo. Campos ausentes no habilitan cobros ni permiten afirmar que todo está pagado.
 - Cancelada, expirada y otros estados terminales: sin cobros habilitados.
 
