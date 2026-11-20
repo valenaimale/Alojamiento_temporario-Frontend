@@ -1,4 +1,6 @@
-// Mapas públicos de HayLugar. Las teselas se solicitan al abrir el mapa.
+// Mapas públicos de HayLugar (US2.12 y US3.4), con Leaflet y OpenStreetMap. Las teselas se solicitan al abrir el mapa.
+
+// Crea el mapa en el <div id="mapa"> de la página, centrado en la Argentina
 function crearMapa() {
   const mapa = L.map("mapa", { scrollWheelZoom: false }).setView([-38.4, -63.6], 4);
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -16,6 +18,7 @@ function prepararMapaPropietario(form, datos = {}) {
     form.elements[campo].value = datos[campo] ?? "";
   }
   let mapa, marcador;
+  // Vuelve a poner el marcador donde dicen la latitud y la longitud (y las hace obligatorias de a pares)
   function actualizar() {
     latitud.required = longitud.value !== "";
     longitud.required = latitud.value !== "";
@@ -55,6 +58,7 @@ function unidadesEnMapa(unidades, barrio, orden) {
   return visibles;
 }
 
+// Arma el mapa del listado: solo si alguna unidad tiene ubicación, con el filtro por barrio y el orden por distancia
 function prepararMapaResultados(unidades, parametros) {
   const panel = document.getElementById("vista-mapa");
   const barrios = document.getElementById("mapa-barrio");
@@ -66,6 +70,7 @@ function prepararMapaResultados(unidades, parametros) {
   barrios.replaceChildren(new Option("Todos los barrios", ""));
   for (const nombre of [...new Set(nombres)].sort()) barrios.add(new Option(nombre, nombre));
   let mapa, puntos;
+  // Dibuja los marcadores y la lista de las unidades que pasan el filtro (cuando el panel está abierto)
   function dibujar() {
     if (!panel.open) return;
     if (!mapa) {

@@ -4,6 +4,7 @@
 
 const resumen = document.getElementById("resumen-busqueda");
 
+// El enlace al detalle de una unidad con la misma búsqueda (la usan la tarjeta y el mapa)
 function rutaDetalle(unidad, parametros) {
   const busqueda = new URLSearchParams({
     id: unidad.id,
