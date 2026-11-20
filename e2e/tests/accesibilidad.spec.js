@@ -8,7 +8,9 @@ const { PaginaListado } = require('../paginas/PaginaListado');
 const { PaginaMisReservas } = require('../paginas/PaginaMisReservas');
 const { PaginaAgenda } = require('../paginas/PaginaAgenda');
 const { PaginaLiquidacionesBackoffice } = require('../paginas/PaginaLiquidacionesBackoffice');
-const { diasDesdeHoy } = require('../soporte/datos');
+const { PaginaGrupal } = require('../paginas/PaginaGrupal');
+const { PaginaGrupalesAdministrador } = require('../paginas/PaginaGrupalesAdministrador');
+const { diasDesdeHoy, GRUPAL } = require('../soporte/datos');
 
 const BUSQUEDA = { ingreso: diasDesdeHoy(10), egreso: diasDesdeHoy(13), personas: 2 };
 
@@ -38,6 +40,15 @@ const PANTALLAS = {
     const pagina = new PaginaAgenda(page);
     await pagina.abrir();
     await pagina.movimientos.first().waitFor();
+  }],
+  'detalle de una reserva grupal': [null, async (page) => {
+    const listado = new PaginaListado(page);
+    await listado.abrir({ ingreso: diasDesdeHoy(90), egreso: diasDesdeHoy(95), personas: 8 });
+    await listado.abrirGrupal(GRUPAL.titulo);
+    await new PaginaGrupal(page).unidades.first().waitFor();
+  }],
+  'reservas grupales del administrador': ['administrador', async (page) => {
+    await new PaginaGrupalesAdministrador(page).abrir();
   }],
   'liquidaciones del backoffice': ['backoffice', async (page) => {
     const pagina = new PaginaLiquidacionesBackoffice(page);

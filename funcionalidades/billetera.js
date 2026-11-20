@@ -8,9 +8,29 @@ export const BASE_SEPOLIA = Object.freeze({
   blockExplorers: { default: { name: 'BaseScan', url: 'https://sepolia.basescan.org' } },
   testnet: true,
 });
-export const ABI_PAGOS = Object.freeze(['pagarSena', 'pagarSaldo'].map(name => ({
-  type: 'function', name, stateMutability: 'payable', inputs: [{ name: 'reservaId', type: 'uint256' }], outputs: [],
-})));
+export const ABI_PAGOS = Object.freeze([
+  ...['pagarSena', 'pagarSaldo'].map(name => ({
+    type: 'function', name, stateMutability: 'payable', inputs: [{ name: 'reservaId', type: 'uint256' }], outputs: [],
+  })),
+  // Reserva grupal (US4.4): la seña o el saldo de varias reservas en una transacción, con el monto de cada una
+  ...['pagarSenaGrupal', 'pagarSaldoGrupal'].map(name => ({
+    type: 'function', name, stateMutability: 'payable',
+    inputs: [{ name: 'reservaIds', type: 'uint256[]' }, { name: 'montos', type: 'uint256[]' }], outputs: [],
+  })),
+]);
+
+// La función del contrato que corresponde a cada cobro: individual o de un grupo (la cotización trae 'reservas')
+function funcionEsperada(cotizacion) {
+  const grupal = Array.isArray(cotizacion?.reservas);
+  if (cotizacion?.tipo === 'sena') return grupal ? 'pagarSenaGrupal' : 'pagarSena';
+  return grupal ? 'pagarSaldoGrupal' : 'pagarSaldo';
+}
+
+// Los argumentos de la llamada: el id de la reserva, o los ids y los montos de cada reserva del grupo
+function argumentosDelPago(cotizacion) {
+  if (!Array.isArray(cotizacion.reservas)) return [BigInt(cotizacion.reserva_id)];
+  return [cotizacion.reservas.map(r => BigInt(r.reserva_id)), cotizacion.reservas.map(r => BigInt(r.monto_wei))];
+}
 
 // Conserva código y causa para distinguir errores terminales de una espera pendiente.
 function fallo(codigo, message, opciones = {}) {
@@ -89,12 +109,13 @@ export function crearBilletera({ proveedor, cargarViem = importarViem } = {}) {
     if (await wallet.getChainId() !== BASE_SEPOLIA.id) throw fallo('RED_INCORRECTA', 'La red de MetaMask cambió.');
   }
 
-  // Simula y envía únicamente las dos funciones de pago acordadas; nunca usa calldata del servidor.
+  // Simula y envía únicamente las funciones de pago acordadas (las dos individuales y las dos grupales); nunca usa
+  // calldata del servidor.
   async function enviarPago(cotizacion) {
     if (enviando) throw fallo('ENVIO_EN_CURSO', 'Ya hay un pago esperando respuesta de MetaMask.');
     enviando = true;
     try {
-      if (cotizacion?.red !== BASE_SEPOLIA.id || cotizacion.simulado !== false || !['sena', 'saldo'].includes(cotizacion?.tipo) || cotizacion.funcion !== (cotizacion.tipo === 'sena' ? 'pagarSena' : 'pagarSaldo')) throw fallo('DATOS_INVALIDOS', 'La cotización del pago es inválida.');
+      if (cotizacion?.red !== BASE_SEPOLIA.id || cotizacion.simulado !== false || !['sena', 'saldo'].includes(cotizacion?.tipo) || cotizacion.funcion !== funcionEsperada(cotizacion)) throw fallo('DATOS_INVALIDOS', 'La cotización del pago es inválida.');
       const { publico } = await obtenerClientes();
       await verificarConexion();
       const expira = cotizacion.vence_en == null ? null : Date.parse(cotizacion.vence_en);
@@ -107,7 +128,7 @@ export function crearBilletera({ proveedor, cargarViem = importarViem } = {}) {
       const { request } = await publico.simulateContract({
         account: cuenta, address: cotizacion.contrato, abi: ABI_PAGOS,
         functionName: cotizacion.funcion,
-        args: [BigInt(cotizacion.reserva_id)], value,
+        args: argumentosDelPago(cotizacion), value,
       });
       await verificarConexion();
       if (expira !== null && expira <= Date.now()) throw fallo('RESERVA_VENCIDA', 'El plazo para pagar venció. Volvé a Mis reservas.');

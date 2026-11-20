@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const PagosModelo = require('../funcionalidades/pagos-modelo.js');
+const GrupalModelo = require('../funcionalidades/grupal-modelo.js');
 const EstadiasModelo = require('../funcionalidades/estadias-modelo.js');
 
 // DOM mínimo para comprobar el contenido y los destinos que recibe el huésped.
@@ -28,7 +29,7 @@ function pagina(opciones = {}) {
   const previa={reserva_id:42,estado:'confirmada',tramo:'mas_de_30',dias_hasta_cobro:45,porcentaje_retencion:'30.00',pagado:{sena:'42000.00',saldo:'168000.00'},retencion:'12600.00',devolucion:'197400.00',devolucion_wei:'1974000000000000',...opciones.previa};
   const contexto = vm.createContext({
     document: { createElement: elemento, getElementById: get, querySelectorAll: () => [] },
-    PagosModelo, Intl, Date, URLSearchParams, encodeURIComponent,
+    PagosModelo, GrupalModelo, Intl, Date, URLSearchParams, encodeURIComponent,
     MENSAJE_SIN_CONEXION:'Sin conexión', console, window: { location: { href: '' } },
     formatearPrecio: valor => `$ ${valor}`, formatearFecha: String, formatearPorcentaje: valor => `${valor} %`,
     pedirAlBack:async(ruta,envio)=>{
@@ -341,7 +342,7 @@ test('pago encuentra extensión anidada, usa seña completa y bloquea enlace de 
     const contexto=vm.createContext({
       document:{getElementById:get,body:{hidden:true}},
       window:{location:{search:`?reserva_id=43&tipo=${tipo}`},addEventListener(){}},
-      PagosModelo,Intl,Date,URLSearchParams,encodeURIComponent,
+      PagosModelo,GrupalModelo,Intl,Date,URLSearchParams,encodeURIComponent,
       sessionStorage:{getItem:()=>null},clearTimeout(){},
       obtenerSesion:async()=>({id:7,rol:'huesped'}),tienePermiso:()=>true,armarMenu(){},formatearPrecio:String,
       pedirAlBack:async ruta=>{

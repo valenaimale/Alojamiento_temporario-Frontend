@@ -87,6 +87,47 @@ const PagosModelo = (() => {
     });
   }
 
+  // La cotización del pago de una reserva grupal (GET /pagos/grupo/sena o /saldo, US4.4): la misma validación que la de
+  // una reserva, más la lista de reservas del grupo. Cada monto en wei tiene que salir de sus pesos, y el total tiene
+  // que ser la suma: es lo que exige el contrato en pagarSenaGrupal(ids, montos) y pagarSaldoGrupal(ids, montos).
+  function normalizarCotizacionGrupal(payload, { grupoId, tipo }) {
+    const pago = payload?.pago;
+    const id = identificador(grupoId);
+    if (!pago || !id || identificador(payload.grupo_id) !== id || !['sena', 'saldo'].includes(tipo) || payload.tipo !== tipo) {
+      throw errorDePago('DATOS_INVALIDOS', 'Los datos del pago no corresponden a esta reserva grupal. Volvé a cargar.');
+    }
+    const simulado = pago.simulado === true;
+    if (typeof pago.simulado !== 'boolean' || payload.red !== (simulado ? 31337 : RED)) throw errorDePago('RED_INCORRECTA', 'La modalidad del pago no coincide con la red informada. Volvé a cargar.');
+    if (pago.funcion !== (tipo === 'sena' ? 'pagarSenaGrupal' : 'pagarSaldoGrupal')) throw errorDePago('DATOS_INVALIDOS', 'La función de pago no corresponde a este importe.');
+    if (!simulado && (!DIRECCION.test(pago.contrato ?? '') || /^0x0{40}$/i.test(pago.contrato))) {
+      throw errorDePago('DATOS_INVALIDOS', 'El contrato de pago todavía no está configurado. Intentá más tarde.');
+    }
+    const lista = Array.isArray(payload.reservas) ? payload.reservas : [];
+    if (lista.length < 1 || lista.length > 10) throw errorDePago('DATOS_INVALIDOS', 'La reserva grupal no tiene unidades para pagar. Volvé a cargar.');
+    const reservas = lista.map(reserva => {
+      const reservaId = identificador(reserva?.reserva_id);
+      if (!reservaId || typeof reserva.monto_wei !== 'string' || !/^[1-9]\d{0,77}$/.test(reserva.monto_wei)
+          || BigInt(reserva.monto_wei) !== pesosAWei(reserva.monto_pesos, payload.pesos_por_eth)) {
+        throw errorDePago('DATOS_INVALIDOS', 'El importe en ETH de una unidad no coincide con la cotización. Volvé a cargar el pago.');
+      }
+      return Object.freeze({ reserva_id: reservaId, unidad: String(reserva.unidad ?? ''), monto_pesos: reserva.monto_pesos, monto_wei: BigInt(reserva.monto_wei) });
+    });
+    if (new Set(reservas.map(r => r.reserva_id)).size !== reservas.length) throw errorDePago('DATOS_INVALIDOS', 'La cotización repite una unidad. Volvé a cargar.');
+    const suma = reservas.reduce((total, r) => total + r.monto_wei, 0n);
+    if (typeof payload.monto_wei !== 'string' || !/^[1-9]\d{0,77}$/.test(payload.monto_wei) || BigInt(payload.monto_wei) !== suma) {
+      throw errorDePago('DATOS_INVALIDOS', 'El total en ETH no coincide con la suma de las unidades. Volvé a cargar el pago.');
+    }
+    if (Number.isNaN(vencimiento(payload.vence_en))) {
+      throw errorDePago('DATOS_INVALIDOS', 'No pudimos validar el vencimiento del pago. Volvé a cargar.');
+    }
+    return Object.freeze({
+      grupo_id: id, tipo, monto_pesos: payload.monto_pesos, monto_wei: suma,
+      pesos_por_eth: payload.pesos_por_eth, red: payload.red, contrato: pago.contrato,
+      funcion: pago.funcion, simulado, vence_en: payload.vence_en ?? null,
+      fecha_cobro: payload.fecha_cobro ?? null, vencido: false, reservas: Object.freeze(reservas),
+    });
+  }
+
   // Presenta ETH exacto, sin notación científica ni redondeos de punto flotante.
   function formatearEth(wei) {
     if (!/^(0|[1-9]\d*)$/.test(String(wei))) throw errorDePago('DATOS_INVALIDOS', 'Importe en ETH inválido.');
@@ -202,6 +243,6 @@ const PagosModelo = (() => {
     return {...datos, pagado: {...datos.pagado}, devolucion_wei: BigInt(datos.devolucion_wei), explicacion};
   }
 
-  return { RED, identificador, normalizarCancelacion, normalizarCotizacion, pesosAWei, weiAPesos, formatearEth, mensajeErrorPago, estadoPagoReserva, vencimiento, tiempoRestante, saldoVencido };
+  return { RED, identificador, normalizarCancelacion, normalizarCotizacion, normalizarCotizacionGrupal, pesosAWei, weiAPesos, formatearEth, mensajeErrorPago, estadoPagoReserva, vencimiento, tiempoRestante, saldoVencido };
 })();
 if (typeof module !== 'undefined') module.exports = PagosModelo;

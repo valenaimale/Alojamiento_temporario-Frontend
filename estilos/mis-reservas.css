@@ -143,3 +143,30 @@ main {
 
 #hash-devolucion { display: block; overflow-wrap: anywhere; margin: 12px 0; }
 #consultando-cancelacion:empty { display: none; }
+
+/* ---------- Reserva grupal (US4.4) ----------
+   La tarjeta del grupo lleva adentro la tarjeta de cada unidad: van una debajo de la otra, con un borde a la
+   izquierda que las une al grupo. */
+.etiqueta-grupal {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-primary-dark);
+}
+
+.reserva-grupal .unidades-del-grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1rem 0 0;
+  padding: 0 0 0 0.75rem;
+  border-left: 3px solid var(--color-primary-light);
+  list-style: none;
+}
+
+.reserva-grupal .unidades-del-grupo .tarjeta {
+  box-shadow: none;
+  border: 1px solid var(--color-border);
+}

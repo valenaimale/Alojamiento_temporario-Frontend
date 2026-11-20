@@ -1,0 +1,100 @@
+/* Las reservas grupales del administrador (vistas/administrador/grupales.html, US4.4) */
+
+[hidden] {
+  display: none !important;
+}
+
+.badge-rol {
+  background-color: var(--color-primary-light);
+  color: var(--color-primary-dark);
+}
+
+#form-grupal {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: none;
+}
+
+#form-grupal fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Las unidades para elegir: una por línea, con un área grande para tocar */
+.opciones-unidades {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.opciones-unidades label {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  cursor: pointer;
+}
+
+.opciones-unidades input {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.acciones-formulario {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.mensaje-accion:empty {
+  display: none;
+}
+
+.mensaje-accion {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-primary-light);
+}
+
+#titulo-lista {
+  margin-top: 2rem;
+}
+
+.lista-grupales {
+  display: grid;
+  gap: 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 760px) {
+  .lista-grupales {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+}
+
+.grupal-administrador header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.grupal-administrador h3 {
+  margin: 0;
+}
+
+.unidades-de-grupal {
+  margin: 0.5rem 0 1rem;
+  padding-left: 1.25rem;
+}
+
+.unidades-de-grupal .no-vigente {
+  color: var(--color-text-muted);
+}

@@ -23,6 +23,7 @@ const MENU = {
     administrador: [
         { texto: 'Alojamientos a cargo', url: '../homes/index-administrador.html' },
         { texto: 'Mis comisiones', url: '../liquidaciones/comisiones.html' },
+        { texto: 'Reservas grupales', url: '../administrador/grupales.html' },   // US4.4: agrupa unidades para alquilarlas juntas
         AYUDA_PAGOS.administrador,
     ],
     backoffice: [
