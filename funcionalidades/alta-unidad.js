@@ -36,6 +36,7 @@ function prepararHorarioCheckIn() {
 // Llena el <select> de localidades. Si el back no responde, avisa y deja el formulario sin poder enviarse.
 async function prepararFormulario() {
     prepararHorarioCheckIn();
+    prepararMapaPropietario(formAlta);
     try {
         await cargarLocalidades(document.getElementById('localidad'));
     } catch (error) {
