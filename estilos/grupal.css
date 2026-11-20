@@ -1,0 +1,111 @@
+/* El detalle de una reserva grupal (vistas/alojamientos/grupal.html, US4.4) */
+
+[hidden] {
+  display: none !important;
+}
+
+.etiqueta-grupal {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-primary-dark);
+}
+
+/* Las unidades: una debajo de la otra en el celular, en grilla en pantallas anchas */
+.unidades-grupal {
+  display: grid;
+  gap: 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 760px) {
+  .unidades-grupal {
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+}
+
+.unidad-grupal {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.unidad-grupal p {
+  margin: 0;
+}
+
+/* La casilla para elegir la unidad, con el nombre: un área grande para tocar */
+.elegir-unidad {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.elegir-unidad input {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.fotos-unidad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.25rem;
+}
+
+.fotos-unidad img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+
+/* Los datos de cada unidad: el concepto arriba y el valor abajo (en dos columnas quedaban apretados) */
+.unidad-grupal dl {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+.unidad-grupal dt {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.unidad-grupal dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+/* El resumen de la reserva: el concepto a la izquierda y el importe a la derecha */
+.resumen-grupal dl {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.25rem 1rem;
+  margin: 0;
+}
+
+.resumen-grupal dd {
+  margin: 0;
+  text-align: right;
+  font-weight: 600;
+}
+
+.resumen-grupal {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.resumen-grupal form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: none;
+}

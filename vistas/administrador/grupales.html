@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<!-- Las reservas grupales del administrador (US4.4): junta unidades que administra (pueden ser de distintos dueños)
+     para que una familia o un grupo las reserve juntas, con una sola seña. Las crea, las edita y las activa o
+     desactiva. En la búsqueda aparecen armadas con las unidades libres en las fechas del huésped.
+     Lo arma grupales-administrador.js. -->
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Reservas grupales</title>
+        <meta name="description" content="Agrupá unidades que administrás para alquilarlas juntas con una sola seña">
+        <link rel="stylesheet" href="../../estilos/style.css">
+        <link rel="stylesheet" href="../../estilos/grupales-administrador.css">
+        <script src="../../funcionalidades/sesion.js" defer></script>
+        <script src="../../funcionalidades/menu.js" defer></script>
+        <script src="../../funcionalidades/proteger-pagina.js" defer></script>
+        <script src="../../funcionalidades/unidades-comun.js" defer></script>
+        <script src="../../funcionalidades/grupales-administrador.js" defer></script>
+        <link rel="stylesheet" href="../../estilos/haylugar.css">
+        <link rel="icon" href="../../imagenes/marca.svg" type="image/svg+xml">
+        <script src="../../funcionalidades/interfaz.js" defer></script>
+    </head>
+    <body class="operacion" data-rol="administrador" hidden>
+        <header class="site-header">
+            <a class="marca" href="../homes/index-sin-sesion.html" aria-label="HayLugar, inicio"><svg viewBox="0 0 32 36" fill="none" aria-hidden="true"><path d="M5 31V13L16 5l11 8v18H5Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M12 31V19h8v12M20 24h.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg><span>HayLugar</span></a>
+            <nav id="menu" aria-label="Principal"></nav>
+            <p class="badge-rol">Administrador</p>
+            <a href="../perfil/perfil.html" class="enlace-perfil">Mi perfil</a>
+        </header>
+        <main>
+            <h1>Reservas grupales</h1>
+            <p class="subtitulo">
+                Juntá unidades que administrás para que un grupo grande las reserve juntas, con una sola seña. En la búsqueda
+                aparecen solo las que están libres en las fechas del huésped, y él elige cuáles reservar. Cada unidad conserva
+                su precio, su seña y su política de cancelación, y su propietario la ve como una reserva más.
+            </p>
+
+            <p id="mensaje-accion" class="mensaje-accion" role="status" data-testid="grupales-mensaje"></p>
+
+            <section class="tarjeta" aria-labelledby="titulo-formulario">
+                <h2 id="titulo-formulario">Nueva reserva grupal</h2>
+                <form id="form-grupal" novalidate>
+                    <input type="hidden" name="id">
+                    <label>Título
+                        <input type="text" name="titulo" maxlength="100" required data-testid="grupales-titulo"
+                               placeholder="Por ejemplo: Cabañas 4, 5 y 6">
+                    </label>
+                    <fieldset>
+                        <legend>Unidades (de 2 a 10, todas de la misma localidad)</legend>
+                        <p id="cargando-unidades" class="ayuda">Cargando tus unidades…</p>
+                        <ul class="opciones-unidades" id="opciones-unidades"></ul>
+                    </fieldset>
+                    <p class="mensaje-error" id="error-formulario" role="alert"></p>
+                    <div class="acciones-formulario">
+                        <button type="submit" class="boton boton-primario" id="boton-guardar" data-testid="grupales-guardar">Crear reserva grupal</button>
+                        <button type="button" class="boton boton-outline" id="boton-cancelar-edicion" hidden>Cancelar la edición</button>
+                    </div>
+                </form>
+            </section>
+
+            <section aria-labelledby="titulo-lista">
+                <h2 id="titulo-lista">Tus reservas grupales</h2>
+                <p id="mensaje-lista" role="status">Cargando…</p>
+                <ul class="lista-grupales" id="lista-grupales"></ul>
+            </section>
+        </main>
+    </body>
+</html>

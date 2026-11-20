@@ -67,6 +67,57 @@ function crearTarjeta(unidad, parametros) {
   return item;
 }
 
+// Una tarjeta de una reserva grupal (US4.4): varias unidades que se reservan juntas, armada por el back con las que
+// están libres en estas fechas. Lleva al detalle de la grupal, donde se eligen las unidades.
+function crearTarjetaGrupal(grupal, parametros) {
+  const item = document.createElement("li");
+  const tarjeta = document.createElement("article");
+  tarjeta.className = "tarjeta tarjeta-grupal";
+  tarjeta.setAttribute("data-testid", "tarjeta-grupal"); // para los E2E (e2e/paginas/PaginaListado.js)
+
+  const foto = grupal.unidades.find((unidad) => unidad.foto_principal)?.foto_principal;
+  if (foto) {
+    const imagen = document.createElement("img");
+    imagen.src = fotoConAncho(foto, 600);
+    imagen.alt = `Foto de ${grupal.titulo}`;
+    imagen.loading = "lazy";
+    tarjeta.appendChild(imagen);
+  }
+
+  const etiqueta = document.createElement("p");
+  etiqueta.className = "etiqueta-grupal";
+  etiqueta.textContent = `Reserva grupal · ${grupal.unidades.length} unidades`;
+
+  const titulo = document.createElement("h2");
+  const enlace = document.createElement("a");
+  const busqueda = new URLSearchParams({
+    id: grupal.id,
+    ingreso: parametros.get("ingreso"),
+    egreso: parametros.get("egreso"),
+    personas: parametros.get("personas"),
+    localidad_id: parametros.get("localidad_id") ?? "",
+  });
+  enlace.href = `grupal.html?${busqueda}`;
+  enlace.textContent = grupal.titulo;
+  titulo.appendChild(enlace);
+
+  const lugar = document.createElement("p");
+  lugar.textContent = `${grupal.localidad}, ${grupal.provincia} · Hasta ${grupal.capacidad} personas en total`;
+  const unidades = document.createElement("p");
+  unidades.className = "ayuda";
+  unidades.textContent = grupal.unidades.map((unidad) => `${unidad.nombre} (${unidad.capacidad})`).join(" · ");
+
+  const precio = document.createElement("p");
+  precio.className = "precio";
+  const total = document.createElement("strong");
+  total.textContent = formatearPrecio(grupal.precio_total);
+  precio.append(total, ` por ${grupal.noches} ${grupal.noches === 1 ? "noche" : "noches"}, todas las unidades`);
+
+  tarjeta.append(etiqueta, titulo, lugar, unidades, precio);
+  item.appendChild(tarjeta);
+  return item;
+}
+
 // Busca con lo que vino en la URL y dibuja los resultados (o por qué no hay)
 async function buscar() {
   const parametros = new URLSearchParams(window.location.search);
@@ -110,7 +161,8 @@ async function buscar() {
       mostrarVacio("Falta ajustar un dato", resultado.error);
       return;
     }
-    const cantidad = resultado.unidades.length;
+    const grupales = resultado.grupales ?? []; // las reservas grupales que corresponden a esta búsqueda (US4.4)
+    const cantidad = resultado.unidades.length + grupales.length;
     titulo.textContent =
       cantidad === 0
         ? "Busquemos otras fechas"
@@ -124,6 +176,7 @@ async function buscar() {
     }
     prepararMapaResultados(resultado.unidades, parametros);
     lista.replaceChildren(
+      ...grupales.map((grupal) => crearTarjetaGrupal(grupal, parametros)),
       ...resultado.unidades.map((unidad) => crearTarjeta(unidad, parametros)),
     );
     resumen.textContent =

@@ -146,3 +146,41 @@ test('tiempo restante para la cuenta regresiva: minutos y segundos, nunca negati
 test('una reserva expirada dice que no se pagó la seña a tiempo', () => {
   assert.equal(modelo.estadoPagoReserva({ estado: 'expirada' }).texto, 'Seña no pagada a tiempo');
 });
+
+// ---------- Reserva grupal (US4.4) ----------
+
+// La cotización de la seña de un grupo de dos unidades, como la devuelve GET /pagos/grupo/sena
+const pagoGrupal = () => ({
+  grupo_id: 7, tipo: 'sena', monto_pesos: '150000.00', monto_wei: '1500000000000000', pesos_por_eth: '100000000', red: 84532,
+  reservas: [
+    { reserva_id: 41, unidad: 'Casa del Bosque', monto_pesos: '80000.00', monto_wei: '800000000000000' },
+    { reserva_id: 42, unidad: 'Cabaña de los Pinos', monto_pesos: '70000.00', monto_wei: '700000000000000' },
+  ],
+  pago: { contrato: direccion, funcion: 'pagarSenaGrupal', simulado: false },
+});
+const normalizarGrupal = valor => modelo.normalizarCotizacionGrupal(valor, { grupoId: '7', tipo: 'sena' });
+
+test('la cotización grupal trae cada reserva con su monto en wei y el total es la suma', () => {
+  // Arrange y Act
+  const cotizacion = normalizarGrupal(pagoGrupal());
+
+  // Assert
+  assert.equal(cotizacion.grupo_id, '7');
+  assert.equal(cotizacion.funcion, 'pagarSenaGrupal');
+  assert.equal(cotizacion.monto_wei, 1500000000000000n);
+  assert.deepEqual(cotizacion.reservas.map(r => [r.reserva_id, r.monto_wei]), [['41', 800000000000000n], ['42', 700000000000000n]]);
+});
+
+test('la cotización grupal se rechaza si no cierra: otro grupo, otra función, un monto mal convertido o un total distinto', () => {
+  const casos = [
+    { ...pagoGrupal(), grupo_id: 8 },
+    { ...pagoGrupal(), pago: { ...pagoGrupal().pago, funcion: 'pagarSena' } },
+    { ...pagoGrupal(), reservas: [{ ...pagoGrupal().reservas[0], monto_wei: '800000000000001' }, pagoGrupal().reservas[1]] },
+    { ...pagoGrupal(), monto_wei: '1500000000000001' },
+    { ...pagoGrupal(), reservas: [] },
+    { ...pagoGrupal(), reservas: [pagoGrupal().reservas[0], pagoGrupal().reservas[0]], monto_wei: '1600000000000000' },
+  ];
+  for (const caso of casos) {
+    assert.throws(() => normalizarGrupal(caso), { codigo: 'DATOS_INVALIDOS' });
+  }
+});

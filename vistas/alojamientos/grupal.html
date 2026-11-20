@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<!-- El detalle de una reserva grupal (US4.4): ?id=, ingreso, egreso y personas (vienen del listado).
+     Muestra cada unidad libre de la grupal para esas fechas (fotos, características, precio, seña y su política de
+     cancelación), el huésped elige cuáles reservar y reserva todas juntas: después paga la seña de todas en un solo pago.
+     Es pública: se ve con o sin sesión. Lo arma grupal-detalle.js. -->
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Reserva grupal</title>
+        <meta name="description" content="Reservá varias unidades juntas con una sola seña">
+        <link rel="stylesheet" href="../../estilos/style.css">
+        <link rel="stylesheet" href="../../estilos/grupal.css">
+        <script src="../../funcionalidades/sesion.js" defer></script>
+        <script src="../../funcionalidades/menu.js" defer></script>
+        <script src="../../funcionalidades/unidades-comun.js" defer></script>
+        <script src="../../funcionalidades/grupal-modelo.js" defer></script>
+        <script src="../../funcionalidades/grupal-detalle.js" defer></script>
+        <link rel="stylesheet" href="../../estilos/haylugar.css">
+        <link rel="icon" href="../../imagenes/marca.svg" type="image/svg+xml">
+        <script src="../../funcionalidades/interfaz.js" defer></script>
+    </head>
+    <body class="detalle">
+        <header class="site-header">
+            <a class="marca" href="../homes/index-sin-sesion.html" aria-label="HayLugar, inicio"><svg viewBox="0 0 32 36" fill="none" aria-hidden="true"><path d="M5 31V13L16 5l11 8v18H5Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/><path d="M12 31V19h8v12M20 24h.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg><span>HayLugar</span></a>
+            <nav id="menu" aria-label="Principal"></nav>
+            <a href="../perfil/perfil.html" class="enlace-perfil" id="enlace-perfil" hidden>Mi perfil</a>
+            <p class="acceso" id="acceso" hidden>
+                <a href="../ayuda/pagos.html" class="enlace-ayuda">Cómo pagar</a>
+                <a href="../sesion/inicio-sesion.html" class="boton boton-outline">Iniciar sesión</a>
+                <a href="../registros/pre-registro.html" class="boton boton-primario">Registrarme</a>
+            </p>
+        </header>
+        <main>
+            <p><a href="listado.html" id="enlace-volver">Volver a los resultados</a></p>
+
+            <p id="mensaje-error" role="alert"></p>
+            <p id="cargando" aria-live="polite">Cargando la reserva grupal…</p>
+
+            <article id="grupal" hidden>
+                <p class="etiqueta-grupal">Reserva grupal</p>
+                <h1 id="titulo" data-testid="grupal-titulo"></h1>
+                <p id="resumen-busqueda" class="subtitulo"></p>
+                <p class="ayuda">
+                    Son unidades distintas, que pueden ser de dueños distintos: cada una tiene su precio, su seña y su política de
+                    cancelación. Reservás las que elijas juntas y pagás la seña de todas en un solo pago. Después, si hace falta,
+                    podés cancelar cada una por separado.
+                </p>
+
+                <section aria-labelledby="titulo-unidades">
+                    <h2 id="titulo-unidades">Elegí las unidades</h2>
+                    <ul class="unidades-grupal" id="unidades"></ul>
+                </section>
+
+                <section class="tarjeta resumen-grupal" aria-labelledby="titulo-resumen">
+                    <h2 id="titulo-resumen">Tu reserva</h2>
+                    <p id="eleccion" role="status" data-testid="grupal-eleccion"></p>
+                    <dl>
+                        <dt>Total de la estadía</dt>
+                        <dd id="total" data-testid="grupal-total"></dd>
+                        <dt>Seña al reservar (todas juntas)</dt>
+                        <dd id="sena" data-testid="grupal-sena"></dd>
+                    </dl>
+
+                    <!-- se muestra solo si quien la ve puede reservar -->
+                    <form id="form-reservar" hidden>
+                        <label class="aceptar-politica">
+                            <input type="checkbox" name="acepta_politica" required>
+                            Leí y acepto la política de cancelación de cada unidad
+                        </label>
+                        <button type="submit" class="boton boton-primario" data-testid="grupal-reservar">Reservar las unidades elegidas</button>
+                        <p class="ayuda">La reserva queda pendiente: tenés <strong>10 minutos</strong> para pagar la seña de todas las
+                            unidades en un solo pago, y mientras tanto te guardamos las fechas.
+                            <a href="../ayuda/pagos.html#huesped">¿Primera vez? Mirá cómo pagar</a></p>
+                    </form>
+                    <p id="aviso-reservar" class="ayuda" hidden></p>
+                    <p class="mensaje-error" id="error-reserva" role="alert" data-testid="grupal-error"></p>
+                </section>
+            </article>
+        </main>
+    </body>
+</html>

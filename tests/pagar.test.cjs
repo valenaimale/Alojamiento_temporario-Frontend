@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const PagosModelo = require('../funcionalidades/pagos-modelo.js');
+const GrupalModelo = require('../funcionalidades/grupal-modelo.js');
 
 const HASH = `0x${'a'.repeat(64)}`;
 const HASH_NUEVO = `0x${'b'.repeat(64)}`;
@@ -45,7 +46,7 @@ function pagina(opciones = {}) {
   const window = {addEventListener:(nombre,fn)=>eventos[nombre]=fn,location:{search:opciones.search || '?reserva_id=42&tipo=sena',href:''}};
   const contexto = vm.createContext({
     document:{getElementById:get,body:{hidden:true}},window,URLSearchParams,Intl,Date:Fecha,
-    PagosModelo,encodeURIComponent,crypto:require('node:crypto').webcrypto,
+    PagosModelo,GrupalModelo,encodeURIComponent,crypto:require('node:crypto').webcrypto,
     setTimeout:(fn,ms)=>{timers.set(++timerId,{fn,ms});return timerId;},clearTimeout:id=>timers.delete(id),navigator:{locks:opciones.locks},
     sessionStorage:{getItem:clave=>datos.get(clave) ?? null,setItem:(clave,valor)=>{
       if(configuracion.fallarGuardado?.(clave,valor))throw new Error('QuotaExceededError');

@@ -58,6 +58,8 @@ e2e/
     PaginaRegistro.js       formularios de registro y "Revisá tu mail"
     PaginaVerificarMail.js  el enlace del mail que crea la cuenta
     PaginaLiquidacionesBackoffice.js  liquidaciones del backoffice: generar y pagar
+    PaginaGrupal.js         detalle de una reserva grupal: elegir unidades y reservar
+    PaginaGrupalesAdministrador.js  reservas grupales del administrador
   tests/                  un archivo por flujo
   soporte/
     fixtures.js           el test y el expect que usan todos los tests
