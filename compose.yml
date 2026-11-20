@@ -1,14 +1,19 @@
+# Dos réplicas del front estático detrás de un balanceador nginx, para probar el escalado en local.
+# Las dos réplicas usan la misma imagen: la construye front1 y front2 la reutiliza. Si las dos la construyeran a la
+# vez con el mismo nombre, la segunda fallaría con "image already exists".
 x-front: &front
-  build: .
   image: haylugar-frontend:local
 
 services:
   front1:
     <<: *front
+    build: .
     hostname: front1
   front2:
     <<: *front
+    pull_policy: never   # la imagen es local (la construye front1): no se busca en Docker Hub
     hostname: front2
+    depends_on: [front1]
   balanceador:
     image: nginx:alpine
     volumes:
