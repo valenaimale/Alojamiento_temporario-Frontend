@@ -131,8 +131,8 @@ function mostrarDetalle(comprobante) {
   );
 }
 
-// Pide el comprobante y lo muestra
-async function cargarComprobante() {
+// Pide el comprobante y lo muestra. $rol: quién está mirando (para saber a dónde vuelve "Volver")
+async function cargarComprobante(rol) {
   const cargando = document.getElementById("cargando");
   const error = document.getElementById("mensaje-error");
 
@@ -177,8 +177,8 @@ async function cargarComprobante() {
   }
 
   // "Volver" lleva a la pantalla del rol que está mirando
-  document.getElementById("volver").href =
-    comprobante.para === "administrador" ? "comisiones.html" : "mis-liquidaciones.html";
+  const volverA = { administrador: "comisiones.html", backoffice: "../backoffice/liquidaciones.html" };
+  document.getElementById("volver").href = volverA[rol] ?? "mis-liquidaciones.html";
 
   cargando.hidden = true;
   document.getElementById("comprobante").hidden = false;
@@ -205,7 +205,7 @@ async function abrirPagina() {
 
   armarMenu(usuario.rol);
   document.body.hidden = false;
-  await cargarComprobante();
+  await cargarComprobante(usuario.rol);
 }
 
 document
