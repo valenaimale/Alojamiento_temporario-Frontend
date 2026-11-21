@@ -113,7 +113,7 @@ const LiquidacionesModelo = (() => {
     const clave = liquidacion.motivo;
     const base = MOTIVOS[clave] ?? { texto: clave, ayuda: "" };
     const original = liquidacion.reserva?.extiende_reserva_id ?? null;
-    if (clave !== "extension" || original === null) {
+    if (!esExtension(liquidacion) || original === null) {
       return { clave, ...base };
     }
     return { clave, ...base, texto: `Extensión de la reserva n.º ${original}` };
