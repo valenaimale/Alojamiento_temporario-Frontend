@@ -20,6 +20,7 @@ function validarVistaCambio(vista, pedido) {
   return vista;
 }
 
+// Mantiene la cotización asociada a las fechas visibles hasta confirmar o volver a editar.
 function formularioCambioFechas(reserva) {
   const panel = document.getElementById('formulario-cambio-fechas').content.firstElementChild.cloneNode(true);
   const form = panel.querySelector('form');
@@ -52,7 +53,8 @@ function formularioCambioFechas(reserva) {
     bloquear(true);
     try {
       vista = validarVistaCambio(await pedirCambioFechas('cotizar', pedido), pedido);
-      estado.textContent = 'A pagar ahora: ' + formatearPrecio(vista.a_pagar) +
+      estado.textContent = 'Del ' + formatearFecha(vista.ingreso) + ' al ' + formatearFecha(vista.egreso) +
+        ' · A pagar ahora: ' + formatearPrecio(vista.a_pagar) +
         ' · Retención: ' + formatearPrecio(vista.retencion) + ' · A devolver: ' + formatearPrecio(vista.a_devolver);
       confirmar.textContent = Number(vista.a_pagar) > 0 ? 'Confirmar y pasar al pago' : 'Confirmar cambio';
       confirmar.hidden = false;

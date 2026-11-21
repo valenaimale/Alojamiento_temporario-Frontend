@@ -5,35 +5,62 @@ const { PaginaMisReservas } = require('../paginas/PaginaMisReservas');
 const { URL_BACK } = require('../soporte/entorno');
 const { diasDesdeHoy } = require('../soporte/datos');
 
-// La reducción muestra lo retenido y lo devuelto antes de enviar la cotización aceptada.
-test('al reducir noches se revisa la retención antes de confirmar', async ({page}) => {
-  // Arrange
+// Prepara una estadía de seis noches para probar las variantes del contrato propuesto.
+// El inicio de sesión y la lectura de reservas pasan por el back de prueba.
+async function prepararCambio(page, importes, alConfirmar) {
   const reservas = new PaginaMisReservas(page);
   await new PaginaInicioSesion(page).ingresarComo('otraHuesped');
-  let id, confirmacion;
+  let id;
   await page.route('**/reservas/mias', async ruta => {
     const respuesta = await ruta.fetch({url: URL_BACK + '/reservas/mias'});
     const datos = await respuesta.json();
     const reserva = datos.reservas.find(r => r.estado === 'confirmada');
     id = reserva.id;
-    reserva.puede_modificar_fechas = true;
+    Object.assign(reserva, {
+      puede_modificar_fechas: true, ingreso: diasDesdeHoy(10), egreso: diasDesdeHoy(16), noches: 6,
+    });
     await ruta.fulfill({response: respuesta, json: datos});
   });
   await page.route('**/cambio-fechas/cotizar', ruta => ruta.fulfill({
-    json: {...ruta.request().postDataJSON(), cotizacion_id: 'prueba', a_pagar: 0, retencion: 8000, a_devolver: 12000},
+    json: {...ruta.request().postDataJSON(), cotizacion_id: 'prueba', ...importes},
   }));
-  await page.route('**/cambio-fechas/confirmar', ruta => {
+  await page.route('**/cambio-fechas/confirmar', alConfirmar);
+  await reservas.abrir();
+  await expect(reservas.tarjetas.first()).toBeVisible();
+  return {reservas, id};
+}
+
+// La reducción muestra lo retenido y lo devuelto antes de enviar la cotización aceptada.
+test('al reducir noches se revisa la retención antes de confirmar', async ({page}) => {
+  // Arrange
+  let confirmacion;
+  const {reservas, id} = await prepararCambio(page, {a_pagar: 0, retencion: 8000, a_devolver: 12000}, ruta => {
     confirmacion = ruta.request().postDataJSON();
     return ruta.fulfill({json: {confirmado: true}});
   });
-  await reservas.abrir();
-  await expect(reservas.tarjetas.first()).toBeVisible();
 
   // Act
-  await reservas.cotizarFechas(id, diasDesdeHoy(3), diasDesdeHoy(7));
+  await reservas.cotizarFechas(id, diasDesdeHoy(10), diasDesdeHoy(14));
   await expect(reservas.resumenCambio(id)).toContainText(/Retención:.*8.000.*A devolver:.*12.000/);
   await reservas.confirmarCambioSinPago(id);
 
   // Assert
   await expect.poll(() => confirmacion).toEqual({reserva_id: id, cotizacion_id: 'prueba'});
+});
+
+// Un traslado con diferencia positiva abre el pago de la reserva vinculada.
+test('al correr el ingreso se paga la diferencia en la reserva vinculada', async ({page}) => {
+  // Arrange
+  const {reservas, id} = await prepararCambio(page, {a_pagar: 35000, retencion: 0, a_devolver: 0}, ruta =>
+    ruta.fulfill({json: {reserva_pago_id: 850}}));
+  // Intercepta el destino: se verifica la navegación; el pago real se prueba en modificar-fechas.spec.js.
+  await page.route('**/pagar.html?*', ruta => ruta.fulfill({contentType: 'text/html', body: '<title>Pago</title>'}));
+
+  // Act
+  await reservas.cotizarFechas(id, diasDesdeHoy(15), diasDesdeHoy(21));
+  await expect(reservas.resumenCambio(id)).toContainText(/A pagar ahora:.*35.000/);
+  await reservas.confirmarCambioConPago(id);
+
+  // Assert
+  await expect(page).toHaveURL(/pagar\.html\?tipo=sena&reserva_id=850$/);
 });
