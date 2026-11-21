@@ -476,6 +476,7 @@ function tarjetaDeReserva(reserva) {
   mostrarPagoDeReserva(reserva, cuerpo, datos);
   mostrarExtensiones(reserva, cuerpo);
   mostrarFormularioExtension(reserva, cuerpo);
+  if (reserva.puede_modificar_fechas === true) cuerpo.append(formularioCambioFechas(reserva));
   // una expirada nunca se va a alojar: no tiene sentido cargar sus huéspedes
   if (reserva.estado !== "expirada") cuerpo.append(huespedes);
   cuerpo.append(detalles);
