@@ -66,6 +66,11 @@ class PaginaMisReservas {
     return this.page.locator(`[data-testid="tarjeta-grupo"][data-grupo-id="${grupoId}"]`);
   }
 
+  // Cada unidad del grupo dispone de su propio control de fechas si el back lo habilita.
+  controlesCambioDelGrupo(grupoId) {
+    return this.grupo(grupoId).getByTestId('tarjeta-reserva').getByText('Modificar fechas', {exact: true});
+  }
+
   // La tarjeta de una unidad dentro de un grupo, por el nombre de la unidad
   unidadDelGrupo(grupoId, nombre) {
     return this.grupo(grupoId).getByTestId('tarjeta-reserva')

@@ -7,7 +7,7 @@ const { diasDesdeHoy } = require('../soporte/datos');
 
 // Prepara una estadía de seis noches para probar las variantes del contrato propuesto.
 // El inicio de sesión y la lectura de reservas pasan por el back de prueba.
-async function prepararCambio(page, importes, alConfirmar) {
+async function prepararCambio(page, importes, alConfirmar, grupo = null) {
   const reservas = new PaginaMisReservas(page);
   await new PaginaInicioSesion(page).ingresarComo('otraHuesped');
   let id;
@@ -19,6 +19,10 @@ async function prepararCambio(page, importes, alConfirmar) {
     Object.assign(reserva, {
       puede_modificar_fechas: true, ingreso: diasDesdeHoy(10), egreso: diasDesdeHoy(16), noches: 6,
     });
+    if (grupo) {
+      reserva.grupo = grupo;
+      datos.reservas.push({...reserva, id: 849, alojamiento: {...reserva.alojamiento, nombre: 'Segunda unidad'}});
+    }
     await ruta.fulfill({response: respuesta, json: datos});
   });
   await page.route('**/cambio-fechas/cotizar', ruta => ruta.fulfill({
@@ -49,10 +53,15 @@ test('al reducir noches se revisa la retención antes de confirmar', async ({pag
 });
 
 // Un traslado con diferencia positiva abre el pago de la reserva vinculada.
-test('al correr el ingreso se paga la diferencia en la reserva vinculada', async ({page}) => {
+test('al mover una unidad del grupo la diferencia se paga en su reserva vinculada', async ({page}) => {
   // Arrange
-  const {reservas, id} = await prepararCambio(page, {a_pagar: 35000, retencion: 0, a_devolver: 0}, ruta =>
-    ruta.fulfill({json: {reserva_pago_id: 850}}));
+  const grupo = {id: 300, titulo: 'Complejo de prueba'};
+  let pedido;
+  const {reservas, id} = await prepararCambio(page, {a_pagar: 35000, retencion: 0, a_devolver: 0}, ruta => {
+    pedido = ruta.request().postDataJSON();
+    return ruta.fulfill({json: {reserva_pago_id: 850}});
+  }, grupo);
+  await expect(reservas.controlesCambioDelGrupo(grupo.id)).toHaveCount(2);
   // Intercepta el destino: se verifica la navegación; el pago real se prueba en modificar-fechas.spec.js.
   await page.route('**/pagar.html?*', ruta => ruta.fulfill({contentType: 'text/html', body: '<title>Pago</title>'}));
 
@@ -62,5 +71,6 @@ test('al correr el ingreso se paga la diferencia en la reserva vinculada', async
   await reservas.confirmarCambioConPago(id);
 
   // Assert
+  expect(pedido).toEqual({reserva_id: id, cotizacion_id: 'prueba'});
   await expect(page).toHaveURL(/pagar\.html\?tipo=sena&reserva_id=850$/);
 });
