@@ -5,6 +5,7 @@ const estadoDelPago = {
   reservaId: null, grupoId: null, tipo: null, usuario: null, reserva: null,
   cotizacion: null, billetera: null, pendiente: null, ocupado: false, completo: false, espera: false, temporizador: null, inicioConsulta: null, consultaAgotada: false, saliendo: false, conflicto: false, fallido: false,
 };
+const INTERVALO_CONSULTA_PAGO_MS = 3500;
 
 // Centraliza el acceso a los elementos de esta pantalla.
 function elementoPago(id) { return document.getElementById(id); }
@@ -306,7 +307,7 @@ async function confirmarPagoEnviado() {
       estadoDelPago.temporizador = null;
       if (Date.now() - estadoDelPago.inicioConsulta >= 120000) { pausarVerificacionPago(); return; }
       return pagarReserva();
-    }, Math.min(3500, restante));
+    }, Math.min(INTERVALO_CONSULTA_PAGO_MS, restante));
     return;
   }
   if (respuesta.status !== 200) throw errorPantallaPago('No pudimos verificar el resultado. Retomá la confirmación.');
