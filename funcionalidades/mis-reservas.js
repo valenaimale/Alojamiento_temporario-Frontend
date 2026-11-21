@@ -2,6 +2,8 @@
 // Pide GET /reservas/mias y arma una tarjeta por reserva. Las pendientes se cancelan con POST /reservas/cancelar.
 // La sesión y el rol los controla proteger-pagina.js (sin sesión o con otro rol, redirige).
 // Si viene ?nueva=1 (recién reservó desde el detalle), muestra el aviso de que la reserva quedó guardada.
+// Las reservas de una reserva grupal (US4.4) van juntas en una tarjeta "Reserva grupal" (tarjetaDeGrupo): ahí se pagan
+// la seña y el saldo de todas, y adentro está la tarjeta de cada unidad, que se cancela por separado.
 
 // El estado de la reserva como se le muestra al huésped, y la clase de su badge
 const ESTADOS_DE_RESERVA = {
@@ -52,7 +54,7 @@ function mostrarPagoDeReserva(reserva, cuerpo, datos) {
   // una extensión se paga entera, sin seña ni saldo: "Seña pendiente" sería confuso
   estado.textContent = `Pago: ${esExtension && pago.texto === 'Seña pendiente' ? 'Pendiente' : pago.texto}`;
   resumen.append(estado);
-  if (pago.tipo && /^[1-9]\d*$/.test(String(reserva.id))) {
+  if (pago.tipo && /^[1-9]\d*$/.test(String(reserva.id)) && !reserva.grupo) {   // una unidad de un grupo se paga con el grupo
     const enlace = document.createElement("a");
     enlace.href = `pagar.html?reserva_id=${encodeURIComponent(reserva.id)}&tipo=${pago.tipo}`;
     enlace.className = "boton boton-primario";
@@ -63,7 +65,7 @@ function mostrarPagoDeReserva(reserva, cuerpo, datos) {
   }
   // Mientras se puede pagar la seña (o la extensión): la cuenta regresiva, que actualiza actualizarCuentasRegresivas()
   const restante = PagosModelo.tiempoRestante(reserva.vence_en);
-  if (restante && restante.ms > 0 && ["pendiente", "pendiente_pago"].includes(reserva.estado)) {
+  if (restante && restante.ms > 0 && ["pendiente", "pendiente_pago"].includes(reserva.estado) && !reserva.grupo) {
     const que = esExtension ? "la extensión" : "la seña";
     const cuenta = document.createElement("p");
     cuenta.className = "cuenta-regresiva";
@@ -106,10 +108,15 @@ function actualizarCuentasRegresivas(ahora = Date.now()) {
       nodo.textContent = textoCuentaRegresiva(nodo.dataset.que, restante);
       return;
     }
-    const reserva = reservasActuales.find((r) => String(r.id) === nodo.dataset.reservaId);
-    if (reserva && ["pendiente", "pendiente_pago"].includes(reserva.estado)) {
-      Object.assign(reserva, { estado: "expirada", vence_en: null, puede_pagar: false, puede_cancelar: false });
-      vencio = true;
+    //en un grupo vencen todas sus unidades pendientes juntas
+    const reservas = reservasActuales.filter((r) => nodo.dataset.grupoId
+      ? String(r.grupo?.id) === nodo.dataset.grupoId
+      : String(r.id) === nodo.dataset.reservaId);
+    for (const reserva of reservas) {
+      if (["pendiente", "pendiente_pago"].includes(reserva.estado)) {
+        Object.assign(reserva, { estado: "expirada", vence_en: null, puede_pagar: false, puede_cancelar: false });
+        vencio = true;
+      }
     }
   });
   if (vencio) mostrarReservas();
@@ -478,6 +485,91 @@ function tarjetaDeReserva(reserva) {
   return item;
 }
 
+// La tarjeta de una reserva grupal (US4.4): el título, las fechas, el total y el pago de todas las unidades juntas
+// (pagar.html?grupo_id=), y adentro la tarjeta de cada unidad, que se cancela por separado con su política.
+function tarjetaDeGrupo(elemento) {
+  const resumen = GrupalModelo.resumen(elemento.grupo, elemento.reservas);
+  const item = document.createElement("li");
+  const tarjeta = document.createElement("article");
+  tarjeta.className = "tarjeta reserva reserva-grupal";
+  tarjeta.setAttribute("data-testid", "tarjeta-grupo");
+  tarjeta.setAttribute("data-grupo-id", String(elemento.grupo.id));
+  tarjeta.setAttribute("aria-labelledby", `grupo-${elemento.grupo.id}`);
+
+  const cuerpo = document.createElement("div");
+  cuerpo.className = "cuerpo-reserva";
+  const estado = ESTADOS_DE_RESERVA[resumen.estado] ?? { texto: resumen.estado, clase: "estado-no-publicada" };
+  const badge = document.createElement("span");
+  badge.className = `estado ${estado.clase}`;
+  badge.setAttribute("data-testid", "estado-grupo");
+  badge.textContent = estado.texto;
+  const etiqueta = document.createElement("p");
+  etiqueta.className = "etiqueta-grupal";
+  etiqueta.textContent = `Reserva grupal · ${elemento.reservas.length} unidades`;
+  const titulo = document.createElement("h2");
+  titulo.id = `grupo-${elemento.grupo.id}`;
+  titulo.textContent = resumen.alojamiento.nombre;
+  const lugar = document.createElement("p");
+  lugar.className = "ubicacion";
+  lugar.textContent = [resumen.alojamiento.localidad, resumen.alojamiento.provincia].filter(Boolean).join(", ");
+  const fechas = document.createElement("p");
+  fechas.className = "ayuda";
+  fechas.textContent = `Del ${formatearFecha(resumen.ingreso)} al ${formatearFecha(resumen.egreso)} · ${resumen.personas} ${resumen.personas === 1 ? "huésped" : "huéspedes"}`;
+  const total = document.createElement("p");
+  total.className = "total-reserva";
+  const monto = document.createElement("strong");
+  monto.textContent = formatearPrecio(resumen.importe_total);
+  total.append(monto, " total de las unidades vigentes");
+  cuerpo.append(badge, etiqueta, titulo, lugar, fechas, total);
+
+  //el pago del grupo: una sola seña y un solo saldo para todas las unidades
+  const pago = PagosModelo.estadoPagoReserva(resumen);
+  const bloque = document.createElement("div");
+  bloque.className = "pago-reserva";
+  const textoPago = document.createElement("p");
+  textoPago.className = "estado-pago-reserva";
+  textoPago.setAttribute("data-testid", "estado-pago-grupo");
+  textoPago.textContent = `Pago: ${pago.texto}`;
+  bloque.append(textoPago);
+  if (pago.tipo) {
+    const enlace = document.createElement("a");
+    enlace.href = `pagar.html?grupo_id=${encodeURIComponent(elemento.grupo.id)}&tipo=${pago.tipo}`;
+    enlace.className = "boton boton-primario";
+    enlace.setAttribute("data-testid", "accion-pago-grupo");
+    enlace.textContent = `${pago.accion} de todas las unidades`;
+    bloque.append(enlace);
+  }
+  const restante = PagosModelo.tiempoRestante(resumen.vence_en);
+  if (restante && restante.ms > 0 && ["pendiente", "pendiente_pago"].includes(resumen.estado)) {
+    const cuenta = document.createElement("p");
+    cuenta.className = "cuenta-regresiva";
+    cuenta.setAttribute("data-vence", resumen.vence_en);
+    cuenta.setAttribute("data-grupo-id", String(elemento.grupo.id));
+    cuenta.setAttribute("data-que", "la seña de todas las unidades");
+    cuenta.textContent = textoCuentaRegresiva("la seña de todas las unidades", restante);
+    bloque.append(cuenta);
+  }
+  const vencimiento = fechaDePagoVisible(resumen.estado === "confirmada" ? resumen.fecha_cobro : null);
+  if (vencimiento) {
+    const plazo = document.createElement("p");
+    plazo.className = "ayuda plazo-pago-reserva";
+    plazo.textContent = `Vencimiento del saldo de todas las unidades: ${vencimiento}`;
+    bloque.append(plazo);
+  }
+  cuerpo.append(bloque);
+
+  //cada unidad, con su tarjeta de siempre (se cancela por separado)
+  const unidades = document.createElement("ul");
+  unidades.className = "reservas unidades-del-grupo";
+  unidades.setAttribute("aria-label", `Unidades de ${resumen.alojamiento.nombre}`);
+  unidades.append(...elemento.reservas.map(tarjetaDeReserva));
+  cuerpo.append(unidades);
+
+  tarjeta.append(cuerpo);
+  item.append(tarjeta);
+  return item;
+}
+
 let reservasActuales = [];
 let filtroReservas = "proximas";
 let cancelandoReserva = false;
@@ -495,13 +587,15 @@ function mostrarReservas() {
   const proxima = (r) =>
     ["pendiente", "pendiente_pago", "confirmada"].includes(r.estado) &&
     (salidaDeReserva(r) >= hoy || (r.estado === 'confirmada' && r.puede_extender === true));
-  const agrupadas = agruparReservas(reservasActuales);
+  //las de un mismo grupo se muestran juntas; para filtrar y ordenar, el grupo cuenta como su resumen
+  const agrupadas = GrupalModelo.agrupar(agruparReservas(reservasActuales));
+  const comoReserva = (r) => GrupalModelo.esGrupo(r) ? GrupalModelo.resumen(r.grupo, r.reservas) : r;
   const proximas = agrupadas
-    .filter(proxima)
-    .sort((a, b) => a.ingreso.localeCompare(b.ingreso));
+    .filter((r) => proxima(comoReserva(r)))
+    .sort((a, b) => comoReserva(a).ingreso.localeCompare(comoReserva(b).ingreso));
   const historial = agrupadas
-    .filter((r) => !proxima(r))
-    .sort((a, b) => b.ingreso.localeCompare(a.ingreso));
+    .filter((r) => !proxima(comoReserva(r)))
+    .sort((a, b) => comoReserva(b).ingreso.localeCompare(comoReserva(a).ingreso));
   const visibles = filtroReservas === "proximas" ? proximas : historial;
   document.getElementById("filtros-reservas").hidden = !reservasActuales.length;
   document.getElementById("cantidad-proximas").textContent = proximas.length;
@@ -516,7 +610,7 @@ function mostrarReservas() {
     );
   document
     .getElementById("lista-reservas")
-    .replaceChildren(...visibles.map(tarjetaDeReserva));
+    .replaceChildren(...visibles.map((r) => GrupalModelo.esGrupo(r) ? tarjetaDeGrupo(r) : tarjetaDeReserva(r)));
   document.getElementById("sin-reservas").hidden = visibles.length > 0;
   document.getElementById("titulo-sin-reservas").textContent =
     filtroReservas === "historial"

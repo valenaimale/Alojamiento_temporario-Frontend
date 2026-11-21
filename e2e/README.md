@@ -55,6 +55,11 @@ e2e/
     PaginaPago.js           pago de seña, saldo o extensión
     PaginaMisReservas.js    Mis reservas
     PaginaAgenda.js         agenda del operador
+    PaginaRegistro.js       formularios de registro y "Revisá tu mail"
+    PaginaVerificarMail.js  el enlace del mail que crea la cuenta
+    PaginaLiquidacionesBackoffice.js  liquidaciones del backoffice: generar y pagar
+    PaginaGrupal.js         detalle de una reserva grupal: elegir unidades y reservar
+    PaginaGrupalesAdministrador.js  reservas grupales del administrador
   tests/                  un archivo por flujo
   soporte/
     fixtures.js           el test y el expect que usan todos los tests
@@ -71,11 +76,12 @@ Todos los usuarios tienen la contraseña `clave-segura-1` y el mail verificado. 
 | Clave en `datos.js` | Usuario | Rol |
 | --- | --- | --- |
 | `huesped` | Juan Pérez | huésped |
-| `otraHuesped` | Lucía Sosa | huésped (tiene una reserva confirmada que ingresa en 3 días, con el saldo pendiente) |
+| `otraHuesped` | Lucía Sosa | huésped (tiene una reserva confirmada que ingresa en 6 días, con el saldo pendiente que vence mañana) |
 | `propietaria` | Marisa Gómez | propietaria, no discrimina IVA |
 | `propietariaConIva` | Elsa Quiroga | propietaria, discrimina IVA |
 | `administrador` | Cacho Fernández | administrador |
 | `operadora` | Nadia Ruiz | operadora |
+| `backoffice` | Rocío Paz | backoffice (genera y paga las liquidaciones) |
 
 Las unidades, sus precios y sus fechas ocupadas están comentadas en `soporte/datos.js`. Si necesitás otro dato de partida, se agrega al seeder del back y se documenta ahí.
 

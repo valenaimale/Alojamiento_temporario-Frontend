@@ -249,3 +249,44 @@ test("un motivo que el front no conoce se muestra tal cual y no rompe la pagina"
   assert.equal(motivo.ayuda, "");
   assert.equal(M.tituloDelPeriodo({ motivo: "reintegro_judicial" }), "Estadía");
 });
+
+// ---------- El listado del backoffice ----------
+
+test("cada situación del backoffice tiene su texto y su color", () => {
+  // Arrange y Act
+  const paraPagar = M.situacion("para_pagar");
+  const sinBilletera = M.situacion("sin_billetera");
+  const pagada = M.situacion("pagada");
+
+  // Assert
+  assert.equal(paraPagar.texto, "Para pagar");
+  assert.equal(sinBilletera.clase, "estado-retenida");
+  assert.equal(pagada.clase, "estado-pagada");
+});
+
+test("una situación que el front no conoce se muestra tal cual", () => {
+  assert.equal(M.situacion("otra_cosa").texto, "otra_cosa");
+});
+
+test("el filtro del backoffice deja solo las de esa situación, y vacío las deja todas", () => {
+  // Arrange
+  const liquidaciones = [
+    { id: 1, situacion: "para_pagar" },
+    { id: 2, situacion: "pagada" },
+    { id: 3, situacion: "para_pagar" },
+  ];
+
+  // Act
+  const paraPagar = M.filtrarPorSituacion(liquidaciones, "para_pagar");
+  const todas = M.filtrarPorSituacion(liquidaciones, "");
+
+  // Assert
+  assert.deepEqual(paraPagar.map((l) => l.id), [1, 3]);
+  assert.equal(todas.length, 3);
+});
+
+test("el texto de las reservas sin liquidar usa singular y plural", () => {
+  assert.equal(M.textoSinLiquidar(0), "No hay reservas esperando su liquidación.");
+  assert.equal(M.textoSinLiquidar(1), "Hay 1 reserva lista para liquidarse.");
+  assert.equal(M.textoSinLiquidar(3), "Hay 3 reservas listas para liquidarse.");
+});

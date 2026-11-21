@@ -392,9 +392,15 @@ function mostrarEstadia(estadia) {
         document.getElementById('descuento').textContent = `−${DescuentosModelo.textoPorcentaje(estadia.porcentaje_descuento)}`;
     }
     document.getElementById('precio-total').textContent = formatearPrecio(estadia.precio_total);
-    document.getElementById('texto-sena').textContent = `Seña al reservar (${Number(estado.alojamiento.porcentaje_sena).toLocaleString('es-AR')} %)`;
+    // Con pocos días para el ingreso se paga el total al reservar y no queda saldo (#75 del back, pago_total)
+    const diasCobro = estado.alojamiento.politica.dias_cobro_saldo;
+    document.getElementById('texto-sena').textContent = estadia.pago_total
+        ? 'A pagar al reservar (el total)'
+        : `Seña al reservar (${Number(estado.alojamiento.porcentaje_sena).toLocaleString('es-AR')} %)`;
     document.getElementById('sena').textContent = formatearPrecio(estadia.sena);
-    saldo.textContent = `El resto se paga ${estado.alojamiento.politica.dias_cobro_saldo} días antes del ingreso.`;
+    saldo.textContent = estadia.pago_total
+        ? `Como faltan ${diasCobro} días o menos para el ingreso, se paga el total al reservar: no queda saldo.`
+        : `El saldo se paga hasta ${diasCobro} días antes del ingreso, sin días de gracia.`;
     detalle.hidden = false;
     saldo.hidden = false;
     mostrarParaReservar();

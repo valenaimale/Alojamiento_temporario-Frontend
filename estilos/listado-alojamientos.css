@@ -71,3 +71,13 @@ header .acceso .boton {
 [hidden] {
     display: none !important;
 }
+
+/* Reserva grupal (US4.4): la etiqueta arriba del nombre, para distinguirla de una unidad suelta */
+.resultados .etiqueta-grupal {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-primary-dark);
+}

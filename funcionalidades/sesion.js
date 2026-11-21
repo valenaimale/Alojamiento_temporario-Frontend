@@ -179,5 +179,5 @@ function irAlHome(rol) {
 // Devuelve la ruta, o null para ir al inicio de su rol.
 function paginaParaVolver() {
     const volver = new URLSearchParams(window.location.search).get('volver');
-    return volver !== null && /^\.\.\/alojamientos\/(detalle|listado)\.html(\?[\w=&%.-]*)?$/.test(volver) ? volver : null;
+    return volver !== null && /^\.\.\/alojamientos\/(detalle|listado|grupal)\.html(\?[\w=&%.-]*)?$/.test(volver) ? volver : null;
 }

@@ -3,8 +3,10 @@ class PaginaListado {
   // Guarda la página del navegador y ubica los elementos de la pantalla
   constructor(page) {
     this.page = page;
+    this.enlacesMapa = page.getByRole('list', { name: 'Alojamientos en el mapa' }).getByRole('link');
     this.resumen = page.getByTestId('resumen-busqueda');
     this.tarjetas = page.getByTestId('tarjeta-alojamiento');
+    this.tarjetasGrupales = page.getByTestId('tarjeta-grupal');   // las reservas grupales (US4.4)
     // El título cambia al terminar: "N alojamientos disponibles", "Busquemos otras fechas" o, si el back falló, "Alojamientos"
     this.titulo = page.getByRole('heading', { level: 1 });
     this.botonReintentar = page.getByRole('button', { name: 'Reintentar' });
@@ -29,9 +31,25 @@ class PaginaListado {
     await this.page.goto(`/vistas/alojamientos/listado.html?${busqueda}`);
   }
 
+  // Abre el mapa público y elige uno de los barrios de los resultados disponibles.
+  async filtrarMapaPorBarrio(barrio) {
+    await this.page.getByText('Ver alojamientos en el mapa', {exact: true}).click();
+    await this.page.getByLabel('Barrio', {exact: true}).selectOption(barrio);
+  }
+
   // La tarjeta del alojamiento con ese nombre
   tarjeta(nombre) {
     return this.tarjetas.filter({ has: this.page.getByRole('link', { name: nombre, exact: true }) });
+  }
+
+  // La tarjeta de la reserva grupal con ese título
+  tarjetaGrupal(titulo) {
+    return this.tarjetasGrupales.filter({ has: this.page.getByRole('link', { name: titulo, exact: true }) });
+  }
+
+  // Abre el detalle de la reserva grupal con ese título (lleva las mismas fechas y personas)
+  async abrirGrupal(titulo) {
+    await this.tarjetaGrupal(titulo).getByRole('link', { name: titulo, exact: true }).click();
   }
 
   // Abre el detalle del alojamiento con ese nombre (lleva las mismas fechas y personas)

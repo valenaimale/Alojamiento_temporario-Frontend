@@ -1,6 +1,8 @@
 // Coordina la cotización, la firma y el registro del pago sin repetir transferencias.
+// También paga una reserva grupal (US4.4) con ?grupo_id=: la seña o el saldo de todas sus unidades en una transacción
+// (pagarSenaGrupal o pagarSaldoGrupal), con la misma pantalla y las mismas protecciones que una reserva.
 const estadoDelPago = {
-  reservaId: null, tipo: null, usuario: null, reserva: null,
+  reservaId: null, grupoId: null, tipo: null, usuario: null, reserva: null,
   cotizacion: null, billetera: null, pendiente: null, ocupado: false, completo: false, espera: false, temporizador: null, inicioConsulta: null, consultaAgotada: false, saliendo: false, conflicto: false, fallido: false,
 };
 
@@ -25,13 +27,16 @@ function errorPantallaPago(mensaje) {
 
 // Conserva la reserva al volver a iniciar sesión, sin guardar credenciales.
 function enlaceSesionPago() {
-  const volver = `../reservas/pagar.html?reserva_id=${estadoDelPago.reservaId}&tipo=${estadoDelPago.tipo}`;
+  const volver = estadoDelPago.grupoId
+    ? `../reservas/pagar.html?grupo_id=${estadoDelPago.grupoId}&tipo=${estadoDelPago.tipo}`
+    : `../reservas/pagar.html?reserva_id=${estadoDelPago.reservaId}&tipo=${estadoDelPago.tipo}`;
   return `../sesion/inicio-sesion.html?volver=${encodeURIComponent(volver)}`;
 }
 
 // Aísla la transacción pendiente por usuario, reserva y concepto.
 function clavePagoPendiente() {
-  return `haylugar:pago:${estadoDelPago.usuario.id}:${estadoDelPago.reservaId}:${estadoDelPago.tipo}`;
+  const que = estadoDelPago.grupoId ? `grupo-${estadoDelPago.grupoId}` : estadoDelPago.reservaId;
+  return `haylugar:pago:${estadoDelPago.usuario.id}:${que}:${estadoDelPago.tipo}`;
 }
 
 // Recupera exclusivamente un hash válido; el servidor siempre verifica su pertenencia.
@@ -123,6 +128,10 @@ async function consultarPago(ruta, opciones, devolverRespuesta = false) {
 
 // Valida una cotización nueva; el navegador no decide cuánto cobrar.
 async function consultarCotizacionPago() {
+  if (estadoDelPago.grupoId) {
+    const grupal = await consultarPago(`/pagos/grupo/${estadoDelPago.tipo}?grupo_id=${estadoDelPago.grupoId}`);
+    return PagosModelo.normalizarCotizacionGrupal(grupal, { grupoId: estadoDelPago.grupoId, tipo: estadoDelPago.tipo });
+  }
   const resultado = await consultarPago(`/pagos/${estadoDelPago.tipo}?reserva_id=${estadoDelPago.reservaId}`);
   return PagosModelo.normalizarCotizacion(resultado, { reservaId: estadoDelPago.reservaId, tipo: estadoDelPago.tipo });
 }
@@ -137,7 +146,9 @@ function fechaVisiblePago(fecha) {
 function mostrarResumenPago() {
   const reserva = estadoDelPago.reserva;
   elementoPago('contenido-pago').hidden = false;
-  elementoPago('numero-reserva').textContent = `Reserva ${reserva.id}`;
+  elementoPago('numero-reserva').textContent = reserva.grupo
+    ? `Reserva grupal · ${reserva.unidades.join(', ')}`
+    : `Reserva ${reserva.id}`;
   elementoPago('nombre-alojamiento').textContent = reserva.alojamiento?.nombre || 'Tu alojamiento';
   elementoPago('lugar-reserva').textContent = [reserva.alojamiento?.localidad, reserva.alojamiento?.provincia].filter(Boolean).join(', ');
   elementoPago('ingreso-reserva').textContent = fechaVisiblePago(reserva.ingreso);
@@ -148,10 +159,18 @@ function mostrarResumenPago() {
   // Una extensión se paga entera (sin seña ni saldo) y se liquida apenas se paga, porque el ingreso ya se registró (#70, #71)
   const esExtension = Boolean(reserva.extiende_reserva_id);
   elementoPago('etiqueta-total-reserva').textContent = esExtension ? 'Total de la extensión' : 'Total de la estadía';
-  elementoPago('fila-sena-reserva').hidden = esExtension;
+  // Reservando con 5 días o menos se paga el total al reservar (#75 del back): no hay una seña aparte que mostrar
+  elementoPago('fila-sena-reserva').hidden = esExtension || esPagoTotal(reserva);
   elementoPago('destino-pago-guia').textContent = esExtension
     ? 'Como ya registraron tu ingreso, el pago le llega al propietario apenas se confirma.'
     : 'Tu plata queda guardada en el contrato hasta que registren tu ingreso.';
+}
+
+// Si la seña de la reserva es el total (reservó con 5 días o menos, #75 del back). Una extensión no cuenta: tiene su propio texto.
+function esPagoTotal(reserva) {
+  if (!reserva || reserva.extiende_reserva_id) return false;
+  const sena = Number(reserva.importe_sena);
+  return Number.isFinite(sena) && sena > 0 && sena === Number(reserva.importe_total);
 }
 
 // Presenta pesos, ETH exacto y tipo de cambio del servidor antes de firmar.
@@ -160,7 +179,8 @@ function mostrarCotizacionPago() {
   elementoPago('cotizacion-pago').hidden = !pago;
   if (!pago) return;
   const esExtension = Boolean(estadoDelPago.reserva?.extiende_reserva_id);
-  elementoPago('concepto-pago').textContent = pago.tipo === 'saldo' ? 'Saldo a pagar' : esExtension ? 'Extensión a pagar' : 'Seña a pagar';
+  elementoPago('concepto-pago').textContent = pago.tipo === 'saldo' ? 'Saldo a pagar' : esExtension ? 'Extensión a pagar'
+    : esPagoTotal(estadoDelPago.reserva) ? 'Total a pagar' : 'Seña a pagar';
   elementoPago('monto-pesos').textContent = formatearPrecio(pago.monto_pesos);
   elementoPago('monto-eth').textContent = `${PagosModelo.formatearEth(pago.monto_wei)} ETH de prueba`;
   elementoPago('cambio-pago').textContent = `Conversión de prueba: 1 ETH = ${formatearPrecio(pago.pesos_por_eth)}.${pago.simulado ? ' No se transfieren fondos.' : ' El costo de la red se suma en MetaMask.'}`;
@@ -174,7 +194,12 @@ function mostrarCotizacionPago() {
     if (!soloFecha) formato.timeStyle = 'short';
     const texto = new Intl.DateTimeFormat('es-AR', formato).format(fecha);
     const vencido = pago.tipo === 'saldo' && (pago.vencido || PagosModelo.saldoVencido(plazo));
-    elementoPago('plazo-pago').textContent = vencido ? `Saldo vencido desde el ${texto}: pagalo antes de ingresar.` : `${pago.tipo === 'sena' ? (esExtension ? 'Pagá la extensión antes del' : 'Pagá la seña antes del') : 'Vencimiento del saldo:'} ${texto}${soloFecha ? '.' : ' (hora argentina).'}`;
+    // El saldo se paga hasta las 23:59 de la fecha de cobro, sin días de gracia (#75 del back)
+    elementoPago('plazo-pago').textContent = vencido
+      ? `El plazo del saldo venció el ${texto}: la reserva se cancela sola.`
+      : pago.tipo === 'saldo'
+        ? `Pagá el saldo hasta el ${texto}, a las 23:59 (hora argentina).`
+        : `${esExtension ? 'Pagá la extensión antes del' : 'Pagá la seña antes del'} ${texto}${soloFecha ? '.' : ' (hora argentina).'}`;
   }
   if (pago.tipo === 'sena') iniciarCuentaPago();
 }
@@ -260,9 +285,13 @@ function pausarVerificacionPago() {
 // El backend es la autoridad de confirmación tanto en simulación como en blockchain.
 async function confirmarPagoEnviado() {
   mostrarPasoPago(2, 'Registrando y verificando el pago…');
-  const { respuesta, resultado } = await consultarPago('/pagos/confirmar', {
+  const grupal = Boolean(estadoDelPago.grupoId);
+  const { respuesta, resultado } = await consultarPago(grupal ? '/pagos/grupo/confirmar' : '/pagos/confirmar', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ reserva_id: estadoDelPago.reservaId, tipo: estadoDelPago.tipo, tx_hash: estadoDelPago.pendiente.hash }),
+    body: JSON.stringify({
+      ...(grupal ? { grupo_id: estadoDelPago.grupoId } : { reserva_id: estadoDelPago.reservaId }),
+      tipo: estadoDelPago.tipo, tx_hash: estadoDelPago.pendiente.hash,
+    }),
   }, true);
   if (respuesta.status === 202) {
     const mensaje = resultado?.mensaje || 'La transacción todavía no se confirmó.';
@@ -293,8 +322,9 @@ async function confirmarPagoEnviado() {
 
 // Compara importes y destino para que cualquier cambio se revise antes de la firma.
 function mismaCotizacionPago(anterior, nueva) {
-  return ['monto_wei', 'monto_pesos', 'pesos_por_eth', 'contrato', 'funcion', 'simulado', 'red', 'tipo', 'reserva_id']
-    .every(campo => anterior?.[campo] === nueva[campo]);
+  const unidades = cotizacion => (cotizacion?.reservas ?? []).map(r => `${r.reserva_id}:${r.monto_wei}`).join(',');
+  return ['monto_wei', 'monto_pesos', 'pesos_por_eth', 'contrato', 'funcion', 'simulado', 'red', 'tipo', 'reserva_id', 'grupo_id']
+    .every(campo => anterior?.[campo] === nueva[campo]) && unidades(anterior) === unidades(nueva);
 }
 
 // Ejecuta un único envío o retoma el existente, incluso después de recargar.
@@ -419,10 +449,12 @@ async function cargarPaginaPago() {
   actualizarBotonPago();
   try {
     const parametros = new URLSearchParams(window.location.search);
-    const id = parametros.get('reserva_id');
+    const grupoId = parametros.get('grupo_id');
+    const id = grupoId ? null : parametros.get('reserva_id');
     const tipo = parametros.get('tipo') || 'sena';
-    if (!PagosModelo.identificador(id) || !['sena', 'saldo'].includes(tipo)) throw errorPantallaPago('El enlace de pago no es válido. Abrí la reserva desde Mis reservas.');
+    if (!PagosModelo.identificador(grupoId ?? id) || !['sena', 'saldo'].includes(tipo)) throw errorPantallaPago('El enlace de pago no es válido. Abrí la reserva desde Mis reservas.');
     estadoDelPago.reservaId = id;
+    estadoDelPago.grupoId = grupoId;
     estadoDelPago.tipo = tipo;
     estadoDelPago.usuario = await obtenerSesion();
     if (!estadoDelPago.usuario) { window.location.href = enlaceSesionPago(); return; }
@@ -432,8 +464,15 @@ async function cargarPaginaPago() {
     elementoPago('titulo-pago').textContent = tipo === 'saldo' ? 'Pagá el saldo de tu reserva' : 'Confirmá tu reserva con la seña';
     const resultado = await consultarPago('/reservas/mias');
     const reservas = Array.isArray(resultado.reservas) ? resultado.reservas : [];
-    estadoDelPago.reserva = reservas.find(reserva => String(reserva.id) === id);
-    if (!estadoDelPago.reserva) {
+    if (grupoId) {
+      // el grupo se muestra y se paga como una sola reserva: el resumen de sus unidades (GrupalModelo)
+      const delGrupo = reservas.filter(reserva => String(reserva.grupo?.id) === grupoId);
+      estadoDelPago.reserva = delGrupo.length ? GrupalModelo.resumen(delGrupo[0].grupo, delGrupo) : null;
+      elementoPago('titulo-pago').textContent = tipo === 'saldo' ? 'Pagá el saldo de tu reserva grupal' : 'Confirmá tu reserva grupal con la seña';
+    } else {
+      estadoDelPago.reserva = reservas.find(reserva => String(reserva.id) === id);
+    }
+    if (!estadoDelPago.reserva && !grupoId) {
       for (const original of reservas) {
         const extension = original.extensiones?.find(reserva => String(reserva.id) === id);
         if (extension) {

@@ -22,6 +22,11 @@ class PaginaPago {
     return new URL(this.page.url()).searchParams.get('reserva_id');
   }
 
+  // El id del grupo que se está pagando (reserva grupal, US4.4), leído de la URL
+  grupoId() {
+    return new URL(this.page.url()).searchParams.get('grupo_id');
+  }
+
   // Paga con el pago simulado y espera a que el back lo confirme
   async pagarSimulado() {
     await this.page.getByRole('button', { name: 'Pagar (simulado)' }).click();

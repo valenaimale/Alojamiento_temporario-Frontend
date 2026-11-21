@@ -189,3 +189,31 @@ test('una caída del CDN permite reintentar su carga', async () => {
   assert.equal(await billetera.conectar(), cuenta);
   assert.equal(cargas, 2);
 });
+
+// Reserva grupal (US4.4): la seña de varias reservas en una transacción, con los ids y los montos de cada una
+test('pagar la seña de un grupo simula pagarSenaGrupal con los ids y los montos en BigInt', async () => {
+  // Arrange
+  const e = await entorno(); await e.billetera.conectar();
+  const grupal = {
+    grupo_id: '7', tipo: 'sena', funcion: 'pagarSenaGrupal', simulado: false, monto_wei: 1500000000000000n, red: 84532, contrato,
+    reservas: [{ reserva_id: '41', monto_wei: 800000000000000n }, { reserva_id: '42', monto_wei: 700000000000000n }],
+  };
+
+  // Act
+  const resultado = await e.billetera.enviarPago(grupal);
+
+  // Assert
+  assert.equal(resultado, hash);
+  const request = e.llamadas.at(-1)[1];
+  assert.equal(request.functionName, 'pagarSenaGrupal');
+  assert.deepEqual(request.args, [[41n, 42n], [800000000000000n, 700000000000000n]]);
+  assert.equal(request.value, 1500000000000000n);
+});
+
+test('una cotización grupal con la función individual se rechaza sin firmar nada', async () => {
+  const e = await entorno(); await e.billetera.conectar();
+  const grupal = { grupo_id: '7', tipo: 'sena', funcion: 'pagarSena', simulado: false, monto_wei: 1n, red: 84532, contrato, reservas: [] };
+
+  await assert.rejects(e.billetera.enviarPago(grupal), { codigo: 'DATOS_INVALIDOS' });
+  assert.equal(e.llamadas.some(([tipo]) => tipo === 'write'), false);
+});

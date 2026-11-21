@@ -32,6 +32,57 @@ const LiquidacionesModelo = (() => {
     );
   }
 
+  // Lo que el backoffice puede hacer con cada liquidación (GET /backoffice/liquidaciones manda "situacion").
+  // Es más fino que el estado: una pendiente puede estar lista para pagar, saliendo o esperando una billetera.
+  const SITUACIONES = {
+    para_pagar: {
+      texto: "Para pagar",
+      clase: "estado-pendiente",
+      ayuda: "Lista: se puede pagar ahora.",
+    },
+    saliendo: {
+      texto: "Saliendo",
+      clase: "estado-pendiente",
+      ayuda: "Ya se mandó al contrato: se confirma en unos minutos.",
+    },
+    sin_billetera: {
+      texto: "Sin billetera",
+      clase: "estado-retenida",
+      ayuda: "Falta la billetera de cobro de alguna de las partes.",
+    },
+    retenida: {
+      texto: "Retenida por deuda",
+      clase: "estado-retenida",
+      ayuda: "No se liquida lo que todavía no se cobró.",
+    },
+    pagada: {
+      texto: "Pagada",
+      clase: "estado-pagada",
+      ayuda: "Cada parte ya recibió lo suyo.",
+    },
+  };
+
+  // Cómo mostrar la situación de una liquidación en el backoffice. Una situación nueva del backend se muestra tal cual.
+  function situacion(nombre) {
+    return (
+      SITUACIONES[nombre] ?? { texto: nombre, clase: "estado-pendiente", ayuda: "" }
+    );
+  }
+
+  // Las liquidaciones de esa situación ("" = todas), para el filtro del backoffice
+  function filtrarPorSituacion(liquidaciones, nombre) {
+    return nombre === ""
+      ? liquidaciones
+      : liquidaciones.filter((liquidacion) => liquidacion.situacion === nombre);
+  }
+
+  // Cómo nombrar cuántas reservas faltan liquidar, para el botón "Generar" del backoffice
+  function textoSinLiquidar(cantidad) {
+    if (cantidad === 0) return "No hay reservas esperando su liquidación.";
+    if (cantidad === 1) return "Hay 1 reserva lista para liquidarse.";
+    return `Hay ${cantidad} reservas listas para liquidarse.`;
+  }
+
   // Por qué se liquida, que es lo primero que el propietario necesita entender cuando ve un cobro:
   // no es lo mismo una estadía que una reserva que no se usó. El backend lo manda en "motivo".
   const MOTIVOS = {
@@ -207,6 +258,9 @@ const LiquidacionesModelo = (() => {
 
   return {
     estado,
+    situacion,
+    filtrarPorSituacion,
+    textoSinLiquidar,
     motivo,
     esExtension,
     tituloDelPeriodo,

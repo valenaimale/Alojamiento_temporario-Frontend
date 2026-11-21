@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const PagosModelo = require('../funcionalidades/pagos-modelo.js');
+const GrupalModelo = require('../funcionalidades/grupal-modelo.js');
 
 const HASH = `0x${'a'.repeat(64)}`;
 const HASH_NUEVO = `0x${'b'.repeat(64)}`;
@@ -45,7 +46,7 @@ function pagina(opciones = {}) {
   const window = {addEventListener:(nombre,fn)=>eventos[nombre]=fn,location:{search:opciones.search || '?reserva_id=42&tipo=sena',href:''}};
   const contexto = vm.createContext({
     document:{getElementById:get,body:{hidden:true}},window,URLSearchParams,Intl,Date:Fecha,
-    PagosModelo,encodeURIComponent,crypto:require('node:crypto').webcrypto,
+    PagosModelo,GrupalModelo,encodeURIComponent,crypto:require('node:crypto').webcrypto,
     setTimeout:(fn,ms)=>{timers.set(++timerId,{fn,ms});return timerId;},clearTimeout:id=>timers.delete(id),navigator:{locks:opciones.locks},
     sessionStorage:{getItem:clave=>datos.get(clave) ?? null,setItem:(clave,valor)=>{
       if(configuracion.fallarGuardado?.(clave,valor))throw new Error('QuotaExceededError');
@@ -233,10 +234,43 @@ test('salir de página detiene reintentos automáticos conservando hash',async()
   assert.equal(p.timers.size,0);assert.ok(p.datos.get(CLAVE));
 });
 
-test('saldo vencido se cotiza y paga; fecha y aviso vienen de la cotización actual',async()=>{
-  const p=pagina({search:'?reserva_id=42&tipo=saldo',reservas:[reserva({estado:'confirmada',saldo:'100000.00',puede_pagar_saldo:true,fecha_cobro:'2020-01-01'})],cotizacion:cotizacion({tipo:'saldo',fecha_cobro:'2020-01-02',vencido:true,pago:{simulado:true,contrato:null,funcion:'pagarSaldo'}})});
-  await p.cargarPaginaPago();assert.match(p.get('plazo-pago').textContent,/Saldo vencido.*2 ene.*pagalo antes de ingresar/);
-  assert.equal(p.get('boton-pagar').disabled,false);await p.pagarReserva();assert.equal(p.estadoDelPago.completo,true);
+// Sin días de gracia (#75 del back): pasada la fecha de cobro la pantalla no arma el pago del saldo
+test('un saldo vencido no se cotiza ni se paga', async () => {
+  // Arrange
+  const p = pagina({search: '?reserva_id=42&tipo=saldo', reservas: [reserva({estado: 'confirmada', saldo: '100000.00', puede_pagar_saldo: true, fecha_cobro: '2020-01-01'})], cotizacion: cotizacion({tipo: 'saldo', fecha_cobro: '2020-01-01', pago: {simulado: true, contrato: null, funcion: 'pagarSaldo'}})});
+
+  // Act
+  await p.cargarPaginaPago();
+
+  // Assert
+  assert.match(p.get('error-pago').textContent, /Saldo vencido: la reserva se cancela/);
+  assert.equal(p.estadoDelPago.cotizacion, null);
+  assert.equal(p.get('boton-pagar').disabled, true);
+});
+
+// El saldo a tiempo dice hasta cuándo se paga: hasta las 23:59 de la fecha de cobro
+test('el saldo a tiempo muestra el último día hasta las 23:59', async () => {
+  // Arrange
+  const p = pagina({search: '?reserva_id=42&tipo=saldo', reservas: [reserva({estado: 'confirmada', saldo: '100000.00', puede_pagar_saldo: true, fecha_cobro: '2099-01-02'})], cotizacion: cotizacion({tipo: 'saldo', fecha_cobro: '2099-01-02', vencido: false, pago: {simulado: true, contrato: null, funcion: 'pagarSaldo'}})});
+
+  // Act
+  await p.cargarPaginaPago();
+
+  // Assert
+  assert.match(p.get('plazo-pago').textContent, /Pagá el saldo hasta el 2 ene.*2099, a las 23:59/);
+});
+
+// Reservando con 5 días o menos la seña es el total (#75 del back): se muestra como "Total a pagar"
+test('una reserva de pago total se cobra como total', async () => {
+  // Arrange
+  const p = pagina({reservas: [reserva({importe_total: '210000.00', importe_sena: '210000.00'})]});
+
+  // Act
+  await p.cargarPaginaPago();
+
+  // Assert
+  assert.equal(p.get('concepto-pago').textContent, 'Total a pagar');
+  assert.equal(p.get('fila-sena-reserva').hidden, true);
 });
 test('202 se pausa a los dos minutos y Volver a verificar conserva el hash',async()=>{
   let estado=202;
